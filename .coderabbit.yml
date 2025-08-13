@@ -1,0 +1,176 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+
+language: en-US
+early_access: false
+enable_free_tier: true
+
+# Knowledge base settings for learning from project patterns
+knowledge_base:
+  opt_out: false
+  web_search:
+    enabled: true
+  code_guidelines:
+    enabled: true
+    filePatterns:
+      - '**/*.ts'
+      - '**/*.js'
+      - '**/*.tsx'
+      - '**/*.jsx'
+      - '**/*.json'
+      - '**/*.md'
+  learnings:
+    scope: auto
+  issues:
+    scope: auto
+  pull_requests:
+    scope: auto
+
+# Educational tone - explain WHY, not just WHAT
+tone_instructions: |
+  Senior Softwate engineer and mentor to students. Explain WHY patterns are better, provide learning context, reference best practices, be encouraging while maintaining quality standards. Guide to solutions, don't provide direct fixes.
+
+# Code generation settings - focused on documentation
+code_generation:
+  docstrings:
+    language: en-US
+    path_instructions:
+      - path: 'src/components/**/*.{ts,tsx}'
+        instructions: 'Document React components: purpose, props, state management, accessibility features. Explain component design decisions.'
+      - path: 'src/app/**/*.{ts,tsx}'
+        instructions: 'Document Next.js app router: routing, data fetching, SEO considerations. Explain pages architecture and rendering strategies.'
+      - path: 'src/hooks/**/*.{ts,tsx}'
+        instructions: 'Document custom hooks: purpose, dependencies, side effects, reusability. Explain hook composition patterns.'
+
+  unit_tests:
+    path_instructions:
+      - path: '**/*.test.{ts,tsx,js,jsx}'
+        instructions: 'Guide component testing: user interactions, accessibility, state changes. Emphasize React Testing Library best practices.'
+      - path: '**/*.spec.{ts,tsx,js,jsx}'
+        instructions: 'Guide unit testing: utility functions, hooks, integration scenarios. Explain frontend testing strategies.'
+
+# Chat settings for student interaction
+chat:
+  auto_reply: true
+
+# Review profile - educational and thorough
+reviews:
+  profile: assertive # Changed from chill to be more thorough for learning
+  request_changes_workflow: true # Students should address feedback
+  high_level_summary: true
+  high_level_summary_placeholder: '@coderabbitai summary'
+  high_level_summary_in_walkthrough: true
+  auto_title_placeholder: '@coderabbitai'
+  auto_title_instructions: 'Create titles focusing on API changes, architectural improvements, or backend functionality'
+  review_status: true
+  commit_status: true
+  fail_commit_status: true # Encourage addressing issues before merge
+  collapse_walkthrough: false # Keep detailed for learning
+  changed_files_summary: true
+
+  # Path-specific review instructions
+  path_instructions:
+    - path: 'app/**/*.{ts,tsx}'
+      instructions: 'Review App Router patterns, layouts, loading states, error boundaries. Explain Next.js 13+ app directory features.'
+
+    - path: 'components/**/*.{ts,tsx}'
+      instructions: 'Review component composition, props interface, state management, performance optimizations, accessibility. Explain React patterns.'
+
+    - path: 'hooks/**/*.{ts,tsx}'
+      instructions: 'Review custom hook design, useEffect dependencies, hook composition, performance implications. Explain hook best practices.'
+
+    - path: 'context/**/*.{ts,tsx}'
+      instructions: 'Review Context API usage, provider patterns, performance considerations, alternative state solutions. Explain state management.'
+
+    - path: 'utils/**/*.{ts,js}'
+      instructions: 'Review utility functions: pure functions, type safety, error handling, testability. Explain utility organization patterns.'
+
+    - path: 'lib/**/*.{ts,js}'
+      instructions: 'Review shared libraries: API clients, configurations, third-party integrations. Explain library organization and reusability.'
+
+    - path: 'styles/**/*.{css,scss}'
+      instructions: 'Review CSS organization, responsive design, accessibility, performance. Explain styling best practices and methodologies.'
+
+    - path: 'public/**/*'
+      instructions: 'Review static assets: optimization, naming conventions, accessibility (alt texts). Explain asset management best practices.'
+
+    - path: '**/*.test.{ts,tsx,js,jsx}'
+      instructions: 'Review component testing: user interactions, accessibility testing, edge cases. Explain React Testing Library patterns.'
+
+    - path: '**/*.stories.{ts,tsx,js,jsx}'
+      instructions: 'Review Storybook stories: component variants, documentation, accessibility testing. Explain component documentation.'
+
+    - path: 'middleware.ts'
+      instructions: 'Review Next.js middleware: routing logic, authentication, redirects, performance. Explain middleware patterns.'
+
+    - path: 'next.config.js'
+      instructions: 'Review Next.js configuration: build optimization, redirects, headers, experimental features. Explain configuration best practices.'
+
+    - path: 'tailwind.config.js'
+      instructions: 'Review Tailwind configuration: custom utilities, responsive breakpoints, design tokens. Explain utility-first CSS principles.'
+
+    - path: 'package.json'
+      instructions: 'Review frontend dependencies, scripts, build configurations, security vulnerabilities. Explain dependency management.'
+
+    - path: 'tsconfig.json'
+      instructions: 'Review TypeScript configuration: strict settings, path mapping, build optimization. Explain TypeScript best practices.'
+
+    - path: '**/*.env*'
+      instructions: 'Review environment variables: client-side exposure (NEXT_PUBLIC_), security considerations. Explain frontend environment management.'
+
+  # Frontend-specific labeling
+  labeling_instructions:
+    - label: 'ui-ux-improvement'
+      instructions: 'Apply when user interface or user experience improvements are suggested'
+    - label: 'accessibility-enhancement'
+      instructions: 'Apply when accessibility improvements or WCAG compliance issues are discussed'
+    - label: 'performance-optimization'
+      instructions: 'Apply when frontend performance improvements (bundle size, rendering, etc.) are suggested'
+    - label: 'responsive-design'
+      instructions: 'Apply when responsive design or mobile optimization improvements are needed'
+    - label: 'seo-improvement'
+      instructions: 'Apply when SEO optimization or meta tag improvements are suggested'
+    - label: 'component-architecture'
+      instructions: 'Apply when component design or React architecture improvements are discussed'
+
+  # Filter paths that don't need review
+  path_filters:
+    - '!node_modules/**'
+    - '!.next/**'
+    - '!out/**'
+    - '!dist/**'
+    - '!build/**'
+    - '!coverage/**'
+    - '!*.log'
+    - '!package-lock.json'
+    - '!yarn.lock'
+    - '!.env.local'
+
+  # Auto review settings
+  auto_review:
+    enabled: true
+    auto_incremental_review: true
+    drafts: false # Only review when ready
+    base_branches:
+      - 'main'
+      - 'master'
+      - 'develop'
+    ignore_title_keywords:
+      - 'wip'
+      - 'draft'
+
+  # Educational finishing touches
+  finishing_touches:
+    docstrings:
+      enabled: true
+    unit_tests:
+      enabled: true
+
+  # Development tools integration
+  tools:
+    eslint:
+      enabled: true
+    actionlint:
+      enabled: true
+
+  # Additional educational features
+  auto_apply_labels: true
