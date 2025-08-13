@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-build-typecheck:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: List folders/files in src
+        run: ls -la src
+
+      - name: Run ESLint
+        run: npm run lint || (echo "ESLint failed" && exit 1)
+
+      - name: Prettier Check
+        run: npx prettier --check ./src || (echo "Prettier check failed" && exit 1)
+
+      - name: TypeScript Check
+        run: npm run type-check || (echo "TypeScript check failed" && exit 1)
+
+      - name: Build Project
+        run: npm run build || (echo "Build failed" && exit 1)
