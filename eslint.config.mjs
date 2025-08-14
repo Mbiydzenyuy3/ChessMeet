@@ -40,6 +40,13 @@ export default [
 
       // Project-specific overrides
       'react/react-in-jsx-scope': 'off', // Not needed in RN
+      // Optional: allow raw text in SplashScreen or other components
+      'react-native/no-raw-text': [
+        'warn',
+        {
+          skip: ['SplashScreen', 'OtherComponent'],
+        },
+      ],
     },
     settings: {
       react: {
