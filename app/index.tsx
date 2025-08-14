@@ -1,7 +1,11 @@
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, Text } from 'react-native';
 
 export default function App() {
-  return <View style={styles.container}>{/* Your content */}</View>;
+  return (
+    <View style={styles.container}>
+      <Text> Welcome to ChessMeet</Text>
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
