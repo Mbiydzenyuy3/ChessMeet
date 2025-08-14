@@ -3,7 +3,7 @@ import { StyleSheet, View, Text } from 'react-native';
 export default function App() {
   return (
     <View style={styles.container}>
-      <Text> Welcome to ChessMeet</Text>
+      <Text>Welcome to ChessMate</Text>
     </View>
   );
 }
