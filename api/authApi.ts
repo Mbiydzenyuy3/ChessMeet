@@ -1,11 +1,21 @@
 // api/authApi.ts
-import axiosClient from './axiosClient';
+import { ENDPOINTS } from '../constants/endpoints';
+import api from './api';
 
-export const authApi = {
-  sendOtp: (phoneOrEmail: string) => axiosClient.post('/auth/send-otp', { phoneOrEmail }),
+export interface RequestOtpRes {
+  requestId?: string;
+  message?: string;
+}
 
-  verifyOtp: (phoneOrEmail: string, otp: string) =>
-    axiosClient.post('/auth/verify-otp', { phoneOrEmail, otp }),
+export interface VerifyOtpRes {
+  token: string;
+  user: { id: string; email: string; name?: string };
+}
 
-  getProfile: () => axiosClient.get('/auth/profile'),
+const authApi = {
+  requestOtp: (email: string) => api.post<RequestOtpRes>(ENDPOINTS.REQUEST_OTP, { email }),
+  verifyOtp: (email: string, otp: string) =>
+    api.post<VerifyOtpRes>(ENDPOINTS.VERIFY_OTP, { email, otp }),
 };
+
+export default authApi;

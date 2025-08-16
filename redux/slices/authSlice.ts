@@ -1,73 +1,96 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+// redux/slices/authSlice.ts
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+import authApi, { VerifyOtpRes } from '../../api/authApi';
 
-interface User {
-  id: string;
-  email?: string;
-  phone?: string;
-  token: string;
-}
-
-interface AuthState {
-  isAuthenticated: boolean;
-  user: User | null;
-  otpSent: boolean;
+type AuthState = {
+  token: string | null;
+  user: { id: string; email: string; name?: string } | null;
   loading: boolean;
   error: string | null;
-}
+  bootstrapped: boolean; // finished reading token from storage
+};
 
 const initialState: AuthState = {
-  isAuthenticated: false,
+  token: null,
   user: null,
-  otpSent: false,
   loading: false,
   error: null,
+  bootstrapped: false,
 };
+
+export const bootstrapAuth = createAsyncThunk('auth/bootstrap', async () => {
+  const token = await AsyncStorage.getItem('token');
+  const userRaw = await AsyncStorage.getItem('user');
+  const user = userRaw ? JSON.parse(userRaw) : null;
+  return { token, user };
+});
+
+export const requestOtp = createAsyncThunk('auth/request-otp', async (email: string) => {
+  const res = await authApi.requestOtp(email);
+  return res.data;
+});
+
+export const verifyOtp = createAsyncThunk(
+  'auth/verify-otp',
+  async ({ email, otp }: { email: string; otp: string }) => {
+    const res = await authApi.verifyOtp(email, otp);
+    const data: VerifyOtpRes = res.data;
+    await AsyncStorage.setItem('token', data.token);
+    await AsyncStorage.setItem('user', JSON.stringify(data.user));
+    return data;
+  }
+);
+
+export const logout = createAsyncThunk('auth/logout', async () => {
+  await AsyncStorage.removeItem('token');
+  await AsyncStorage.removeItem('user');
+  return true;
+});
 
 const authSlice = createSlice({
   name: 'auth',
   initialState,
-  reducers: {
-    sendOtpStart(state) {
-      state.loading = true;
-      state.error = null;
-    },
-    sendOtpSuccess(state) {
-      state.loading = false;
-      state.otpSent = true;
-    },
-    sendOtpFailure(state, action: PayloadAction<string>) {
-      state.loading = false;
-      state.error = action.payload;
-    },
-    verifyOtpStart(state) {
-      state.loading = true;
-      state.error = null;
-    },
-    verifyOtpSuccess(state, action: PayloadAction<User>) {
-      state.loading = false;
-      state.isAuthenticated = true;
-      state.user = action.payload;
-    },
-    verifyOtpFailure(state, action: PayloadAction<string>) {
-      state.loading = false;
-      state.error = action.payload;
-    },
-    logout(state) {
-      state.isAuthenticated = false;
-      state.user = null;
-      state.otpSent = false;
-    },
+  reducers: {},
+  extraReducers(builder) {
+    builder
+      .addCase(bootstrapAuth.fulfilled, (state, action) => {
+        state.token = action.payload.token;
+        state.user = action.payload.user;
+        state.bootstrapped = true;
+      })
+      .addCase(bootstrapAuth.rejected, (state) => {
+        state.bootstrapped = true;
+      })
+      .addCase(requestOtp.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(requestOtp.fulfilled, (state) => {
+        state.loading = false;
+      })
+      .addCase(requestOtp.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message ?? 'Failed to request OTP';
+      })
+      .addCase(verifyOtp.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(verifyOtp.fulfilled, (state, action) => {
+        state.loading = false;
+        state.token = action.payload.token;
+        state.user = action.payload.user;
+      })
+      .addCase(verifyOtp.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message ?? 'OTP verification failed';
+      })
+      .addCase(logout.fulfilled, (state) => {
+        state.token = null;
+        state.user = null;
+      });
   },
 });
-
-export const {
-  sendOtpStart,
-  sendOtpSuccess,
-  sendOtpFailure,
-  verifyOtpStart,
-  verifyOtpSuccess,
-  verifyOtpFailure,
-  logout,
-} = authSlice.actions;
 
 export default authSlice.reducer;

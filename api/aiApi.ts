@@ -1,9 +1,9 @@
 // api/aiApi.ts
-import axiosClient from './axiosClient';
+import api from './api';
 
 export const aiApi = {
-  getMoveSuggestion: (gameId: string) => axiosClient.get(`/ai/${gameId}/suggestion`),
+  getMoveSuggestion: (gameId: string) => api.get(`/ai/${gameId}/suggestion`),
 
   getMoveExplanation: (gameId: string, move: string) =>
-    axiosClient.post(`/ai/${gameId}/explanation`, { move }),
+    api.post(`/ai/${gameId}/explanation`, { move }),
 };

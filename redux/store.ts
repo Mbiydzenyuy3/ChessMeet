@@ -1,15 +1,15 @@
 import { configureStore } from '@reduxjs/toolkit';
 import aiReducer from './slices/aiSlice';
 import authReducer from './slices/authSlice';
-import gameReducer from './slices/gameSlice';
-import socketReducer from './slices/socketSlice';
+// import gameReducer from './slices/gameSlice';
+// import socketReducer from './slices/socketSlice';
 
 export const store = configureStore({
   reducer: {
     auth: authReducer,
-    game: gameReducer,
+    // game: gameReducer,
     ai: aiReducer,
-    socket: socketReducer,
+    // socket: socketReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

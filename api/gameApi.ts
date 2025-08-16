@@ -1,5 +1,5 @@
 // api/gameApi.ts
-import axiosClient from './axiosClient';
+import axiosClient from './api';
 
 export const gameApi = {
   startGame: (mode: 'ai' | 'multiplayer', opponentId?: string) =>
