@@ -1,6 +1,6 @@
 /** @type {import('tailwindcss').Config} */
-import tailwindcssAnimate from 'tailwindcss-animate';
 import tailwindForms from '@tailwindcss/forms';
+import tailwindcssAnimate from 'tailwindcss-animate';
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {

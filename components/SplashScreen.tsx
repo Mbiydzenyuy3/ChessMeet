@@ -1,6 +1,7 @@
+import { COLORS } from '@/constants/colors';
+import { Bot, Shield, Sparkles, Users } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
-import { View, Text, Animated } from 'react-native';
-import { Shield, Sparkles, Bot, Users } from 'lucide-react-native';
+import { Animated, StyleSheet, Text, View } from 'react-native';
 
 interface SplashScreenProps {
   onComplete?: () => void;
@@ -12,10 +13,10 @@ export default function SplashScreen({ onComplete, minDisplayTime = 2000 }: Spla
   const [currentFeature, setCurrentFeature] = useState(0);
 
   const features = [
-    { icon: Bot, text: 'AI-Powered Chess Engine', color: 'purple' },
-    { icon: Users, text: 'Real-time Multiplayer', color: 'blue' },
-    { icon: Shield, text: 'Secure Authentication', color: 'green' },
-    { icon: Sparkles, text: 'Smart Move Analysis', color: 'yellow' },
+    { icon: Bot, text: 'AI-Powered Chess Engine', color: COLORS.primary },
+    { icon: Users, text: 'Real-time Multiplayer', color: COLORS.secondary },
+    { icon: Shield, text: 'Secure Authentication', color: COLORS.success },
+    { icon: Sparkles, text: 'Smart Move Analysis', color: COLORS.ctaButton },
   ];
 
   useEffect(() => {
@@ -45,75 +46,70 @@ export default function SplashScreen({ onComplete, minDisplayTime = 2000 }: Spla
   const CurrentIcon = features[currentFeature].icon;
 
   return (
-    <View className="flex-1 bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 justify-center items-center">
+    <View style={styles.container}>
       {/* Main Logo */}
-      <View className="items-center mb-8">
-        <View className="relative w-24 h-24 mb-6">
-          <View className="absolute inset-0 bg-gradient-to-r from-purple-600 to-blue-600 rounded-3xl" />
-          <View className="absolute inset-2 bg-white rounded-2xl justify-center items-center">
-            <Shield width={48} height={48} color="#7c3aed" />
+      <View style={styles.logoContainer}>
+        <View style={styles.logoWrapper}>
+          <View style={styles.logoGradient} />
+          <View style={styles.logoInner}>
+            <Shield width={48} height={48} color={COLORS.primary} />
           </View>
-          <View className="absolute -top-2 -right-2">
-            <Sparkles width={24} height={24} color="#facc15" />
+          <View style={styles.logoSparkles}>
+            <Sparkles width={24} height={24} color={COLORS.ctaButton} />
           </View>
         </View>
 
-        <Text className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white via-purple-200 to-blue-200 mb-2">
-          Chess AI
-        </Text>
-        <Text className="text-slate-300 text-lg font-medium">AI-Native Chess Experience</Text>
+        <Text style={styles.title}>ChessMeet</Text>
+        <Text style={styles.subtitle}>AI-Native Chess Experience</Text>
       </View>
 
       {/* Feature Showcase */}
-      <View className="mb-8 h-16 justify-center items-center">
-        <View className="flex-row items-center gap-3">
+      <View style={styles.featureContainer}>
+        <View style={styles.featureRow}>
           <CurrentIcon width={32} height={32} color={features[currentFeature].color} />
-          <Text className="text-white text-lg font-medium">{features[currentFeature].text}</Text>
+          <Text style={styles.featureText}>{features[currentFeature].text}</Text>
         </View>
       </View>
 
       {/* Progress Bar */}
-      <View className="mb-6 w-3/4">
-        <View className="bg-slate-700 rounded-full h-2 overflow-hidden">
-          <View
-            className="h-full rounded-full bg-gradient-to-r from-purple-500 to-blue-500"
-            style={{ width: `${progress}%` }}
-          />
+      <View style={styles.progressContainer}>
+        <View style={styles.progressBackground}>
+          <View style={[styles.progressBar, { width: `${progress}%` }]} />
         </View>
-        <View className="flex-row justify-between mt-2">
-          <Text className="text-slate-400 text-sm">Loading...</Text>
-          <Text className="text-slate-400 text-sm">{Math.round(progress)}%</Text>
+        <View style={styles.progressLabelRow}>
+          <Text style={styles.progressLabel}>Loading...</Text>
+          <Text style={styles.progressLabel}>{Math.round(progress)}%</Text>
         </View>
       </View>
 
       {/* Loading States */}
-      <View className="space-y-2">
-        <Text className={`text-slate-400 text-sm ${progress > 20 ? 'opacity-100' : 'opacity-50'}`}>
+      <View style={styles.loadingStates}>
+        <Text style={[styles.loadingText, progress > 20 && styles.loadingTextActive]}>
           ✓ Initializing chess engine
         </Text>
-        <Text className={`text-slate-400 text-sm ${progress > 40 ? 'opacity-100' : 'opacity-50'}`}>
+        <Text style={[styles.loadingText, progress > 40 && styles.loadingTextActive]}>
           ✓ Loading AI models
         </Text>
-        <Text className={`text-slate-400 text-sm ${progress > 60 ? 'opacity-100' : 'opacity-50'}`}>
+        <Text style={[styles.loadingText, progress > 60 && styles.loadingTextActive]}>
           ✓ Connecting to servers
         </Text>
-        <Text className={`text-slate-400 text-sm ${progress > 80 ? 'opacity-100' : 'opacity-50'}`}>
+        <Text style={[styles.loadingText, progress > 80 && styles.loadingTextActive]}>
           ✓ Preparing game interface
         </Text>
       </View>
 
       {/* Floating Chess Pieces */}
-      <View className="absolute inset-0 pointer-events-none">
+      <View style={styles.floatingPieces}>
         {['♔', '♕', '♖', '♗', '♘', '♙'].map((piece, index) => (
           <Animated.Text
             key={index}
-            className="absolute text-white opacity-10 text-4xl"
-            style={{
-              left: `${10 + index * 15}%`,
-              top: `${20 + (index % 2) * 60}%`,
-              transform: [{ translateY: new Animated.Value(0) }],
-              animationDelay: `${index * 0.5}s`,
-            }}
+            style={[
+              styles.piece,
+              {
+                left: `${10 + index * 15}%`,
+                top: `${20 + (index % 2) * 60}%`,
+              },
+            ]}
           >
             {piece}
           </Animated.Text>
@@ -122,3 +118,114 @@ export default function SplashScreen({ onComplete, minDisplayTime = 2000 }: Spla
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.container,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logoContainer: {
+    alignItems: 'center',
+    marginBottom: 32,
+  },
+  logoWrapper: {
+    width: 96,
+    height: 96,
+    marginBottom: 24,
+    position: 'relative',
+  },
+  logoGradient: {
+    position: 'absolute',
+    inset: 0,
+    borderRadius: 24,
+    backgroundColor: COLORS.primary,
+  },
+  logoInner: {
+    position: 'absolute',
+    inset: 8,
+    borderRadius: 16,
+    backgroundColor: COLORS.whitetext,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logoSparkles: {
+    position: 'absolute',
+    top: -8,
+    right: -8,
+  },
+  title: {
+    fontSize: 40,
+    fontWeight: '700',
+    color: COLORS.blacktext,
+    marginBottom: 4,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: COLORS.blacktext,
+    fontWeight: '500',
+  },
+  featureContainer: {
+    height: 64,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 32,
+  },
+  featureRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  featureText: {
+    fontSize: 18,
+    color: COLORS.whitetext,
+    fontWeight: '500',
+  },
+  progressContainer: {
+    width: '75%',
+    marginBottom: 24,
+  },
+  progressBackground: {
+    height: 8,
+    backgroundColor: COLORS.muted,
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
+  progressBar: {
+    height: '100%',
+    borderRadius: 8,
+    backgroundColor: COLORS.primary,
+  },
+  progressLabelRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 4,
+  },
+  progressLabel: {
+    fontSize: 12,
+    color: COLORS.blacktext,
+  },
+  loadingStates: {
+    marginTop: 8,
+  },
+  loadingText: {
+    fontSize: 12,
+    color: COLORS.muted,
+    marginBottom: 2,
+  },
+  loadingTextActive: {
+    color: COLORS.foreground,
+  },
+  floatingPieces: {
+    position: 'absolute',
+    inset: 0,
+    pointerEvents: 'none',
+  },
+  piece: {
+    position: 'absolute',
+    fontSize: 32,
+    color: COLORS.foreground,
+    opacity: 0.1,
+  },
+});

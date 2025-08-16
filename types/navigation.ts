@@ -4,4 +4,5 @@ export type RootStackParamList = {
   SignIn: undefined;
   OTPVerify: { email: string };
   Lobby: undefined;
+  SplashScreen: undefined;
 };

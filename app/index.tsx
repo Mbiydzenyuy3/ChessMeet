@@ -1,3 +1,4 @@
+//index.tsx
 import { COLORS } from '@/constants/colors';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React from 'react';

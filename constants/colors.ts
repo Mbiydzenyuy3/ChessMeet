@@ -37,6 +37,9 @@ export const COLORS = {
   containerHome: '#0B0C10',
   ctaButton: '#45A29E',
 
+  foreground: '#F9FAFB', // default foreground color (light text / elements)
+  muted: '#9CA3AF',
+
   // Chess piece colors
   chessLight: '#F0D9B5',
   chessDark: '#B58863',
