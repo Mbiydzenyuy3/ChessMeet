@@ -7,15 +7,15 @@ export default function Board() {
   const [selectedSquare, setSelectedSquare] = useState<string | null>(null);
 
   //click logic
-  const handlePress = useCallback(async (box: string) => {
+  const handlePress = useCallback(async (square: string) => {
     //first click select initial box
     if (!selectedSquare) {
-      setSelectedSquare(box);
+      setSelectedSquare(square);
     } else {
       //second click to move
       const moveRes = await chessboardRef.current?.move({
         from: selectedSquare,
-        to: box,
+        to: square,
       });
 
       //reset move if it's illegal
@@ -47,8 +47,8 @@ export default function Board() {
 
   return (
     <View style={styles.container}>
-      <View>
-        <Chessboard ref={chessboardRef} durations={{ move: 1000 }} />
+      <Chessboard ref={chessboardRef} durations={{ move: 1000 }} />
+      <View style={styles.overlay} pointerEvents="auto">
         {listenTap()}
       </View>
     </View>
@@ -60,5 +60,14 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    position: 'relative',
+  },
+  overlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 1,
   },
 });
