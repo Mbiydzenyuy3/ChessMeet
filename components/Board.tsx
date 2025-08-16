@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Chessboard, { ChessboardRef } from 'react-native-chessboard';
 
@@ -7,19 +7,19 @@ export default function Board() {
   const [selectedSquare, setSelectedSquare] = useState<string | null>(null);
 
   //click logic
-  const handlePress = async (box: string) => {
+  const handlePress = useCallback(async (box: string) => {
     //first click select initial box
     if (!selectedSquare) {
       setSelectedSquare(box);
     } else {
       //second click to move
-      const Move = await chessboardRef.current?.move({
+      const moveRes = await chessboardRef.current?.move({
         from: selectedSquare,
         to: box,
       });
 
       //reset move if it's illegal
-      if (!Move) {
+      if (!moveRes) {
         setSelectedSquare(null);
         return;
       }
@@ -27,7 +27,7 @@ export default function Board() {
       //reset selected box
       setSelectedSquare(null);
     }
-  };
+  }, []);
 
   //make all boxes listen for taps and handlepress function
 
