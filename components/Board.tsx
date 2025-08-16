@@ -29,23 +29,23 @@ export default function Board() {
   );
 
   const listenTap = () => {
-    const square = [];
-    const box = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+    const squareList = [];
+    const file = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
 
     for (let i = 8; i >= 1; i--) {
       for (let x = 0; x < 8; x++) {
-        const squares = `${box[x]}${i}` as Square;
-        square.push(
+        const square = `${file[x]}${i}` as Square;
+        squareList.push(
           <Pressable
-            key={squares}
-            onPress={() => handlePress(squares)}
+            key={square}
+            onPress={() => handlePress(square)}
             style={styles.overlaySquare}
           />
         );
       }
     }
 
-    return square;
+    return squareList;
   };
 
   return (
