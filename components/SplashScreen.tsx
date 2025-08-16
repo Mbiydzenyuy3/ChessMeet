@@ -60,7 +60,7 @@ export default function SplashScreen({ onComplete, minDisplayTime = 2000 }: Spla
         </View>
 
         <Text style={styles.title}>ChessMeet</Text>
-        <Text style={styles.subtitle}>AI-Native Chess Experience</Text>
+        <Text style={styles.subtitle}>Chess Experience</Text>
       </View>
 
       {/* Feature Showcase */}
