@@ -2,9 +2,17 @@ import { COLORS } from '@/constants/colors';
 import { RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useRef, useState } from 'react';
-import { Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Image,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { verifyOtp } from '../../redux/slices/authSlice';
-import { useAppDispatch } from '../../redux/slices/hooks';
+import { useAppDispatch, useAppSelector } from '../../redux/slices/hooks';
 
 // Define your navigation stack params
 type RootStackParamList = {
@@ -22,6 +30,7 @@ export default function OTPVerify({ route, navigation }: OTPVerifyProps) {
   const { email } = route.params;
   const dispatch = useAppDispatch();
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  const { loading, error } = useAppSelector((state) => state.auth);
 
   // refs for each input
   const inputRefs = useRef<TextInput[]>([]);
@@ -75,9 +84,15 @@ export default function OTPVerify({ route, navigation }: OTPVerifyProps) {
         ))}
       </View>
 
-      <TouchableOpacity style={styles.button} onPress={handleVerify}>
-        <Text style={styles.buttonText}>Verify & Continue</Text>
+      <TouchableOpacity style={styles.button} onPress={handleVerify} disabled={loading}>
+        {loading ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.buttonText}>Verify & Continue</Text>
+        )}
       </TouchableOpacity>
+
+      {error && <Text style={styles.errorText}>{error}</Text>}
     </View>
   );
 }
@@ -137,5 +152,10 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     textAlign: 'center',
     fontSize: 16,
+  },
+  errorText: {
+    color: 'red',
+    fontSize: 12,
+    marginTop: 8,
   },
 });

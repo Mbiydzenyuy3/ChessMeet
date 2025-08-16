@@ -1,36 +1,41 @@
 import { COLORS } from '@/constants/colors';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import React, { useState } from 'react';
+import { Formik } from 'formik';
+import React from 'react';
 import { Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import * as Yup from 'yup';
 import { requestOtp } from '../../redux/slices/authSlice';
 import { useAppDispatch } from '../../redux/slices/hooks';
 
-// Define your navigation stack params
 type RootStackParamList = {
   SignIn: undefined;
   OTPVerify: { email: string };
 };
 
-// Type for navigation prop
 type SignInNavigationProp = NativeStackNavigationProp<RootStackParamList, 'SignIn'>;
 
-// Props for SignIn
 type SignInProps = {
   navigation: SignInNavigationProp;
 };
 
+type SignInFormValues = {
+  email: string;
+};
+
+const SignInSchema = Yup.object().shape({
+  email: Yup.string().email('Invalid email').required('Required'),
+});
+
 export default function SignIn({ navigation }: SignInProps) {
-  const [email, setEmail] = useState('');
   const dispatch = useAppDispatch();
 
-  const handleRequestOtp = async () => {
-    await dispatch(requestOtp(email));
-    navigation.navigate('OTPVerify', { email });
+  const handleRequestOtp = async (values: SignInFormValues) => {
+    await dispatch(requestOtp(values.email));
+    navigation.navigate('OTPVerify', { email: values.email });
   };
 
   return (
     <View style={styles.container}>
-      {/* Crown Icon */}
       <Image
         source={{
           uri: 'https://www.shutterstock.com/image-vector/queen-crown-vector-icon-chess-600nw-2431362527.jpg',
@@ -38,27 +43,34 @@ export default function SignIn({ navigation }: SignInProps) {
         style={styles.crown}
       />
 
-      {/* Title & Subtitle */}
       <Text style={styles.title}>Welcome to ChessAI</Text>
-      <Text style={styles.subtitle}>Enter your phone number or email to get started</Text>
+      <Text style={styles.subtitle}>Enter your email to get started</Text>
 
-      {/* Input */}
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Phone number or email"
-          placeholderTextColor="#888"
-          value={email}
-          onChangeText={setEmail}
-        />
-      </View>
+      <Formik
+        initialValues={{ email: '' }}
+        validationSchema={SignInSchema}
+        onSubmit={handleRequestOtp}
+      >
+        {({ handleChange, handleSubmit, values, errors, touched }) => (
+          <>
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={styles.input}
+                placeholder="Phone number or email"
+                placeholderTextColor="#888"
+                value={values.email}
+                onChangeText={handleChange('email')}
+              />
+            </View>
+            {touched.email && errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
 
-      {/* Button */}
-      <TouchableOpacity style={styles.button} onPress={handleRequestOtp}>
-        <Text style={styles.buttonText}>Send OTP</Text>
-      </TouchableOpacity>
+            <TouchableOpacity style={styles.button} onPress={() => handleSubmit()}>
+              <Text style={styles.buttonText}>Send OTP</Text>
+            </TouchableOpacity>
+          </>
+        )}
+      </Formik>
 
-      {/* Footer text */}
       <Text style={styles.footerText}>
         We’ll send you a verification code to confirm your identity
       </Text>
@@ -98,17 +110,18 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 15,
     paddingVertical: 5,
-    marginBottom: 20,
-    elevation: 2,
-    shadowColor: COLORS.blacktext,
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    shadowOffset: { width: 0, height: 2 },
+    marginBottom: 10,
   },
   input: {
     height: 45,
     fontSize: 16,
     color: COLORS.inputText,
+  },
+  errorText: {
+    color: 'red',
+    fontSize: 12,
+    marginBottom: 15,
+    alignSelf: 'flex-start',
   },
   button: {
     backgroundColor: COLORS.ctaButton,
