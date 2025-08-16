@@ -82,13 +82,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 22,
     fontWeight: '700',
-    color: COLORS.text,
+    color: COLORS.blacktext,
     marginBottom: 5,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: 14,
-    color: COLORS.subtitle,
+    color: COLORS.blacktext,
     marginBottom: 30,
     textAlign: 'center',
   },
@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
     color: COLORS.inputText,
   },
   button: {
-    backgroundColor: COLORS.button,
+    backgroundColor: COLORS.ctaButton,
     borderRadius: 8,
     paddingVertical: 14,
     paddingHorizontal: 40,
@@ -126,7 +126,7 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 12,
-    color: COLORS.text,
+    color: COLORS.blacktext,
     textAlign: 'center',
     paddingHorizontal: 20,
   },
