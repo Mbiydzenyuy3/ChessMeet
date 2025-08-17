@@ -43,4 +43,6 @@ export const COLORS = {
   // Chess piece colors
   chessLight: '#F0D9B5',
   chessDark: '#B58863',
+
+  textShadowColor: 'rgba(0, 0, 0, 0.3)',
 };

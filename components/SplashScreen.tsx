@@ -1,231 +1,151 @@
 import { COLORS } from '@/constants/colors';
-import { Bot, Shield, Sparkles, Users } from 'lucide-react-native';
-import React, { useEffect, useState } from 'react';
-import { Animated, StyleSheet, Text, View } from 'react-native';
+import { RootState } from '@/redux/store'; // your Redux store
+import type { RootStackParamList } from '@/types/navigation';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { LinearGradient } from 'expo-linear-gradient';
+import React, { useEffect, useRef } from 'react';
+import { Animated, Dimensions, StyleSheet, Text, View } from 'react-native';
+import { useSelector } from 'react-redux';
+import ChessPiece from '../components/ChessPiece';
 
-interface SplashScreenProps {
-  onComplete?: () => void;
-  minDisplayTime?: number;
-}
+const { height } = Dimensions.get('window');
 
-export default function SplashScreen({ onComplete, minDisplayTime = 2000 }: SplashScreenProps) {
-  const [progress, setProgress] = useState(0);
-  const [currentFeature, setCurrentFeature] = useState(0);
+export default function SplashScreen() {
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.8)).current;
+  const piecesFadeAnim = useRef(new Animated.Value(0)).current;
+  const piecesTranslateY = useRef(new Animated.Value(50)).current;
 
-  const features = [
-    { icon: Bot, text: 'AI-Powered Chess Engine', color: COLORS.primary },
-    { icon: Users, text: 'Real-time Multiplayer', color: COLORS.secondary },
-    { icon: Shield, text: 'Secure Authentication', color: COLORS.success },
-    { icon: Sparkles, text: 'Smart Move Analysis', color: COLORS.ctaButton },
-  ];
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+
+  // ✅ Redux auth state (replace with your own selector)
+  const isAuthenticated = useSelector((state: RootState) => !!state.auth.token);
 
   useEffect(() => {
-    const progressInterval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(progressInterval);
-          if (onComplete) {
-            setTimeout(onComplete, 500);
-          }
-          return 100;
-        }
-        return prev + 2;
-      });
-    }, minDisplayTime / 50);
+    // Logo animation
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 1000,
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        friction: 4,
+        tension: 40,
+        useNativeDriver: true,
+      }),
+    ]).start();
 
-    const featureInterval = setInterval(() => {
-      setCurrentFeature((prev) => (prev + 1) % features.length);
-    }, 800);
+    // Pieces animation
+    setTimeout(() => {
+      Animated.parallel([
+        Animated.timing(piecesFadeAnim, {
+          toValue: 1,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(piecesTranslateY, {
+          toValue: 0,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }, 400);
 
-    return () => {
-      clearInterval(progressInterval);
-      clearInterval(featureInterval);
-    };
-  }, [minDisplayTime, onComplete, features.length]);
+    // ✅ Navigate after delay
+    const timer = setTimeout(() => {
+      if (isAuthenticated) {
+        navigation.replace('Lobby'); // already logged in
+      } else {
+        navigation.replace('GetStarted'); // first time / not logged in
+      }
+    }, 5000); // 2.5s splash duration
 
-  const CurrentIcon = features[currentFeature].icon;
+    return () => clearTimeout(timer);
+  }, [isAuthenticated, fadeAnim, scaleAnim, piecesFadeAnim, piecesTranslateY, navigation]);
 
   return (
-    <View style={styles.container}>
-      {/* Main Logo */}
-      <View style={styles.logoContainer}>
-        <View style={styles.logoWrapper}>
-          <View style={styles.logoGradient} />
-          <View style={styles.logoInner}>
-            <Shield width={48} height={48} color={COLORS.primary} />
-          </View>
-          <View style={styles.logoSparkles}>
-            <Sparkles width={24} height={24} color={COLORS.ctaButton} />
-          </View>
+    <LinearGradient
+      colors={['#81b64c', '#5e7c47']}
+      style={styles.container}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+    >
+      <Animated.View
+        style={[
+          styles.logoContainer,
+          {
+            opacity: fadeAnim,
+            transform: [{ scale: scaleAnim }],
+          },
+        ]}
+      >
+        <View style={styles.pawnIcon}>
+          <ChessPiece type="pawn" color="white" size={60} />
         </View>
+        <Text style={styles.title}>Chess</Text>
+        <Text style={styles.subtitle}>Meet</Text>
+      </Animated.View>
 
-        <Text style={styles.title}>ChessMeet</Text>
-        <Text style={styles.subtitle}>Chess Experience</Text>
-      </View>
-
-      {/* Feature Showcase */}
-      <View style={styles.featureContainer}>
-        <View style={styles.featureRow}>
-          <CurrentIcon width={32} height={32} color={features[currentFeature].color} />
-          <Text style={styles.featureText}>{features[currentFeature].text}</Text>
+      <Animated.View
+        style={[
+          styles.piecesContainer,
+          {
+            opacity: piecesFadeAnim,
+            transform: [{ translateY: piecesTranslateY }],
+          },
+        ]}
+      >
+        <View style={styles.pieceWrapper}>
+          <ChessPiece type="knight" color="black" size={80} />
         </View>
-      </View>
-
-      {/* Progress Bar */}
-      <View style={styles.progressContainer}>
-        <View style={styles.progressBackground}>
-          <View style={[styles.progressBar, { width: `${progress}%` }]} />
+        <View style={styles.centerPieceWrapper}>
+          <ChessPiece type="pawn" color="white" size={90} />
         </View>
-        <View style={styles.progressLabelRow}>
-          <Text style={styles.progressLabel}>Loading...</Text>
-          <Text style={styles.progressLabel}>{Math.round(progress)}%</Text>
+        <View style={styles.pieceWrapper}>
+          <ChessPiece type="rook" color="black" size={80} />
         </View>
-      </View>
-
-      {/* Loading States */}
-      <View style={styles.loadingStates}>
-        <Text style={[styles.loadingText, progress > 20 && styles.loadingTextActive]}>
-          ✓ Initializing chess engine
-        </Text>
-        <Text style={[styles.loadingText, progress > 40 && styles.loadingTextActive]}>
-          ✓ Loading AI models
-        </Text>
-        <Text style={[styles.loadingText, progress > 60 && styles.loadingTextActive]}>
-          ✓ Connecting to servers
-        </Text>
-        <Text style={[styles.loadingText, progress > 80 && styles.loadingTextActive]}>
-          ✓ Preparing game interface
-        </Text>
-      </View>
-
-      {/* Floating Chess Pieces */}
-      <View style={styles.floatingPieces}>
-        {['♔', '♕', '♖', '♗', '♘', '♙'].map((piece, index) => (
-          <Animated.Text
-            key={index}
-            style={[
-              styles.piece,
-              {
-                left: `${10 + index * 15}%`,
-                top: `${20 + (index % 2) * 60}%`,
-              },
-            ]}
-          >
-            {piece}
-          </Animated.Text>
-        ))}
-      </View>
-    </View>
+      </Animated.View>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.container,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  logoContainer: {
-    alignItems: 'center',
-    marginBottom: 32,
-  },
-  logoWrapper: {
-    width: 96,
-    height: 96,
-    marginBottom: 24,
-    position: 'relative',
-  },
-  logoGradient: {
-    position: 'absolute',
-    inset: 0,
-    borderRadius: 24,
-    backgroundColor: COLORS.primary,
-  },
-  logoInner: {
-    position: 'absolute',
-    inset: 8,
-    borderRadius: 16,
-    backgroundColor: COLORS.whitetext,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  logoSparkles: {
-    position: 'absolute',
-    top: -8,
-    right: -8,
+  container: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  logoContainer: { alignItems: 'center', marginBottom: 60 },
+  pawnIcon: {
+    marginBottom: 20,
+    shadowColor: COLORS.blacktext,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
   },
   title: {
-    fontSize: 40,
-    fontWeight: '700',
-    color: COLORS.blacktext,
-    marginBottom: 4,
+    fontSize: 48,
+    fontWeight: 'bold',
+    color: COLORS.whitetext,
+    letterSpacing: 2,
+    textShadowColor: COLORS.textShadowColor,
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
   subtitle: {
-    fontSize: 16,
-    color: COLORS.blacktext,
-    fontWeight: '500',
+    fontSize: 24,
+    color: COLORS.white,
+    opacity: 0.9,
+    marginTop: -5,
+    letterSpacing: 4,
   },
-  featureContainer: {
-    height: 64,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 32,
-  },
-  featureRow: {
+  piecesContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  featureText: {
-    fontSize: 18,
-    color: COLORS.whitetext,
-    fontWeight: '500',
-  },
-  progressContainer: {
-    width: '75%',
-    marginBottom: 24,
-  },
-  progressBackground: {
-    height: 8,
-    backgroundColor: COLORS.muted,
-    borderRadius: 8,
-    overflow: 'hidden',
-  },
-  progressBar: {
-    height: '100%',
-    borderRadius: 8,
-    backgroundColor: COLORS.primary,
-  },
-  progressLabelRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 4,
-  },
-  progressLabel: {
-    fontSize: 12,
-    color: COLORS.blacktext,
-  },
-  loadingStates: {
-    marginTop: 8,
-  },
-  loadingText: {
-    fontSize: 12,
-    color: COLORS.muted,
-    marginBottom: 2,
-  },
-  loadingTextActive: {
-    color: COLORS.foreground,
-  },
-  floatingPieces: {
     position: 'absolute',
-    inset: 0,
-    pointerEvents: 'none',
+    bottom: height * 0.15,
+    alignItems: 'flex-end',
+    gap: 20,
   },
-  piece: {
-    position: 'absolute',
-    fontSize: 32,
-    color: COLORS.foreground,
-    opacity: 0.1,
-  },
+  pieceWrapper: { opacity: 0.6 },
+  centerPieceWrapper: { marginBottom: -10 },
 });
