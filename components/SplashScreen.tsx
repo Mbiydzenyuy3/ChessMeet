@@ -27,7 +27,7 @@ export default function SplashScreen() {
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 1000,
+        duration: 600,
         useNativeDriver: true,
       }),
       Animated.spring(scaleAnim, {
@@ -43,12 +43,12 @@ export default function SplashScreen() {
       Animated.parallel([
         Animated.timing(piecesFadeAnim, {
           toValue: 1,
-          duration: 1000,
+          duration: 600,
           useNativeDriver: true,
         }),
         Animated.timing(piecesTranslateY, {
           toValue: 0,
-          duration: 1000,
+          duration: 600,
           useNativeDriver: true,
         }),
       ]).start();
@@ -61,7 +61,7 @@ export default function SplashScreen() {
       } else {
         navigation.replace('GetStarted'); // first time / not logged in
       }
-    }, 5000); // 2.5s splash duration
+    }, 5000); // 5s splash duration
 
     return () => clearTimeout(timer);
   }, [isAuthenticated, fadeAnim, scaleAnim, piecesFadeAnim, piecesTranslateY, navigation]);
