@@ -6,4 +6,7 @@ export type RootStackParamList = {
   OTPVerify: { email: string };
   Lobby: undefined;
   SplashScreen: undefined;
+  Multiplayer: undefined;
+  AI: undefined;
+  Lessons: undefined;
 };

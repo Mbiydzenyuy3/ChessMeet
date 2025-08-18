@@ -6,12 +6,12 @@ export const ENDPOINTS = {
   VERIFY_OTP: '/auth/verify-otp',
 
   // Game
-  CREATE_GAME: '/game/create',
-  JOIN_GAME: '/game/join',
-  MAKE_MOVE: '/game/move',
-  GET_GAME: (gameId: string) => `/game/${gameId}`,
-  GET_HISTORY: (userId: string) => `/game/history/${userId}`,
+  // CREATE_GAME: '/game/create',
+  // JOIN_GAME: '/game/join',
+  // MAKE_MOVE: '/game/move',
+  // GET_GAME: (gameId: string) => `/game/${gameId}`,
+  // GET_HISTORY: (userId: string) => `/game/history/${userId}`,
 
   // AI
-  AI_SUGGESTION: '/ai/suggestion',
+  // AI_SUGGESTION: '/ai/suggestion',
 };

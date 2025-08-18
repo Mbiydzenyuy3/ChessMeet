@@ -126,7 +126,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
   button: {
-    backgroundColor: COLORS.ctaButton,
+    backgroundColor: COLORS.bgMossGreen,
     paddingVertical: 14,
     paddingHorizontal: 40,
     borderRadius: 8,
