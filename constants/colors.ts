@@ -45,4 +45,10 @@ export const COLORS = {
   chessDark: '#B58863',
 
   textShadowColor: 'rgba(0, 0, 0, 0.3)',
+  BackgroundColor: '#1F2937',
+  backgroundOne: '#6C63FF',
+  backgroundTwo: '#F4B400',
+  bgMossGreen: '#70994A',
+
+  Overlaybg: 'rgba(0,0,0,0.45)',
 };

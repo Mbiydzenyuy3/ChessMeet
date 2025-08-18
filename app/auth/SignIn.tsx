@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
     color: COLORS.inputText,
   },
   button: {
-    backgroundColor: COLORS.ctaButton,
+    backgroundColor: COLORS.bgMossGreen,
     borderRadius: 8,
     paddingVertical: 14,
     paddingHorizontal: 40,
