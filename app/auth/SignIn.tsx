@@ -23,7 +23,9 @@ type SignInFormValues = {
 };
 
 const SignInSchema = Yup.object().shape({
-  email: Yup.string().email('Invalid email').required('Required'),
+  email: Yup.string()
+    .matches(/^([^\s@]+@[^\s@]+\.[^\s@]+)$/, 'Enter a valid email address')
+    .required('Email is required'),
 });
 
 export default function SignIn({ navigation }: SignInProps) {
@@ -43,7 +45,7 @@ export default function SignIn({ navigation }: SignInProps) {
         style={styles.crown}
       />
 
-      <Text style={styles.title}>Welcome to ChessAI</Text>
+      <Text style={styles.title}>Welcome to ChessMeet</Text>
       <Text style={styles.subtitle}>Enter your email to get started</Text>
 
       <Formik
