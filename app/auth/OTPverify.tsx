@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
     padding: 24,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: COLORS.primary,
+    backgroundColor: COLORS.white,
   },
   crown: {
     width: 50,
@@ -141,7 +141,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
   button: {
-    backgroundColor: COLORS.button,
+    backgroundColor: COLORS.bgMossGreen,
     paddingVertical: 14,
     paddingHorizontal: 40,
     borderRadius: 8,

@@ -126,7 +126,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   button: {
-    backgroundColor: COLORS.ctaButton,
+    backgroundColor: COLORS.bgMossGreen,
     borderRadius: 8,
     paddingVertical: 14,
     paddingHorizontal: 40,
