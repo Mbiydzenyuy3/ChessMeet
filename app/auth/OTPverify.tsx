@@ -67,7 +67,7 @@ export default function OTPVerify({ route, navigation }: Props) {
     <View style={styles.container}>
       <Image
         source={{
-          uri: 'https://www.shutterstock.com/image-vector/queen-crown-vector-icon-chess-600nw-2431362527.jpg',
+          uri: 'assets/images/chesslogo.jpeg',
         }}
         style={styles.crown}
       />
@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
     padding: 24,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: COLORS.white,
+    backgroundColor: COLORS.BackgroundColor,
   },
   crown: {
     width: 50,
@@ -130,7 +130,7 @@ const styles = StyleSheet.create({
   },
   email: {
     fontWeight: '500',
-    color: COLORS.black,
+    color: COLORS.white,
   },
   otpContainer: {
     flexDirection: 'row',
