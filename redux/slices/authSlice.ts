@@ -1,14 +1,13 @@
-// redux/slices/authSlice.ts
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import authApi, { VerifyOtpRes } from '../../api/authApi';
 
 type AuthState = {
   token: string | null;
-  user: { id: string; email: string; name?: string } | null;
+  user: { _id: string; email: string; displayName?: string } | null;
   loading: boolean;
   error: string | null;
-  bootstrapped: boolean; // finished reading token from storage
+  bootstrapped: boolean;
 };
 
 const initialState: AuthState = {
@@ -28,16 +27,18 @@ export const bootstrapAuth = createAsyncThunk('auth/bootstrap', async () => {
 
 export const requestOtp = createAsyncThunk('auth/request-otp', async (email: string) => {
   const res = await authApi.requestOtp(email);
-  return res.data;
+  return res.data; // contains requestId + message
 });
 
 export const verifyOtp = createAsyncThunk(
   'auth/verify-otp',
-  async ({ email, otp }: { email: string; otp: string }) => {
-    const res = await authApi.verifyOtp(email, otp);
+  async ({ userIdentifier, code }: { userIdentifier: string; code: string }) => {
+    const res = await authApi.verifyOtp(userIdentifier, code);
     const data: VerifyOtpRes = res.data;
-    await AsyncStorage.setItem('token', data.token);
+
+    await AsyncStorage.setItem('token', data.accessToken);
     await AsyncStorage.setItem('user', JSON.stringify(data.user));
+
     return data;
   }
 );
@@ -79,7 +80,7 @@ const authSlice = createSlice({
       })
       .addCase(verifyOtp.fulfilled, (state, action) => {
         state.loading = false;
-        state.token = action.payload.token;
+        state.token = action.payload.accessToken;
         state.user = action.payload.user;
       })
       .addCase(verifyOtp.rejected, (state, action) => {

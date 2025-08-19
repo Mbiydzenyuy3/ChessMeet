@@ -1,21 +1,21 @@
-// api/authApi.ts
 import { ENDPOINTS } from '../constants/endpoints';
 import api from './api';
 
 export interface RequestOtpRes {
-  requestId?: string;
-  message?: string;
+  userIdentifier: string; // <-- add this (backend returns it)
+  message: string;
 }
 
 export interface VerifyOtpRes {
-  token: string;
-  user: { id: string; email: string; name?: string };
+  accessToken: string; // backend returns accessToken
+  user: { _id: string; email: string; displayName?: string };
 }
 
 const authApi = {
   requestOtp: (email: string) => api.post<RequestOtpRes>(ENDPOINTS.REQUEST_OTP, { email }),
-  verifyOtp: (email: string, otp: string) =>
-    api.post<VerifyOtpRes>(ENDPOINTS.VERIFY_OTP, { email, otp }),
+
+  verifyOtp: (userIdentifier: string, code: string) =>
+    api.post<VerifyOtpRes>(ENDPOINTS.VERIFY_OTP, { userIdentifier, code }),
 };
 
 export default authApi;
