@@ -66,7 +66,11 @@ export default function Board() {
 
   return (
     <View style={styles.container}>
-      <Chessboard ref={chessboardRef} durations={{ move: 200 }} />
+      <Chessboard
+        // renderPiece=""
+        ref={chessboardRef}
+        durations={{ move: 200 }}
+      />
       <View>{listenTap()}</View>
     </View>
   );
