@@ -31,7 +31,7 @@ export default function GetStarted({ navigation }: Props) {
       {/* Content */}
       <View style={styles.content}>
         <View style={styles.textContainer}>
-          <Text style={styles.title}>Welcome to ChessMeet</Text>
+          <Text style={styles.title}>ChessMeet</Text>
           <Text style={styles.subtitle}>
             Play chess against AI or real players, get instant move suggestions, and master your
             game

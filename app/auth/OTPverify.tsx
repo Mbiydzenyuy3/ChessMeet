@@ -1,34 +1,32 @@
+import api from '@/api/api';
 import { COLORS } from '@/constants/colors';
-import { RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { verifyOtp } from '../../redux/slices/authSlice';
-import { useAppDispatch } from '../../redux/slices/hooks';
 
-// Define your navigation stack params
 type RootStackParamList = {
-  OTPVerify: { email: string };
+  OTPVerify: { userIdentifier: string };
   Lobby: undefined;
 };
 
-// Props for OTPVerify
-type OTPVerifyProps = {
-  navigation: NativeStackNavigationProp<RootStackParamList, 'OTPVerify'>;
-  route: RouteProp<RootStackParamList, 'OTPVerify'>;
+type OTPVerifyNavigationProp = NativeStackNavigationProp<RootStackParamList, 'OTPVerify'>;
+
+type Props = {
+  route: { params: { userIdentifier: string } };
+  navigation: OTPVerifyNavigationProp;
 };
 
-export default function OTPVerify({ route, navigation }: OTPVerifyProps) {
-  const { email } = route.params;
-  const dispatch = useAppDispatch();
-  const [otp, setOtp] = useState(['', '', '', '', '', '']);
+export default function OTPVerify({ route, navigation }: Props) {
+  const { userIdentifier } = route.params;
+  // const dispatch = useAppDispatch();
+  const [loading, setLoading] = useState(false);
 
-  // refs for each input
+  const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const inputRefs = useRef<TextInput[]>([]);
 
   const handleChange = (value: string, index: number) => {
     const newOtp = [...otp];
-    newOtp[index] = value.slice(-1); // only last character
+    newOtp[index] = value.slice(-1); // keep only last digit
     setOtp(newOtp);
 
     // auto-focus next input
@@ -39,9 +37,29 @@ export default function OTPVerify({ route, navigation }: OTPVerifyProps) {
 
   const handleVerify = async () => {
     const code = otp.join('');
-    const result = await dispatch(verifyOtp({ email, otp: code }));
-    if (verifyOtp.fulfilled.match(result)) {
-      navigation.replace('Lobby'); // typed correctly now
+    if (code.length !== 6) return;
+
+    setLoading(true);
+
+    try {
+      const response = await api.post('/auth/verify-otp', {
+        email: userIdentifier, // matches backend
+        code, // already a string
+      });
+
+      if (response.data?.success) {
+        navigation.replace('Lobby');
+      } else {
+        console.log('Verification failed:', response.data?.message || 'Invalid OTP');
+      }
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        console.error('Failed to request OTP:', err.message);
+      } else {
+        console.error('Failed to request OTP: Unknown error', err);
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -56,7 +74,7 @@ export default function OTPVerify({ route, navigation }: OTPVerifyProps) {
       <Text style={styles.title}>Verify OTP</Text>
       <Text style={styles.subtitle}>
         We sent a 6-digit code to {'\n'}
-        <Text style={styles.email}>{email}</Text>
+        <Text style={styles.email}>{userIdentifier}</Text>
       </Text>
 
       <View style={styles.otpContainer}>
@@ -75,8 +93,12 @@ export default function OTPVerify({ route, navigation }: OTPVerifyProps) {
         ))}
       </View>
 
-      <TouchableOpacity style={styles.button} onPress={handleVerify}>
-        <Text style={styles.buttonText}>Verify & Continue</Text>
+      <TouchableOpacity
+        style={styles.button}
+        onPress={handleVerify}
+        disabled={loading} // disable while verifying
+      >
+        <Text style={styles.buttonText}>{loading ? 'Verifying...' : 'Verify & Continue'}</Text>
       </TouchableOpacity>
     </View>
   );

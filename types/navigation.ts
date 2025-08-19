@@ -3,7 +3,7 @@ export type RootStackParamList = {
   GetStarted: undefined;
   SignIn: undefined;
   Local: undefined;
-  OTPVerify: { email: string };
+  OTPVerify: { userIdentifier: string };
   Lobby: undefined;
   SplashScreen: undefined;
   Multiplayer: undefined;
