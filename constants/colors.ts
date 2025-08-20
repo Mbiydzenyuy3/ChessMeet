@@ -51,4 +51,6 @@ export const COLORS = {
   bgMossGreen: '#70994A',
 
   Overlaybg: 'rgba(0,0,0,0.45)',
+  ErrorTextColor: 'red',
+  transparentBorder: 'transparent',
 };

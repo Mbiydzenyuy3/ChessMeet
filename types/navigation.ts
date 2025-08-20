@@ -8,5 +8,5 @@ export type RootStackParamList = {
   SplashScreen: undefined;
   Multiplayer: undefined;
   AI: undefined;
-  Lessons: undefined;
+  GameRules: undefined;
 };
