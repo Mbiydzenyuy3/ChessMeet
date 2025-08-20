@@ -141,7 +141,9 @@ export default function LobbyScreen({ navigation }: Props) {
         >
           <Book size={32} color="white" />
           <Text style={styles.cardTitle}>Game Rules</Text>
-          <Text style={styles.cardDesc}>Your tour guide to winning your first game</Text>
+          <Text style={styles.cardDesc}>
+            Your tour guide to winning your first game and many more
+          </Text>
         </AnimatedTouchable>
       </View>
 
