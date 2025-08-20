@@ -25,7 +25,7 @@ export default function LobbyScreen({ navigation }: Props) {
   const multiplayerScale = useSharedValue(0.8);
   const aiScale = useSharedValue(0.8);
   const lessonsScale = useSharedValue(0.8);
-  const playButtonScale = useSharedValue(1);
+  // const playButtonScale = useSharedValue(1);
 
   const multiplayerStyle = useAnimatedStyle(() => ({
     transform: [{ scale: multiplayerScale.value }],
@@ -36,9 +36,9 @@ export default function LobbyScreen({ navigation }: Props) {
   const lessonsStyle = useAnimatedStyle(() => ({
     transform: [{ scale: lessonsScale.value }],
   }));
-  const playButtonStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: playButtonScale.value }],
-  }));
+  // const playButtonStyle = useAnimatedStyle(() => ({
+  //   transform: [{ scale: playButtonScale.value }],
+  // }));
 
   // Animate cards on mount
   React.useEffect(() => {
@@ -69,10 +69,10 @@ export default function LobbyScreen({ navigation }: Props) {
   }, []);
 
   // Play button bounce
-  const handlePlayPress = () => {
-    playButtonScale.value = withSequence(withSpring(0.9), withSpring(1.05), withSpring(1));
-    // navigation logic here
-  };
+  // const handlePlayPress = () => {
+  //   playButtonScale.value = withSequence(withSpring(0.9), withSpring(1.05), withSpring(1));
+  //   // navigation logic here
+  // };
 
   const chessSymbols = ['♔', '♕', '♖', '♗', '♘', '♙'];
 
@@ -104,18 +104,26 @@ export default function LobbyScreen({ navigation }: Props) {
       </View>
 
       {/* Header */}
-      <Text style={styles.welcome}>👋 Welcome back!</Text>
+      <Text style={styles.welcome}>ChessMeet</Text>
       <Text style={styles.subtitle}>Choose your game mode</Text>
 
       {/* Game Options */}
       <View style={styles.cardsContainer}>
         <AnimatedTouchable
           style={[styles.card, { backgroundColor: COLORS.primary }, multiplayerStyle]}
+          onPress={() => navigation.navigate('Local')}
+        >
+          <Users size={32} color="white" />
+          <Text style={styles.cardTitle}>Play Offline</Text>
+          <Text style={styles.cardDesc}>Play on locally with other players</Text>
+        </AnimatedTouchable>
+        <AnimatedTouchable
+          style={[styles.card, { backgroundColor: COLORS.primary }, multiplayerStyle]}
           onPress={() => navigation.navigate('Multiplayer')}
         >
           <Users size={32} color="white" />
-          <Text style={styles.cardTitle}>Play vs Players</Text>
-          <Text style={styles.cardDesc}>Compete in real time</Text>
+          <Text style={styles.cardTitle}>Play vs Multiplayer</Text>
+          <Text style={styles.cardDesc}>Compete in real time online with other players</Text>
         </AnimatedTouchable>
 
         <AnimatedTouchable
@@ -129,18 +137,20 @@ export default function LobbyScreen({ navigation }: Props) {
 
         <AnimatedTouchable
           style={[styles.card, { backgroundColor: COLORS.backgroundTwo }, lessonsStyle]}
-          onPress={() => navigation.navigate('Lessons')}
+          onPress={() => navigation.navigate('GameRules')}
         >
           <Book size={32} color="white" />
-          <Text style={styles.cardTitle}>Lessons</Text>
-          <Text style={styles.cardDesc}>Improve your skills</Text>
+          <Text style={styles.cardTitle}>Game Rules</Text>
+          <Text style={styles.cardDesc}>
+            Your tour guide to winning your first game and many more
+          </Text>
         </AnimatedTouchable>
       </View>
 
       {/* Play Now Button */}
-      <AnimatedTouchable style={[styles.playButton, playButtonStyle]} onPress={handlePlayPress}>
+      {/* <AnimatedTouchable style={[styles.playButton, playButtonStyle]} onPress={handlePlayPress}>
         <Text style={styles.playText}>Play Now</Text>
-      </AnimatedTouchable>
+      </AnimatedTouchable> */}
     </View>
   );
 }
@@ -189,19 +199,19 @@ const styles = StyleSheet.create({
     marginTop: 4,
     textAlign: 'center',
   },
-  playButton: {
-    backgroundColor: COLORS.ctaButton,
-    paddingVertical: 16,
-    borderRadius: 30,
-    marginTop: 'auto',
-    alignItems: 'center',
-    elevation: 6,
-  },
-  playText: {
-    color: COLORS.white,
-    fontSize: 18,
-    fontWeight: '700',
-  },
+  // playButton: {
+  //   backgroundColor: COLORS.ctaButton,
+  //   paddingVertical: 16,
+  //   borderRadius: 30,
+  //   marginTop: 'auto',
+  //   alignItems: 'center',
+  //   elevation: 6,
+  // },
+  // playText: {
+  //   color: COLORS.white,
+  //   fontSize: 18,
+  //   fontWeight: '700',
+  // },
   floatingPiece: {
     position: 'absolute',
     fontSize: 48,
