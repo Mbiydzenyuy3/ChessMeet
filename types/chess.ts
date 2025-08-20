@@ -20,3 +20,9 @@ export interface Move {
   piece: ChessPiece;
   captured?: ChessPiece;
 }
+
+export type ChessMove = {
+  from: string;
+  to: string;
+  promotion?: string;
+};

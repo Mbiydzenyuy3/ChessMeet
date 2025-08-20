@@ -121,10 +121,11 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: '600',
     marginBottom: 8,
+    color: COLORS.white,
   },
   subtitle: {
     fontSize: 14,
-    color: COLORS.title,
+    color: COLORS.white,
     textAlign: 'center',
     marginBottom: 24,
   },
@@ -139,8 +140,9 @@ const styles = StyleSheet.create({
   },
   otpInput: {
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: COLORS.white,
     width: 40,
+    color: COLORS.white,
     height: 50,
     textAlign: 'center',
     fontSize: 18,

@@ -111,11 +111,19 @@ export default function LobbyScreen({ navigation }: Props) {
       <View style={styles.cardsContainer}>
         <AnimatedTouchable
           style={[styles.card, { backgroundColor: COLORS.primary }, multiplayerStyle]}
+          onPress={() => navigation.navigate('Local')}
+        >
+          <Users size={32} color="white" />
+          <Text style={styles.cardTitle}>Play Offline</Text>
+          <Text style={styles.cardDesc}>Play on locally with other players</Text>
+        </AnimatedTouchable>
+        <AnimatedTouchable
+          style={[styles.card, { backgroundColor: COLORS.primary }, multiplayerStyle]}
           onPress={() => navigation.navigate('Multiplayer')}
         >
           <Users size={32} color="white" />
-          <Text style={styles.cardTitle}>Play vs Players</Text>
-          <Text style={styles.cardDesc}>Compete in real time</Text>
+          <Text style={styles.cardTitle}>Play vs Multiplayer</Text>
+          <Text style={styles.cardDesc}>Compete in real time online with other players</Text>
         </AnimatedTouchable>
 
         <AnimatedTouchable
@@ -129,11 +137,11 @@ export default function LobbyScreen({ navigation }: Props) {
 
         <AnimatedTouchable
           style={[styles.card, { backgroundColor: COLORS.backgroundTwo }, lessonsStyle]}
-          onPress={() => navigation.navigate('Lessons')}
+          onPress={() => navigation.navigate('GameRules')}
         >
           <Book size={32} color="white" />
-          <Text style={styles.cardTitle}>Lessons</Text>
-          <Text style={styles.cardDesc}>Improve your skills</Text>
+          <Text style={styles.cardTitle}>Game Rules</Text>
+          <Text style={styles.cardDesc}>Your tour guide to winning your first game</Text>
         </AnimatedTouchable>
       </View>
 
