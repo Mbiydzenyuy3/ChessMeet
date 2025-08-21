@@ -13,6 +13,7 @@ import SignIn from './auth/SignIn';
 import PlayLocal from './game/PlayLocal';
 import GetStarted from './index';
 import Lobby from './lobby/lobby';
+import Settings from './settings/SettingsScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -28,6 +29,7 @@ export default function RootLayout() {
         <Stack.Screen name="Lobby" component={Lobby} />
         <Stack.Screen name="GameRules" component={GameRules} />
         <Stack.Screen name="AI" component={AIScreen} />
+        <Stack.Screen name="Settings" component={Settings} />
       </Stack.Navigator>
     </Provider>
   );
