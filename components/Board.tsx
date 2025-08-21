@@ -1,13 +1,15 @@
 import { COLORS } from '@/constants/colors';
 import { Chess, Square } from 'chess.js';
 import { Audio } from 'expo-av';
-import { Link } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { DoorOpenIcon, Lightbulb, RotateCcwIcon, Undo2 } from 'lucide-react-native';
 import { useCallback, useRef, useState } from 'react';
 import { ImageBackground, Pressable, StyleSheet, Text, View } from 'react-native';
 import Chessboard, { ChessboardRef } from 'react-native-chessboard';
 import captureSound from '../assets/sound/Capture.mp3';
 import moveSound from '../assets/sound/Move.mp3';
+
+const router = useRouter();
 
 export default function Board() {
   const chessboardRef = useRef<ChessboardRef>(null);
@@ -81,7 +83,9 @@ export default function Board() {
       console.error(error);
     }
   };
-  const image = { uri: 'assets/images/boardbg.avif' };
+  const image = {
+    uri: 'https://img.freepik.com/premium-photo/watercolor-teal-blue-green-background-painting-watercolor-dark-blue_145343-69.jpg?w=360',
+  };
   return (
     <ImageBackground source={image} resizeMode="cover" style={styles.backgroundImage}>
       <View style={styles.screen}>
@@ -108,12 +112,10 @@ export default function Board() {
             <Text style={styles.text}>Undo</Text>
           </Pressable>
 
-          <Link href="../Lobby" asChild>
-            <Pressable style={styles.button}>
-              <DoorOpenIcon size={32} color="white" />
-              <Text style={styles.text}>Exit</Text>
-            </Pressable>
-          </Link>
+          <Pressable style={styles.button} onPress={() => router.back()}>
+            <DoorOpenIcon size={32} color="white" />
+            <Text style={styles.text}>Exit</Text>
+          </Pressable>
         </View>
       </View>
     </ImageBackground>

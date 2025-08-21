@@ -1,7 +1,8 @@
 // index.tsx
 import { COLORS } from '@/constants/colors';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React from 'react';
+import { Audio } from 'expo-av';
+import React, { useEffect } from 'react';
 import {
   Dimensions,
   ImageBackground,
@@ -15,8 +16,26 @@ import type { RootStackParamList } from '../types/navigation';
 const { width, height } = Dimensions.get('window');
 
 type Props = NativeStackScreenProps<RootStackParamList, 'GetStarted'>;
-
 export default function GetStarted({ navigation }: Props) {
+  useEffect(() => {
+    const setAudioMode = async () => {
+      try {
+        await Audio.setAudioModeAsync({
+          allowsRecordingIOS: false,
+          playsInSilentModeIOS: true,
+          // interruptionModeIOS: Audio.InterruptionModeIOS.MixWithOthers,
+          // interruptionModeAndroid: Audio.InterruptionModeAndroid.MixWithOthers,
+          shouldDuckAndroid: true,
+          playThroughEarpieceAndroid: false,
+        });
+      } catch (error) {
+        console.warn('Failed to set audio mode:', error);
+      }
+    };
+
+    setAudioMode();
+  }, []);
+
   return (
     <ImageBackground
       source={{
@@ -38,7 +57,7 @@ export default function GetStarted({ navigation }: Props) {
           </Text>
         </View>
 
-        <TouchableOpacity style={styles.ctaButton} onPress={() => navigation.navigate('SignIn')}>
+        <TouchableOpacity style={styles.ctaButton} onPress={() => navigation.navigate('Lobby')}>
           <Text style={styles.ctaText}>Get Started</Text>
         </TouchableOpacity>
       </View>
