@@ -1,7 +1,6 @@
-// screens/LobbyScreen.tsx
 import { COLORS } from '@/constants/colors';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { Book, Bot, Users } from 'lucide-react-native';
+import { Book, Bot, Settings as SettingsIcon, Users } from 'lucide-react-native';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Animated, {
@@ -15,7 +14,6 @@ import Animated, {
 } from 'react-native-reanimated';
 import type { RootStackParamList } from '../../types/navigation';
 
-// const { width, height } = Dimensions.get('window');
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 const AnimatedText = Animated.createAnimatedComponent(Text);
 type Props = NativeStackScreenProps<RootStackParamList, 'Lobby'>;
@@ -25,7 +23,6 @@ export default function LobbyScreen({ navigation }: Props) {
   const multiplayerScale = useSharedValue(0.8);
   const aiScale = useSharedValue(0.8);
   const lessonsScale = useSharedValue(0.8);
-  // const playButtonScale = useSharedValue(1);
 
   const multiplayerStyle = useAnimatedStyle(() => ({
     transform: [{ scale: multiplayerScale.value }],
@@ -36,9 +33,6 @@ export default function LobbyScreen({ navigation }: Props) {
   const lessonsStyle = useAnimatedStyle(() => ({
     transform: [{ scale: lessonsScale.value }],
   }));
-  // const playButtonStyle = useAnimatedStyle(() => ({
-  //   transform: [{ scale: playButtonScale.value }],
-  // }));
 
   // Animate cards on mount
   React.useEffect(() => {
@@ -67,12 +61,6 @@ export default function LobbyScreen({ navigation }: Props) {
       );
     });
   }, []);
-
-  // Play button bounce
-  // const handlePlayPress = () => {
-  //   playButtonScale.value = withSequence(withSpring(0.9), withSpring(1.05), withSpring(1));
-  //   // navigation logic here
-  // };
 
   const chessSymbols = ['♔', '♕', '♖', '♗', '♘', '♙'];
 
@@ -104,8 +92,17 @@ export default function LobbyScreen({ navigation }: Props) {
       </View>
 
       {/* Header */}
-      <Text style={styles.welcome}>ChessMeet</Text>
-      <Text style={styles.subtitle}>Choose your game mode</Text>
+      <View style={styles.header}>
+        <View>
+          <Text style={styles.welcome}>ChessMeet</Text>
+          <Text style={styles.subtitle}>Choose your game mode</Text>
+        </View>
+
+        {/* Settings Icon */}
+        <TouchableOpacity onPress={() => navigation.navigate('Settings')}>
+          <SettingsIcon size={28} color={COLORS.white} />
+        </TouchableOpacity>
+      </View>
 
       {/* Game Options */}
       <View style={styles.cardsContainer}>
@@ -115,8 +112,9 @@ export default function LobbyScreen({ navigation }: Props) {
         >
           <Users size={32} color="white" />
           <Text style={styles.cardTitle}>Play Offline</Text>
-          <Text style={styles.cardDesc}>Play on locally with other players</Text>
+          <Text style={styles.cardDesc}>Play locally with other players</Text>
         </AnimatedTouchable>
+
         <AnimatedTouchable
           style={[styles.card, { backgroundColor: COLORS.primary }, multiplayerStyle]}
           onPress={() => navigation.navigate('Multiplayer')}
@@ -146,11 +144,6 @@ export default function LobbyScreen({ navigation }: Props) {
           </Text>
         </AnimatedTouchable>
       </View>
-
-      {/* Play Now Button */}
-      {/* <AnimatedTouchable style={[styles.playButton, playButtonStyle]} onPress={handlePlayPress}>
-        <Text style={styles.playText}>Play Now</Text>
-      </AnimatedTouchable> */}
     </View>
   );
 }
@@ -161,6 +154,12 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.BackgroundColor,
     padding: 20,
   },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
   welcome: {
     fontSize: 24,
     fontWeight: '700',
@@ -170,7 +169,6 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 16,
     color: COLORS.muted,
-    marginBottom: 20,
   },
   cardsContainer: {
     flexDirection: 'row',
@@ -199,19 +197,6 @@ const styles = StyleSheet.create({
     marginTop: 4,
     textAlign: 'center',
   },
-  // playButton: {
-  //   backgroundColor: COLORS.ctaButton,
-  //   paddingVertical: 16,
-  //   borderRadius: 30,
-  //   marginTop: 'auto',
-  //   alignItems: 'center',
-  //   elevation: 6,
-  // },
-  // playText: {
-  //   color: COLORS.white,
-  //   fontSize: 18,
-  //   fontWeight: '700',
-  // },
   floatingPiece: {
     position: 'absolute',
     fontSize: 48,

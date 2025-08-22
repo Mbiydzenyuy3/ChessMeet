@@ -43,7 +43,7 @@ export default function OTPVerify({ route, navigation }: Props) {
 
     try {
       const response = await api.post('/auth/verify-otp', {
-        email: userIdentifier, // matches backend
+        userIdentifier: userIdentifier, // matches backend
         code, // already a string
       });
 
@@ -67,7 +67,7 @@ export default function OTPVerify({ route, navigation }: Props) {
     <View style={styles.container}>
       <Image
         source={{
-          uri: 'assets/images/chesslogo.jpeg',
+          uri: '../images/chesslogo.jpeg',
         }}
         style={styles.crown}
       />

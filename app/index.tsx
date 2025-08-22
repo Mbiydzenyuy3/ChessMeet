@@ -20,7 +20,7 @@ export default function GetStarted({ navigation }: Props) {
   return (
     <ImageBackground
       source={{
-        uri: 'https://digital-game-technology-2021.imgix.net/media/Headers/dgt-electronic-plastic-chess-pieces.jpg?auto=format&crop=focalpoint&domain=digital-game-technology-2021.imgix.net&fit=crop&fp-x=0.5&fp-y=0.5&h=721&ixlib=php-3.3.1&q=82&w=1081',
+        uri: 'https://img.lovepik.com/free-png/20211105/lovepik-chess-png-image_400298871_wh1200.png',
       }}
       style={styles.background}
       resizeMode="cover"

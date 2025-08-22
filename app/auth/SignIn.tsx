@@ -56,7 +56,7 @@ export default function SignIn({ navigation }: SignInProps) {
     <View style={styles.container}>
       <Image
         source={{
-          uri: 'assets/images/chesslogo.jpeg',
+          uri: '../images/chesslogo.jpeg',
         }}
         style={styles.crown}
       />
