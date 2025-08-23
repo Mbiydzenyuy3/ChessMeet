@@ -49,6 +49,7 @@ export const COLORS = {
   backgroundOne: '#6C63FF',
   backgroundTwo: '#F4B400',
   bgMossGreen: '#70994A',
+  boardBackground: '#446b6a',
 
   Overlaybg: 'rgba(0,0,0,0.45)',
   ErrorTextColor: 'red',

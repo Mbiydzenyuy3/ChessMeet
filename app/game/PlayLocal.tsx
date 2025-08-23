@@ -1,4 +1,5 @@
 import Board from '@/components/Board';
+import { COLORS } from '@/constants/colors';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 
@@ -13,5 +14,6 @@ export default function PlayLocal() {
 const styles = StyleSheet.create({
   contain: {
     flex: 1,
+    backgroundColor: COLORS.BackgroundColor,
   },
 });
