@@ -20,6 +20,7 @@ export default function OTPVerify({ route, navigation }: Props) {
   const { userIdentifier } = route.params;
   // const dispatch = useAppDispatch();
   const [loading, setLoading] = useState(false);
+  console.log('✅ Paramètre reçu depuis SignIn:', userIdentifier);
 
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const inputRefs = useRef<TextInput[]>([]);
@@ -47,8 +48,11 @@ export default function OTPVerify({ route, navigation }: Props) {
         code, // already a string
       });
 
-      if (response.data?.success) {
+      console.log('📩 Réponse backend:', response.data);
+
+      if (response.data) {
         navigation.replace('Lobby');
+        console.log('➡️ Navigation vers Lobby');
       } else {
         console.log('Verification failed:', response.data?.message || 'Invalid OTP');
       }
