@@ -12,7 +12,8 @@ export function useAuth() {
     loading,
     error,
     requestOtp: (email: string) => dispatch(requestOtp(email)),
-    verifyOtp: (email: string, otp: string) => dispatch(verifyOtp({ email, otp })),
+    verifyOtp: (userIdentifier: string, code: string) =>
+      dispatch(verifyOtp({ userIdentifier, code })),
     logout: () => dispatch(logout()),
     isAuthenticated: Boolean(token),
   };
