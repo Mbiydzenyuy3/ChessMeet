@@ -36,6 +36,7 @@ export const COLORS = {
   footerText: '#6B7280',
   containerHome: '#0B0C10',
   ctaButton: '#45A29E',
+  mediumGray: 'rgb(136, 136, 136)',
 
   foreground: '#F9FAFB', // default foreground color (light text / elements)
   muted: '#9CA3AF',
