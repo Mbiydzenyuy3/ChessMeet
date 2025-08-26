@@ -15,17 +15,23 @@ const initialState: AuthState = { token: null, user: null, loading: false };
 
 export const hydrateAuth = createAsyncThunk('auth/hydrate', async () => {
   const t = await getToken();
+  console.log('rechercher du token');
   if (!t) return { token: null, user: null };
+  console.log('rechercher du token', t);
+
   const me = await fetchMe();
+  console.log(`user fetche me : ${JSON.stringify(me)}`);
   return { token: t, user: me };
 });
 
 export const doVerifyOtp = createAsyncThunk(
   'auth/verifyOtp',
   async ({ userIdentifier, code }: { userIdentifier: string; code: string }) => {
+    console.log(`information de verification recue ${userIdentifier}, code : ${code}`);
     const res = await verifyOtp(userIdentifier, code);
     await saveToken(res.accessToken);
     const me = res.user || (await fetchMe());
+    console.log(`information ${res} me :${me}`);
     return { token: res.accessToken, user: me };
   }
 );

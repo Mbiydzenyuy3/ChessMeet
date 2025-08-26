@@ -1,97 +1,50 @@
-// // app/_layout.tsx
-// import { createNativeStackNavigator } from '@react-navigation/native-stack';
-// import type { RootStackParamList } from '../types/navigation';
-
-// import { Provider } from 'react-redux';
-// import { store } from '../redux/store'; // adjust path to where your store is
-
-// import SplashScreen from '@/components/SplashScreen';
-// import AIScreen from '@/screens/AIScreen';
-// import GameRules from '@/screens/LessonScreen';
-// import OTPVerify from './auth/OTPverify';
-// import SignIn from './auth/SignIn';
-// import PlayLocal from './game/PlayLocal';
-// import GetStarted from './index';
-// import Lobby from './lobby/lobby';
-
-// const Stack = createNativeStackNavigator<RootStackParamList>();
-
-// export default function RootLayout() {
-//   return (
-//     <Provider store={store}>
-//       <Stack.Navigator screenOptions={{ headerShown: false }}>
-//         <Stack.Screen name="SplashScreen" component={SplashScreen} />
-//         <Stack.Screen name="GetStarted" component={GetStarted} />
-//         <Stack.Screen name="SignIn" component={SignIn} />
-//         <Stack.Screen name="OTPVerify" component={OTPVerify} />
-//         <Stack.Screen name="Local" component={PlayLocal} />
-//         <Stack.Screen name="Lobby" component={Lobby} />
-//         <Stack.Screen name="GameRules" component={GameRules} />
-//         <Stack.Screen name="AI" component={AIScreen} />
-//       </Stack.Navigator>
-//     </Provider>
-//   );
-// }
-
-import React, { useEffect } from 'react';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { Provider } from 'react-redux';
-import { store } from '../redux/store';
-import type { RootStackParamList } from '../types/navigation';
-import { hydrateAuth } from '../store/authSlice';
-
-// Screens
+// app/_layout.tsx
+import { Slot, useRouter } from 'expo-router';
+import { Provider, useDispatch, useSelector } from 'react-redux';
+import { store, AppDispatch, RootState } from '@/store';
+import { useEffect, useState } from 'react';
+import { hydrateAuth } from '@/store/authSlice';
 import SplashScreen from '@/components/SplashScreen';
-import AIScreen from '@/screens/AIScreen';
-import GameRules from '@/screens/LessonScreen';
-import OTPVerify from './auth/OTPverify';
-import SignIn from './auth/SignIn';
-import PlayLocal from './game/PlayLocal';
-import GetStarted from './index';
-import Lobby from './lobby/lobby';
-import { useAppDispatch, useAppSelector } from '@/store';
 
-function MainNavigator() {
-  const dispatch = useAppDispatch();
-  const { token, loading } = useAppSelector((state) => state.auth);
+function AuthGate() {
+  const router = useRouter();
+  const dispatch = useDispatch<AppDispatch>();
+  const { token, loading } = useSelector((state: RootState) => state.auth);
+  const [ready, setReady] = useState(false);
 
-  // Charger le token + user au lancement
+  // hydrate Redux
   useEffect(() => {
-    dispatch(hydrateAuth());
+    dispatch(hydrateAuth()).finally(() => {
+      setReady(true);
+    });
   }, [dispatch]);
 
-  if (loading) {
-    return <SplashScreen />; // pendant chargement AsyncStorage
+  // rediriger SEULEMENT après le premier render
+  useEffect(() => {
+    if (!ready || loading) return;
+
+    // ⚠️ Utiliser setTimeout pour laisser RootLayout + Slot se monter
+    setTimeout(() => {
+      if (token) {
+        router.replace('/main');
+      } else {
+        router.replace('/auth');
+      }
+    }, 0);
+  }, [ready, loading, token]);
+
+  if (!ready || loading) {
+    return <SplashScreen />;
   }
 
-  const Stack = createNativeStackNavigator<RootStackParamList>();
-
-  return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-      {token ? (
-        // 🔐 Utilisateur connecté → accès direct au Lobby
-        <>
-          <Stack.Screen name="Lobby" component={Lobby} />
-          <Stack.Screen name="Local" component={PlayLocal} />
-          <Stack.Screen name="GameRules" component={GameRules} />
-          <Stack.Screen name="AI" component={AIScreen} />
-        </>
-      ) : (
-        // 👤 Pas de token → parcours Auth
-        <>
-          <Stack.Screen name="GetStarted" component={GetStarted} />
-          <Stack.Screen name="SignIn" component={SignIn} />
-          <Stack.Screen name="OTPVerify" component={OTPVerify} />
-        </>
-      )}
-    </Stack.Navigator>
-  );
+  // Toujours rendre un Slot (même si on redirige juste après)
+  return <Slot />;
 }
 
 export default function RootLayout() {
   return (
     <Provider store={store}>
-      <MainNavigator />
+      <AuthGate />
     </Provider>
   );
 }

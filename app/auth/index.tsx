@@ -1,6 +1,7 @@
-// index.tsx
+// app/index.tsx
+
 import { COLORS } from '@/constants/colors';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+// import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React from 'react';
 import {
   Dimensions,
@@ -10,13 +11,14 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import type { RootStackParamList } from '../types/navigation';
+import { useRouter } from 'expo-router';
 
 const { width, height } = Dimensions.get('window');
 
-type Props = NativeStackScreenProps<RootStackParamList, 'GetStarted'>;
+// type Props = NativeStackScreenProps<RootStackParamList, 'GetStarted'>;
 
-export default function GetStarted({ navigation }: Props) {
+export default function GetStarted() {
+  const router = useRouter();
   return (
     <ImageBackground
       source={{
@@ -38,7 +40,7 @@ export default function GetStarted({ navigation }: Props) {
           </Text>
         </View>
 
-        <TouchableOpacity style={styles.ctaButton} onPress={() => navigation.navigate('SignIn')}>
+        <TouchableOpacity style={styles.ctaButton} onPress={() => router.push('/auth/SignIn')}>
           <Text style={styles.ctaText}>Get Started</Text>
         </TouchableOpacity>
       </View>

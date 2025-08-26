@@ -8,7 +8,7 @@ export default function NotFoundScreen() {
       <View style={styles.container}>
         <Text style={styles.title}>This screen does not exist.</Text>
 
-        <Link href="/" style={styles.link}>
+        <Link href="/auth" style={styles.link}>
           <Text style={styles.linkText}>Go to home screen!</Text>
         </Link>
       </View>
@@ -31,6 +31,7 @@ const styles = StyleSheet.create({
     marginTop: 15,
     paddingVertical: 15,
   },
+  // eslint-disable-next-line react-native/no-color-literals
   linkText: {
     fontSize: 14,
     color: '#2e78b7',

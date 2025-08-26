@@ -8,8 +8,10 @@ const KEY = 'chessmeet.jwt';
 export async function saveToken(token: string) {
   try {
     await SecureStore.setItemAsync(KEY, token);
+    console.log('token sauve succesfully SecureStore');
   } catch {
     await AsyncStorage.setItem(KEY, token);
+    console.log('token sauve succesfully AsyncStorage');
   }
 }
 

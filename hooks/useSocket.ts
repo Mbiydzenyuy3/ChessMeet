@@ -1,9 +1,10 @@
 // ============================ hooks/useSocket.ts ============================
+import { useEffect, useMemo } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useAppDispatch, useAppSelector } from '../store';
 import { ENV } from '../lib/env';
 import { getToken } from '../lib/storage';
-import { setConnected, setDisconnected, setSocketId } from '../redux/socketSlice';
+import { setConnected, setDisconnected, setSocketId } from '../store/socketSlice';
 
 export function useSocket() {
   const dispatch = useAppDispatch();
@@ -23,6 +24,7 @@ export function useSocket() {
     async function connect() {
       const jwt = token || (await getToken());
       if (!jwt) return;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       socket.io.opts.extraHeaders = { Authorization: `Bearer ${jwt}` } as any;
       socket.connect();
     }

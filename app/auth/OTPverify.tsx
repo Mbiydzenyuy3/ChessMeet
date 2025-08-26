@@ -1,36 +1,26 @@
-import api from '@/api/api';
-import { COLORS } from '@/constants/colors';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+// app/auth/OTPVerify.tsx
 import React, { useRef, useState } from 'react';
 import { Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { doVerifyOtp } from '@/store/authSlice';
+import { COLORS } from '@/constants/colors';
+import { useAppDispatch, useAppSelector } from '@/store';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 
-type RootStackParamList = {
-  OTPVerify: { userIdentifier: string };
-  Lobby: undefined;
-};
+export default function OTPVerify() {
+  const router = useRouter();
+  const { userIdentifier } = useLocalSearchParams<{ userIdentifier: string }>();
 
-type OTPVerifyNavigationProp = NativeStackNavigationProp<RootStackParamList, 'OTPVerify'>;
-
-type Props = {
-  route: { params: { userIdentifier: string } };
-  navigation: OTPVerifyNavigationProp;
-};
-
-export default function OTPVerify({ route, navigation }: Props) {
-  const { userIdentifier } = route.params;
-  // const dispatch = useAppDispatch();
-  const [loading, setLoading] = useState(false);
-  console.log('✅ Paramètre reçu depuis SignIn:', userIdentifier);
+  const dispatch = useAppDispatch();
+  const { loading, error } = useAppSelector((state) => state.auth);
 
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const inputRefs = useRef<TextInput[]>([]);
 
   const handleChange = (value: string, index: number) => {
     const newOtp = [...otp];
-    newOtp[index] = value.slice(-1); // keep only last digit
+    newOtp[index] = value.slice(-1);
     setOtp(newOtp);
 
-    // auto-focus next input
     if (value && index < 5) {
       inputRefs.current[index + 1]?.focus();
     }
@@ -40,41 +30,24 @@ export default function OTPVerify({ route, navigation }: Props) {
     const code = otp.join('');
     if (code.length !== 6) return;
 
-    setLoading(true);
-
     try {
-      const response = await api.post('/auth/verify-otp', {
-        userIdentifier: userIdentifier, // matches backend
-        code, // already a string
-      });
+      const resultAction = await dispatch(doVerifyOtp({ userIdentifier, code }));
 
-      console.log('📩 Réponse backend:', response.data);
-
-      if (response.data) {
-        navigation.replace('Lobby');
-        console.log('➡️ Navigation vers Lobby');
+      if (doVerifyOtp.fulfilled.match(resultAction)) {
+        console.log('✅ OTP Vérifié et token sauvegardé');
+        // Avec expo-router → redirect vers (main)/index.tsx = Lobby
+        router.replace('/main');
       } else {
-        console.log('Verification failed:', response.data?.message || 'Invalid OTP');
+        console.error('❌ OTP invalide:', resultAction.error.message);
       }
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        console.error('Failed to request OTP:', err.message);
-      } else {
-        console.error('Failed to request OTP: Unknown error', err);
-      }
-    } finally {
-      setLoading(false);
+    } catch (err) {
+      console.error('❌ Erreur lors de la vérification OTP:', err);
     }
   };
 
   return (
     <View style={styles.container}>
-      <Image
-        source={{
-          uri: 'assets/images/chesslogo.jpeg',
-        }}
-        style={styles.crown}
-      />
+      <Image source={{ uri: 'assets/images/chesslogo.jpeg' }} style={styles.crown} />
       <Text style={styles.title}>Verify OTP</Text>
       <Text style={styles.subtitle}>
         We sent a 6-digit code to {'\n'}
@@ -97,17 +70,16 @@ export default function OTPVerify({ route, navigation }: Props) {
         ))}
       </View>
 
-      <TouchableOpacity
-        style={styles.button}
-        onPress={handleVerify}
-        disabled={loading} // disable while verifying
-      >
+      <TouchableOpacity style={styles.button} onPress={handleVerify} disabled={loading}>
         <Text style={styles.buttonText}>{loading ? 'Verifying...' : 'Verify & Continue'}</Text>
       </TouchableOpacity>
+
+      {error && <Text style={{ color: 'red', marginTop: 10 }}>{error}</Text>}
     </View>
   );
 }
 
+// ✅ Styles identiques à avant
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -116,32 +88,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: COLORS.BackgroundColor,
   },
-  crown: {
-    width: 50,
-    height: 50,
-    marginBottom: 20,
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: '600',
-    marginBottom: 8,
-    color: COLORS.white,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: COLORS.white,
-    textAlign: 'center',
-    marginBottom: 24,
-  },
-  email: {
-    fontWeight: '500',
-    color: COLORS.white,
-  },
-  otpContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 32,
-  },
+  crown: { width: 50, height: 50, marginBottom: 20 },
+  title: { fontSize: 22, fontWeight: '600', marginBottom: 8, color: COLORS.white },
+  subtitle: { fontSize: 14, color: COLORS.white, textAlign: 'center', marginBottom: 24 },
+  email: { fontWeight: '500', color: COLORS.white },
+  otpContainer: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 32 },
   otpInput: {
     borderWidth: 1,
     borderColor: COLORS.white,
@@ -160,10 +111,5 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     width: '100%',
   },
-  buttonText: {
-    color: COLORS.white,
-    fontWeight: '600',
-    textAlign: 'center',
-    fontSize: 16,
-  },
+  buttonText: { color: COLORS.white, fontWeight: '600', textAlign: 'center', fontSize: 16 },
 });

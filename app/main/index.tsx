@@ -1,6 +1,4 @@
-// screens/LobbyScreen.tsx
 import { COLORS } from '@/constants/colors';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Book, Bot, Users } from 'lucide-react-native';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -13,19 +11,18 @@ import Animated, {
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
-import type { RootStackParamList } from '../../types/navigation';
+import { useRouter } from 'expo-router';
 
-// const { width, height } = Dimensions.get('window');
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 const AnimatedText = Animated.createAnimatedComponent(Text);
-type Props = NativeStackScreenProps<RootStackParamList, 'Lobby'>;
 
-export default function LobbyScreen({ navigation }: Props) {
+export default function LobbyScreen() {
+  const router = useRouter();
+
   // Scale animations for cards
   const multiplayerScale = useSharedValue(0.8);
   const aiScale = useSharedValue(0.8);
   const lessonsScale = useSharedValue(0.8);
-  // const playButtonScale = useSharedValue(1);
 
   const multiplayerStyle = useAnimatedStyle(() => ({
     transform: [{ scale: multiplayerScale.value }],
@@ -36,25 +33,20 @@ export default function LobbyScreen({ navigation }: Props) {
   const lessonsStyle = useAnimatedStyle(() => ({
     transform: [{ scale: lessonsScale.value }],
   }));
-  // const playButtonStyle = useAnimatedStyle(() => ({
-  //   transform: [{ scale: playButtonScale.value }],
-  // }));
 
-  // Animate cards on mount
   React.useEffect(() => {
     multiplayerScale.value = withDelay(100, withSpring(1, { damping: 6 }));
     aiScale.value = withDelay(250, withSpring(1, { damping: 6 }));
     lessonsScale.value = withDelay(400, withSpring(1, { damping: 6 }));
   }, []);
 
-  // Floating pieces shared values
+  // Floating pieces
   const floatingPieces = Array.from({ length: 6 }).map((_, i) => ({
     translateY: useSharedValue(0),
     opacity: useSharedValue(0.1),
     delay: i * 300,
   }));
 
-  // Animate floating pieces (looping up & down)
   React.useEffect(() => {
     floatingPieces.forEach((piece) => {
       piece.translateY.value = withRepeat(
@@ -67,12 +59,6 @@ export default function LobbyScreen({ navigation }: Props) {
       );
     });
   }, []);
-
-  // Play button bounce
-  // const handlePlayPress = () => {
-  //   playButtonScale.value = withSequence(withSpring(0.9), withSpring(1.05), withSpring(1));
-  //   // navigation logic here
-  // };
 
   const chessSymbols = ['♔', '♕', '♖', '♗', '♘', '♙'];
 
@@ -111,24 +97,25 @@ export default function LobbyScreen({ navigation }: Props) {
       <View style={styles.cardsContainer}>
         <AnimatedTouchable
           style={[styles.card, { backgroundColor: COLORS.primary }, multiplayerStyle]}
-          onPress={() => navigation.navigate('Local')}
+          onPress={() => router.push('/main/PlayLocal')}
         >
           <Users size={32} color="white" />
           <Text style={styles.cardTitle}>Play Offline</Text>
-          <Text style={styles.cardDesc}>Play on locally with other players</Text>
+          <Text style={styles.cardDesc}>Play locally with other players</Text>
         </AnimatedTouchable>
+
         <AnimatedTouchable
           style={[styles.card, { backgroundColor: COLORS.primary }, multiplayerStyle]}
-          onPress={() => navigation.navigate('Multiplayer')}
+          onPress={() => router.push('/main/game')}
         >
           <Users size={32} color="white" />
           <Text style={styles.cardTitle}>Play vs Multiplayer</Text>
-          <Text style={styles.cardDesc}>Compete in real time online with other players</Text>
+          <Text style={styles.cardDesc}>Compete online with players</Text>
         </AnimatedTouchable>
 
         <AnimatedTouchable
           style={[styles.card, { backgroundColor: COLORS.backgroundOne }, aiStyle]}
-          onPress={() => navigation.navigate('AI')}
+          onPress={() => router.push('/main/game')}
         >
           <Bot size={32} color="white" />
           <Text style={styles.cardTitle}>Play vs AI</Text>
@@ -137,20 +124,13 @@ export default function LobbyScreen({ navigation }: Props) {
 
         <AnimatedTouchable
           style={[styles.card, { backgroundColor: COLORS.backgroundTwo }, lessonsStyle]}
-          onPress={() => navigation.navigate('GameRules')}
+          onPress={() => router.push('/main')}
         >
           <Book size={32} color="white" />
           <Text style={styles.cardTitle}>Game Rules</Text>
-          <Text style={styles.cardDesc}>
-            Your tour guide to winning your first game and many more
-          </Text>
+          <Text style={styles.cardDesc}>Learn how to win your first game and many more</Text>
         </AnimatedTouchable>
       </View>
-
-      {/* Play Now Button */}
-      {/* <AnimatedTouchable style={[styles.playButton, playButtonStyle]} onPress={handlePlayPress}>
-        <Text style={styles.playText}>Play Now</Text>
-      </AnimatedTouchable> */}
     </View>
   );
 }
@@ -199,19 +179,6 @@ const styles = StyleSheet.create({
     marginTop: 4,
     textAlign: 'center',
   },
-  // playButton: {
-  //   backgroundColor: COLORS.ctaButton,
-  //   paddingVertical: 16,
-  //   borderRadius: 30,
-  //   marginTop: 'auto',
-  //   alignItems: 'center',
-  //   elevation: 6,
-  // },
-  // playText: {
-  //   color: COLORS.white,
-  //   fontSize: 18,
-  //   fontWeight: '700',
-  // },
   floatingPiece: {
     position: 'absolute',
     fontSize: 48,
