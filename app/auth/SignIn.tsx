@@ -1,16 +1,14 @@
 import { COLORS } from '@/constants/colors';
+import { useAuth } from '@/hooks/useAuth'; // ✅ import your custom hook
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import React, { useState } from 'react';
-import { Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-// import { requestOtp } from '../../redux/slices/authSlice';
-import api from '@/api/api';
 import { Formik } from 'formik';
+import React from 'react';
+import { Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import * as Yup from 'yup';
 
-// Navigation stack params
 type RootStackParamList = {
   SignIn: undefined;
-  OTPVerify: { userIdentifier: string }; // pass email
+  OTPVerify: { userIdentifier: string };
   Lobby: undefined;
 };
 
@@ -26,48 +24,27 @@ const signInSchema = Yup.object().shape({
 });
 
 export default function SignIn({ navigation }: SignInProps) {
-  const [loading, setLoading] = useState(false);
+  const { requestOtp, loading } = useAuth(); // ✅ useAuth replaces local state & API
 
-  const handleRequestOtp = async (email: string) => {
-    if (!email) return;
-
-    setLoading(true);
+  const handleSubmitOtp = async (email: string) => {
     try {
-      const response = await api.post('/auth/request-otp', { email });
-
-      if (response.data?.success || response.status === 201 || response.status === 200) {
-        const userIdentifier = response.data?.userIdentifier ?? email;
-        navigation.navigate('OTPVerify', { userIdentifier });
-      } else {
-        console.log('Error sending OTP:', response.data?.message || 'Unknown error');
-      }
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        console.error('Failed to request OTP:', err.message);
-      } else {
-        console.error('Failed to request OTP: Unknown error', err);
-      }
-    } finally {
-      setLoading(false);
+      const res = await requestOtp(email).unwrap(); // ✅ unwrap
+      const userIdentifier = res?.email ?? email;
+      navigation.navigate('OTPVerify', { userIdentifier });
+    } catch (err) {
+      console.error('Failed to request OTP:', err);
     }
   };
-
   return (
     <View style={styles.container}>
-      <Image
-        source={{
-          uri: '../images/chesslogo.jpeg',
-        }}
-        style={styles.crown}
-      />
+      <Image source={{ uri: '../images/chesslogo.jpeg' }} style={styles.crown} />
       <Text style={styles.title}>Welcome to ChessMeet</Text>
       <Text style={styles.subtitle}>Enter your email to get started</Text>
 
-      {/* ✅ Wrap form with Formik */}
       <Formik
         initialValues={{ email: '' }}
         validationSchema={signInSchema}
-        onSubmit={(values) => handleRequestOtp(values.email)}
+        onSubmit={({ email }) => handleSubmitOtp(email)}
       >
         {({ handleChange, handleBlur, handleSubmit, values, errors, touched, isValid }) => (
           <>
@@ -81,16 +58,15 @@ export default function SignIn({ navigation }: SignInProps) {
                 onBlur={handleBlur('email')}
                 autoCapitalize="none"
                 keyboardType="email-address"
-                underlineColorAndroid="transparent" // removes Android underline
+                underlineColorAndroid="transparent"
                 selectionColor={COLORS.inputText}
               />
             </View>
-            {/* ✅ Show error if invalid */}
             {touched.email && errors.email && <Text style={styles.error}>{errors.email}</Text>}
 
             <TouchableOpacity
               style={[styles.button, (!isValid || loading) && { opacity: 0.6 }]}
-              onPress={() => handleSubmit()} // ✅ wrap in arrow function
+              onPress={() => handleSubmit()}
               disabled={!isValid || loading}
             >
               <Text style={styles.buttonText}>{loading ? 'Sending...' : 'Send OTP'}</Text>
@@ -106,6 +82,7 @@ export default function SignIn({ navigation }: SignInProps) {
   );
 }
 
+// ✅ Styles remain the same
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -122,10 +99,7 @@ const styles = StyleSheet.create({
     marginBottom: 5,
     textAlign: 'center',
   },
-  error: {
-    color: COLORS.ErrorTextColor,
-    marginBottom: 10,
-  },
+  error: { color: COLORS.ErrorTextColor, marginBottom: 10 },
   subtitle: { fontSize: 14, color: COLORS.white, marginBottom: 30, textAlign: 'center' },
   inputContainer: {
     width: '100%',
@@ -140,13 +114,7 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     shadowOffset: { width: 0, height: 2 },
   },
-  input: {
-    height: 45,
-    fontSize: 16,
-    color: COLORS.inputText,
-    borderWidth: 0,
-    borderRadius: 0,
-  },
+  input: { height: 45, fontSize: 16, color: COLORS.inputText, borderWidth: 0, borderRadius: 0 },
   button: {
     backgroundColor: COLORS.bgMossGreen,
     borderRadius: 8,

@@ -1,5 +1,5 @@
-import api from '@/api/api';
 import { COLORS } from '@/constants/colors';
+import { useAuth } from '@/hooks/useAuth';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useRef, useState } from 'react';
 import { Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -18,19 +18,17 @@ type Props = {
 
 export default function OTPVerify({ route, navigation }: Props) {
   const { userIdentifier } = route.params;
-  // const dispatch = useAppDispatch();
+  const { verifyOtp } = useAuth(); // ✅ get verifyOtp from hook
   const [loading, setLoading] = useState(false);
-  console.log('✅ Paramètre reçu depuis SignIn:', userIdentifier);
 
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const inputRefs = useRef<TextInput[]>([]);
 
   const handleChange = (value: string, index: number) => {
     const newOtp = [...otp];
-    newOtp[index] = value.slice(-1); // keep only last digit
+    newOtp[index] = value.slice(-1);
     setOtp(newOtp);
 
-    // auto-focus next input
     if (value && index < 5) {
       inputRefs.current[index + 1]?.focus();
     }
@@ -41,27 +39,11 @@ export default function OTPVerify({ route, navigation }: Props) {
     if (code.length !== 6) return;
 
     setLoading(true);
-
     try {
-      const response = await api.post('/auth/verify-otp', {
-        userIdentifier: userIdentifier, // matches backend
-        code, // already a string
-      });
-
-      console.log('📩 Réponse backend:', response.data);
-
-      if (response.data) {
-        navigation.replace('Lobby');
-        console.log('➡️ Navigation vers Lobby');
-      } else {
-        console.log('Verification failed:', response.data?.message || 'Invalid OTP');
-      }
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        console.error('Failed to request OTP:', err.message);
-      } else {
-        console.error('Failed to request OTP: Unknown error', err);
-      }
+      await verifyOtp(userIdentifier, code).unwrap(); // ✅ unwrap the thunk
+      navigation.replace('Lobby');
+    } catch (err) {
+      console.error('OTP verification failed:', err);
     } finally {
       setLoading(false);
     }
@@ -69,12 +51,7 @@ export default function OTPVerify({ route, navigation }: Props) {
 
   return (
     <View style={styles.container}>
-      <Image
-        source={{
-          uri: '../images/chesslogo.jpeg',
-        }}
-        style={styles.crown}
-      />
+      <Image source={{ uri: '../images/chesslogo.jpeg' }} style={styles.crown} />
       <Text style={styles.title}>Verify OTP</Text>
       <Text style={styles.subtitle}>
         We sent a 6-digit code to {'\n'}
@@ -97,11 +74,7 @@ export default function OTPVerify({ route, navigation }: Props) {
         ))}
       </View>
 
-      <TouchableOpacity
-        style={styles.button}
-        onPress={handleVerify}
-        disabled={loading} // disable while verifying
-      >
+      <TouchableOpacity style={styles.button} onPress={handleVerify} disabled={loading}>
         <Text style={styles.buttonText}>{loading ? 'Verifying...' : 'Verify & Continue'}</Text>
       </TouchableOpacity>
     </View>
@@ -116,32 +89,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: COLORS.BackgroundColor,
   },
-  crown: {
-    width: 50,
-    height: 50,
-    marginBottom: 20,
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: '600',
-    marginBottom: 8,
-    color: COLORS.white,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: COLORS.white,
-    textAlign: 'center',
-    marginBottom: 24,
-  },
-  email: {
-    fontWeight: '500',
-    color: COLORS.white,
-  },
-  otpContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 32,
-  },
+  crown: { width: 50, height: 50, marginBottom: 20 },
+  title: { fontSize: 22, fontWeight: '600', marginBottom: 8, color: COLORS.white },
+  subtitle: { fontSize: 14, color: COLORS.white, textAlign: 'center', marginBottom: 24 },
+  email: { fontWeight: '500', color: COLORS.white },
+  otpContainer: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 32 },
   otpInput: {
     borderWidth: 1,
     borderColor: COLORS.white,
@@ -160,10 +112,5 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     width: '100%',
   },
-  buttonText: {
-    color: COLORS.white,
-    fontWeight: '600',
-    textAlign: 'center',
-    fontSize: 16,
-  },
+  buttonText: { color: COLORS.white, fontWeight: '600', textAlign: 'center', fontSize: 16 },
 });

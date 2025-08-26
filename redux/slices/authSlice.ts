@@ -1,10 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
-import authApi, { VerifyOtpRes } from '../../api/authApi';
+import authApi, { UpdateProfilePayload, VerifyOtpRes } from '../../api/authApi';
 
 type AuthState = {
   token: string | null;
-  user: { _id: string; email: string; displayName?: string } | null;
+  user: { _id: string; userIdentifier: string; displayName?: string; avatarUrl: string } | null;
   loading: boolean;
   error: string | null;
   bootstrapped: boolean;
@@ -49,6 +49,17 @@ export const logout = createAsyncThunk('auth/logout', async () => {
   return true;
 });
 
+export const updateProfile = createAsyncThunk(
+  'auth/update-profile',
+  async (updates: UpdateProfilePayload, { getState }) => {
+    const state = getState() as { auth: AuthState };
+    const token = state.auth.token!;
+    const res = await authApi.updateProfile(updates, token);
+    const updatedUser = res.data;
+    await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
+    return updatedUser;
+  }
+);
 const authSlice = createSlice({
   name: 'auth',
   initialState,
@@ -90,6 +101,18 @@ const authSlice = createSlice({
       .addCase(logout.fulfilled, (state) => {
         state.token = null;
         state.user = null;
+      })
+      .addCase(updateProfile.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateProfile.fulfilled, (state, action) => {
+        state.loading = false;
+        state.user = { ...state.user, ...action.payload };
+      })
+      .addCase(updateProfile.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message ?? 'Failed to update profile';
       });
   },
 });

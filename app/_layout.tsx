@@ -8,12 +8,12 @@ import { store } from '../redux/store'; // adjust path to where your store is
 import SplashScreen from '@/components/SplashScreen';
 import AIScreen from '@/screens/AIScreen';
 import GameRules from '@/screens/LessonScreen';
+import Profile from '@/screens/ProfileScreen';
 import OTPVerify from './auth/OTPverify';
 import SignIn from './auth/SignIn';
 import PlayLocal from './game/PlayLocal';
 import GetStarted from './index';
 import Lobby from './lobby/lobby';
-import Settings from './settings/SettingsScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -29,7 +29,7 @@ export default function RootLayout() {
         <Stack.Screen name="Lobby" component={Lobby} />
         <Stack.Screen name="GameRules" component={GameRules} />
         <Stack.Screen name="AI" component={AIScreen} />
-        <Stack.Screen name="Settings" component={Settings} />
+        <Stack.Screen name="Profile" component={Profile} />
       </Stack.Navigator>
     </Provider>
   );
