@@ -1,5 +1,5 @@
-// index.tsx
 import { COLORS } from '@/constants/colors';
+import { useAuth } from '@/hooks/useAuth';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Audio } from 'expo-av';
 import React, { useEffect } from 'react';
@@ -16,15 +16,17 @@ import type { RootStackParamList } from '../types/navigation';
 const { width, height } = Dimensions.get('window');
 
 type Props = NativeStackScreenProps<RootStackParamList, 'GetStarted'>;
+
 export default function GetStarted({ navigation }: Props) {
+  const { isAuthenticated, bootstrapAuth } = useAuth();
+
+  // 1️⃣ Set audio
   useEffect(() => {
     const setAudioMode = async () => {
       try {
         await Audio.setAudioModeAsync({
           allowsRecordingIOS: false,
           playsInSilentModeIOS: true,
-          // interruptionModeIOS: Audio.InterruptionModeIOS.MixWithOthers,
-          // interruptionModeAndroid: Audio.InterruptionModeAndroid.MixWithOthers,
           shouldDuckAndroid: true,
           playThroughEarpieceAndroid: false,
         });
@@ -32,22 +34,30 @@ export default function GetStarted({ navigation }: Props) {
         console.warn('Failed to set audio mode:', error);
       }
     };
-
     setAudioMode();
   }, []);
+
+  // 2️⃣ Bootstrap auth on mount
+  useEffect(() => {
+    const initAuth = async () => {
+      await bootstrapAuth();
+      if (isAuthenticated) {
+        navigation.replace('Lobby');
+      }
+    };
+    initAuth();
+  }, [isAuthenticated, bootstrapAuth, navigation]);
 
   return (
     <ImageBackground
       source={{
-        uri: 'https://digital-game-technology-2021.imgix.net/media/Headers/dgt-electronic-plastic-chess-pieces.jpg?auto=format&crop=focalpoint&domain=digital-game-technology-2021.imgix.net&fit=crop&fp-x=0.5&fp-y=0.5&h=721&ixlib=php-3.3.1&q=82&w=1081',
+        uri: './images/chesspiecesbg.avif',
       }}
       style={styles.background}
       resizeMode="cover"
     >
-      {/* Overlay */}
       <View style={styles.overlay} />
 
-      {/* Content */}
       <View style={styles.content}>
         <View style={styles.textContainer}>
           <Text style={styles.title}>ChessMeet</Text>
@@ -57,7 +67,7 @@ export default function GetStarted({ navigation }: Props) {
           </Text>
         </View>
 
-        <TouchableOpacity style={styles.ctaButton} onPress={() => navigation.navigate('Lobby')}>
+        <TouchableOpacity style={styles.ctaButton} onPress={() => navigation.navigate('SignIn')}>
           <Text style={styles.ctaText}>Get Started</Text>
         </TouchableOpacity>
       </View>
@@ -75,7 +85,7 @@ const styles = StyleSheet.create({
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: COLORS.Overlaybg, // 45% black overlay
+    backgroundColor: COLORS.Overlaybg,
   },
   content: {
     flex: 1,

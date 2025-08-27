@@ -9,4 +9,7 @@ export type RootStackParamList = {
   Multiplayer: undefined;
   AI: undefined;
   GameRules: undefined;
+  // Settings: undefined;
+  Profile: undefined;
+  History: undefined;
 };
