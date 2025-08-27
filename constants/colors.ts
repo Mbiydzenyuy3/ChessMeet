@@ -20,6 +20,7 @@ export const COLORS = {
   error: '#F44336',
   warning: '#FF9800',
   info: '#66FCF1',
+  orange: 'orange',
 
   secondary: '#E6A276',
   black: '#18191A',

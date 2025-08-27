@@ -1,4 +1,4 @@
-// // // src/api/game.ts
+// //
 // // import api from './api'; // your Axios instance
 
 // // export async function joinAIGame(timeControl: string) {
@@ -26,7 +26,7 @@
 // //     throw err;
 // //   }
 // // }
-
+// src/api/game.ts
 import api from './api';
 
 export interface AIJoinResponse {
