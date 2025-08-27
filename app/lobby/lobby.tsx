@@ -146,7 +146,7 @@ export default function LobbyScreen({ navigation }: Props) {
         </View>
         <AnimatedTouchable
           style={[styles.card, { backgroundColor: COLORS.primary }, multiplayerStyle]}
-          onPress={() => navigation.navigate('Local')}
+          onPress={() => navigation.navigate('Local', undefined)}
         >
           <Users size={32} color="white" />
           <Text style={styles.cardTitle}>Play Offline</Text>
@@ -155,7 +155,7 @@ export default function LobbyScreen({ navigation }: Props) {
 
         <AnimatedTouchable
           style={[styles.card, { backgroundColor: COLORS.primary }, multiplayerStyle]}
-          onPress={() => navigation.navigate('Multiplayer')}
+          onPress={() => navigation.navigate('Multiplayer', undefined)}
         >
           <Users size={32} color="white" />
           <Text style={styles.cardTitle}>Play vs Multiplayer</Text>
@@ -164,7 +164,7 @@ export default function LobbyScreen({ navigation }: Props) {
 
         <AnimatedTouchable
           style={[styles.card, { backgroundColor: COLORS.backgroundOne }, aiStyle]}
-          onPress={() => navigation.navigate('AI')}
+          onPress={() => navigation.navigate('AI', {})}
         >
           <Bot size={32} color="white" />
           <Text style={styles.cardTitle}>Play vs AI</Text>
@@ -173,7 +173,7 @@ export default function LobbyScreen({ navigation }: Props) {
 
         <AnimatedTouchable
           style={[styles.card, { backgroundColor: COLORS.backgroundTwo }, lessonsStyle]}
-          onPress={() => navigation.navigate('GameRules')}
+          onPress={() => navigation.navigate('GameRules', undefined)}
         >
           <Book size={32} color="white" />
           <Text style={styles.cardTitle}>Game Rules</Text>

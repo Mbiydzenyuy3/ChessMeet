@@ -7,7 +7,10 @@ export type RootStackParamList = {
   Lobby: undefined;
   SplashScreen: undefined;
   Multiplayer: undefined;
-  AI: undefined;
+  AI: {
+    gameId?: string;
+    token?: string;
+  };
   GameRules: undefined;
   // Settings: undefined;
   Profile: undefined;

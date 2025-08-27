@@ -6,11 +6,10 @@ import { Provider } from 'react-redux';
 import { store } from '../redux/store'; // adjust path to where your store is
 
 import SplashScreen from '@/components/SplashScreen';
-import AIScreen from '@/screens/AIScreen';
 import GameRules from '@/screens/LessonScreen';
-import Profile from '@/screens/ProfileScreen';
 import OTPVerify from './auth/OTPverify';
 import SignIn from './auth/SignIn';
+import PlayAI from './game/PlayAI';
 import PlayLocal from './game/PlayLocal';
 import GetStarted from './index';
 import Lobby from './lobby/lobby';
@@ -28,8 +27,7 @@ export default function RootLayout() {
         <Stack.Screen name="Local" component={PlayLocal} />
         <Stack.Screen name="Lobby" component={Lobby} />
         <Stack.Screen name="GameRules" component={GameRules} />
-        <Stack.Screen name="AI" component={AIScreen} />
-        <Stack.Screen name="Profile" component={Profile} />
+        <Stack.Screen name="AI" component={PlayAI} />
       </Stack.Navigator>
     </Provider>
   );

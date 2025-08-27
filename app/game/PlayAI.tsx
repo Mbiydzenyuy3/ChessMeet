@@ -1,43 +1,39 @@
+import { gameApi } from '@/api/gameApi';
 import { connectSocket } from '@/components/sockets/io';
 import { COLORS } from '@/constants/colors';
+import { API_BASE_URL } from '@/constants/config';
+import { useAppSelector } from '@/redux/slices/hooks';
 import { RouteProp } from '@react-navigation/native';
-import { Chess, Square } from 'chess.js';
+import { Chess, Move, Square } from 'chess.js';
 import { Audio } from 'expo-av';
 import { useRouter } from 'expo-router';
 import { DoorOpenIcon, Lightbulb, RotateCcwIcon, Undo2 } from 'lucide-react-native';
 import { useEffect, useRef, useState } from 'react';
 import { Alert, ImageBackground, Pressable, StyleSheet, Text, View } from 'react-native';
 import Chessboard, { ChessboardRef } from 'react-native-chessboard';
+import moveSoundFile from '../../assets/sound/Move.mp3';
+import captureSoundFile from '../../assets/sound/Capture.mp3';
 
-// Backend URL
-const API_BASE = 'http://localhost:3000';
-
-type BoardScreenParams = {
-  Board: {
-    gameId: string;
-    token: string;
+type AIScreenParams = {
+  AI: {
+    gameId?: string;
+    token?: string;
   };
 };
 
-type BoardRouteProp = RouteProp<BoardScreenParams, 'Board'>;
-
-interface BoardProps {
-  route: BoardRouteProp;
-}
+type AIRouteProp = RouteProp<AIScreenParams, 'AI'>;
 
 interface ChessMoveInfo {
-  move: {
-    from: Square;
-    to: Square;
-    promotion?: string;
-    piece?: string;
-    captured?: string;
-  };
-  state: unknown; // We don't need to fully type this for our use case
+  move: Move;
+  // We don't need to access state properties in our implementation
 }
 
-export default function Board({ route }: BoardProps) {
-  const { gameId, token } = route.params;
+export default function PlayAI({ route }: { route: AIRouteProp }) {
+  const { gameId: initialGameId, token: initialToken } = route.params || {};
+  const [gameId, setGameId] = useState<string | null>(initialGameId || null);
+  const [token, setToken] = useState<string | null>(initialToken || null);
+  const [loading, setLoading] = useState<boolean>(!initialGameId || !initialToken);
+
   const chessboardRef = useRef<ChessboardRef>(null);
   const chess = useRef(new Chess()).current;
   const [fen, setFen] = useState(chess.fen());
@@ -45,28 +41,86 @@ export default function Board({ route }: BoardProps) {
   const captureRef = useRef<Audio.Sound | null>(null);
   const router = useRouter();
 
+  // Get token from Redux if not provided in params
+  const reduxToken = useAppSelector((state) => state.auth.token);
+
   // Load sounds
+  useEffect(() => {
+    const loadSounds = async () => {
+      try {
+        const moveSound = new Audio.Sound();
+        const captureSound = new Audio.Sound();
+
+        // Load move sound
+        await moveSound.loadAsync(moveSoundFile);
+        moveRef.current = moveSound;
+
+        // Load capture sound
+        await captureSound.loadAsync(captureSoundFile);
+        captureRef.current = captureSound;
+      } catch (error) {
+        console.error('Error loading sounds:', error);
+      }
+    };
+
+    loadSounds();
+
+    return () => {
+      // Unload sounds when component unmounts
+      moveRef.current?.unloadAsync();
+      captureRef.current?.unloadAsync();
+    };
+  }, []);
+
+  // Create new AI game if needed
+  useEffect(() => {
+    const initializeGame = async () => {
+      if (gameId && token) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        // Use token from Redux if not provided in params
+        const authToken = token || reduxToken;
+        if (!authToken) {
+          Alert.alert('Error', 'Authentication required');
+          router.back();
+          return;
+        }
+
+        setToken(authToken);
+
+        // Create new AI game
+        const response = await gameApi.startGame('ai');
+        const newGameId = response.data.gameId;
+        setGameId(newGameId);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error creating AI game:', error);
+        Alert.alert('Error', 'Failed to create AI game');
+        router.back();
+      }
+    };
+
+    if (!gameId || !token) {
+      initializeGame();
+    }
+  }, [gameId, token, reduxToken]);
+
   // Connect socket when component mounts
   useEffect(() => {
+    if (!token || !gameId) return;
+
     const socket = connectSocket(token);
 
     // Listen for moves from backend (AI or opponent)
     socket.on(
       'move',
-      ({
-        from: fromStr,
-        to: toStr,
-        promotion,
-      }: {
-        from: string;
-        to: string;
-        promotion?: string;
-      }) => {
-        const from = fromStr as Square;
-        const to = toStr as Square;
-        const move = chess.move({ from, to, promotion });
+      ({ from, to, promotion }: { from: string; to: string; promotion?: string }) => {
+        const move = chess.move({ from: from as Square, to: to as Square, promotion });
         if (move) {
-          chessboardRef.current?.move({ from, to });
+          chessboardRef.current?.move({ from: from as Square, to: to as Square });
           setFen(chess.fen());
         }
       }
@@ -75,7 +129,7 @@ export default function Board({ route }: BoardProps) {
     return () => {
       socket.off('move');
     };
-  }, []);
+  }, [token, gameId]);
 
   const playSound = async (type: 'move' | 'capture') => {
     try {
@@ -88,11 +142,11 @@ export default function Board({ route }: BoardProps) {
 
   // Handle a player move
   const handleMove = async (info: ChessMoveInfo) => {
-    const from = info.move.from;
-    const to = info.move.to;
-    const promotion = info.move.promotion;
+    if (!gameId || !token) return;
 
-    const moveRes = chess.move({ from, to, promotion });
+    const { from, to, promotion } = info.move;
+
+    const moveRes = chess.move({ from: from as Square, to: to as Square, promotion });
     if (!moveRes) return;
 
     setFen(chess.fen());
@@ -100,7 +154,8 @@ export default function Board({ route }: BoardProps) {
 
     try {
       // Send human move to backend
-      const res = await fetch(`${API_BASE}/games/move`, {
+      // We need to use a direct fetch call here because gameApi.makeMove doesn't match the backend endpoint
+      const res = await fetch(`${API_BASE_URL.apiBaseUrl}/games/move`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -126,13 +181,17 @@ export default function Board({ route }: BoardProps) {
 
       // If AI move is returned from backend
       if (data?.aiMove) {
-        const aiFrom = data.aiMove.slice(0, 2) as unknown as Square;
-        const aiTo = data.aiMove.slice(2, 4) as unknown as Square;
+        const aiFrom = data.aiMove.slice(0, 2);
+        const aiTo = data.aiMove.slice(2, 4);
         const aiPromotion = data.aiPromotion || undefined;
 
-        const aiMoveRes = chess.move({ from: aiFrom, to: aiTo, promotion: aiPromotion });
+        const aiMoveRes = chess.move({
+          from: aiFrom as Square,
+          to: aiTo as Square,
+          promotion: aiPromotion,
+        });
         if (aiMoveRes) {
-          chessboardRef.current?.move({ from: aiFrom, to: aiTo });
+          chessboardRef.current?.move({ from: aiFrom as Square, to: aiTo as Square });
           setFen(chess.fen());
           playSound(aiMoveRes.captured ? 'capture' : 'move');
         }
@@ -155,8 +214,11 @@ export default function Board({ route }: BoardProps) {
 
   // Fetch AI hints
   const handleHint = async () => {
+    if (!gameId || !token) return;
+
     try {
-      const res = await fetch(`${API_BASE}/ai/suggest-moves`, {
+      // The aiApi.getMoveSuggestion doesn't match the backend endpoint, so we use a direct fetch call
+      const res = await fetch(`${API_BASE_URL.apiBaseUrl}/ai/suggest-moves`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -176,6 +238,14 @@ export default function Board({ route }: BoardProps) {
   const image = {
     uri: 'https://img.freepik.com/premium-photo/watercolor-teal-blue-green-background-painting-watercolor-dark-blue_145343-69.jpg?w=360',
   };
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text style={styles.loadingText}>Setting up AI game...</Text>
+      </View>
+    );
+  }
 
   return (
     <ImageBackground source={image} resizeMode="cover" style={styles.backgroundImage}>
@@ -213,6 +283,16 @@ export default function Board({ route }: BoardProps) {
 }
 
 const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: COLORS.BackgroundColor,
+  },
+  loadingText: {
+    fontSize: 18,
+    color: COLORS.white,
+  },
   screen: { flex: 1 },
   backgroundImage: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   container: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingBottom: 20 },
