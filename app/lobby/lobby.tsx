@@ -28,9 +28,18 @@ interface Game {
   blackPlayer: { _id: string; displayName?: string; avatarUrl?: string };
 }
 
+const initialStats: UserStats = {
+  gamesPlayed: 0,
+  wins: 0,
+  losses: 0,
+  draws: 0,
+  resigned: 0,
+  rating: 1200,
+};
+
 export default function LobbyScreen({ navigation }: Props) {
   const { user, token } = useAuth();
-  const [stats, setStats] = React.useState<UserStats | null>(null);
+  const [stats, setStats] = React.useState<UserStats>(initialStats);
   const [history, setHistory] = React.useState<Game[]>([]);
 
   React.useEffect(() => {
@@ -187,11 +196,11 @@ export default function LobbyScreen({ navigation }: Props) {
           style={[styles.card, { backgroundColor: COLORS.backgroundTwo }, lessonsStyle]}
         >
           <View>
-            {stats ? (
+            <AnimatedTouchable
+            // style={[styles.card, { backgroundColor: COLORS.backgroundTwo }, lessonsStyle]}
+            >
               <StatsCard stats={stats} />
-            ) : (
-              <Text style={styles.loading}>Loading stats...</Text>
-            )}
+            </AnimatedTouchable>
           </View>
         </AnimatedTouchable>
         <AnimatedTouchable
@@ -223,11 +232,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 10,
+    marginTop: 20,
   },
   historyItem: {
     paddingVertical: 8,
     borderBottomWidth: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 60,
     borderBottomColor: COLORS.border,
   },
   historyText: {
@@ -252,6 +266,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 16,
+    marginTop: -30,
     justifyContent: 'space-between',
   },
   cardsContainerTwo: {
@@ -272,7 +287,7 @@ const styles = StyleSheet.create({
   cardTitle: { color: COLORS.white, fontWeight: '700', fontSize: 14, marginTop: 10 },
   cardDesc: { color: COLORS.white, opacity: 0.8, fontSize: 12, marginTop: 4, textAlign: 'center' },
   floatingPiece: { position: 'absolute', fontSize: 48, color: COLORS.white, opacity: 0.08 },
-  avatar: { width: 40, height: 40, borderRadius: 60 },
+  avatar: { width: 40, height: 40, borderRadius: 60, marginLeft: 24 },
   headerItems: {
     flexDirection: 'row',
     justifyContent: 'space-between',
