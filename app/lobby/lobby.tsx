@@ -1,5 +1,8 @@
+import api from '@/api/api';
+import StatsCard from '@/components/StatsCard';
 import { COLORS } from '@/constants/colors';
 import { useAuth } from '@/hooks/useAuth';
+import { UserStats } from '@/types/types';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Book, Bot, Users } from 'lucide-react-native';
 import React from 'react';
@@ -18,9 +21,38 @@ import type { RootStackParamList } from '../../types/navigation';
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 const AnimatedText = Animated.createAnimatedComponent(Text);
 type Props = NativeStackScreenProps<RootStackParamList, 'Lobby'>;
+interface Game {
+  _id: string;
+  status: string;
+  whitePlayer: { _id: string; displayName?: string; avatarUrl?: string };
+  blackPlayer: { _id: string; displayName?: string; avatarUrl?: string };
+}
 
 export default function LobbyScreen({ navigation }: Props) {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
+  const [stats, setStats] = React.useState<UserStats | null>(null);
+  const [history, setHistory] = React.useState<Game[]>([]);
+
+  React.useEffect(() => {
+    const fetchData = async () => {
+      try {
+        if (!token) return;
+        const headers = { Authorization: `Bearer ${token}` };
+
+        // fetch stats
+        const statsRes = await api.get<UserStats>('/user/me/stats', { headers });
+        setStats(statsRes.data);
+
+        // fetch game history
+        const historyRes = await api.get<Game[]>('/games/my/history?limit=5', { headers });
+        setHistory(historyRes.data);
+      } catch (err) {
+        console.error('Failed to fetch lobby data', err);
+      }
+    };
+
+    fetchData();
+  }, [token]);
 
   // Scale animations for cards
   const multiplayerScale = useSharedValue(0.8);
@@ -90,7 +122,6 @@ export default function LobbyScreen({ navigation }: Props) {
           );
         })}
       </View>
-
       {/* Header */}
       <View style={styles.header}>
         {/* Profile Icon 👇 */}
@@ -98,13 +129,16 @@ export default function LobbyScreen({ navigation }: Props) {
           <View style={styles.headerItems}>
             <Text style={styles.welcome}>Welcome back, {user?.displayName || 'Guest'}!</Text>
             <Image
-              source={{ uri: user?.avatarUrl || 'https://via.placeholder.com/100' }}
+              source={{
+                uri:
+                  user?.avatarUrl ||
+                  'https://i.pinimg.com/474x/fa/d5/e7/fad5e79954583ad50ccb3f16ee64f66d.jpg',
+              }}
               style={styles.avatar}
             />
           </View>
         </TouchableOpacity>
       </View>
-
       {/* Game Options */}
       <View style={styles.cardsContainer}>
         <View>
@@ -148,6 +182,37 @@ export default function LobbyScreen({ navigation }: Props) {
           </Text>
         </AnimatedTouchable>
       </View>
+      <View style={styles.cardsContainerTwo}>
+        <AnimatedTouchable
+          style={[styles.card, { backgroundColor: COLORS.backgroundTwo }, lessonsStyle]}
+        >
+          <View>
+            {stats ? (
+              <StatsCard stats={stats} />
+            ) : (
+              <Text style={styles.loading}>Loading stats...</Text>
+            )}
+          </View>
+        </AnimatedTouchable>
+        <AnimatedTouchable
+          style={[styles.card, { backgroundColor: COLORS.backgroundOne }, aiStyle]}
+        >
+          <View>
+            {history.length > 0 ? (
+              history.map((game) => (
+                <View key={game._id} style={styles.historyItem}>
+                  <Text style={styles.historyText}>
+                    {game.whitePlayer.displayName || 'White'} vs{' '}
+                    {game.blackPlayer.displayName || 'Black'} — {game.status}
+                  </Text>
+                </View>
+              ))
+            ) : (
+              <Text style={styles.loading}>No game history yet.</Text>
+            )}
+          </View>
+        </AnimatedTouchable>
+      </View>
     </View>
   );
 }
@@ -159,6 +224,21 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 20,
+  },
+  historyItem: {
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+  },
+  historyText: {
+    color: COLORS.white,
+    fontSize: 14,
+  },
+
+  loading: {
+    fontSize: 16,
+    color: COLORS.white,
+    textAlign: 'center',
   },
   welcome: { fontSize: 24, fontWeight: '700', color: COLORS.whitetext, marginBottom: 6 },
   subtitle: {
@@ -172,6 +252,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 16,
+    justifyContent: 'space-between',
+  },
+  cardsContainerTwo: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 16,
+    marginTop: 20,
     justifyContent: 'space-between',
   },
   card: {

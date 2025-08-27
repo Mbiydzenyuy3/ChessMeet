@@ -47,7 +47,9 @@ export default function Profile() {
       <Text style={styles.title}>My Profile</Text>
       <Image
         source={{
-          uri: user?.avatarUrl || 'https://via.placeholder.com/100',
+          uri:
+            user?.avatarUrl ||
+            'https://i.pinimg.com/474x/fa/d5/e7/fad5e79954583ad50ccb3f16ee64f66d.jpg',
         }}
         style={styles.avatar}
       />
@@ -126,12 +128,12 @@ const styles = StyleSheet.create({
     marginTop: 10,
     marginBottom: 10,
   },
-  value: {
-    fontSize: 16,
-    marginBottom: 10,
-    fontWeight: '500',
-    color: COLORS.white,
-  },
+  // value: {
+  //   fontSize: 16,
+  //   marginBottom: 10,
+  //   fontWeight: '500',
+  //   color: COLORS.white,
+  // },
   input: {
     borderWidth: 1,
     borderColor: COLORS.border,
