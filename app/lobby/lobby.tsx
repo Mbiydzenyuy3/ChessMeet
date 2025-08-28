@@ -40,11 +40,11 @@ export default function LobbyScreen({ navigation }: Props) {
         const headers = { Authorization: `Bearer ${token}` };
 
         // fetch stats
-        const statsRes = await api.get<UserStats>('/user/me/stats', { headers });
+        const statsRes = await api.get<UserStats>('/user/me', { headers });
         setStats(statsRes.data);
 
         // fetch game history
-        const historyRes = await api.get<Game[]>('/games/my/history?limit=5', { headers });
+        const historyRes = await api.get<Game[]>('/games/:id/last-moves', { headers });
         setHistory(historyRes.data);
       } catch (err) {
         console.error('Failed to fetch lobby data', err);
