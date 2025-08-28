@@ -46,7 +46,7 @@ export default function SplashScreen() {
         Animated.timing(piecesTranslateY, {
           toValue: 0,
           duration: 600,
-          useNativeDriver: true,
+          useNativeDriver: false,
         }),
       ]).start();
     }, 400);

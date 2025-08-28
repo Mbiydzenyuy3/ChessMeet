@@ -1,10 +1,10 @@
 // app/auth/OTPVerify.tsx
-import React, { useRef, useState } from 'react';
-import { Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { doVerifyOtp } from '@/store/authSlice';
 import { COLORS } from '@/constants/colors';
 import { useAppDispatch, useAppSelector } from '@/store';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { doVerifyOtp } from '@/store/authSlice';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useRef, useState } from 'react';
+import { Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function OTPVerify() {
   const router = useRouter();
@@ -18,6 +18,7 @@ export default function OTPVerify() {
 
   const handleChange = (value: string, index: number) => {
     const newOtp = [...otp];
+    newOtp[index] = value.slice(-1);
     newOtp[index] = value.slice(-1);
     setOtp(newOtp);
 

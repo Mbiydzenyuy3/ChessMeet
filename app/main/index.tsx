@@ -1,7 +1,9 @@
 import { COLORS } from '@/constants/colors';
+import { useAuth } from '@/hooks/useAuth';
+import { useRouter } from 'expo-router';
 import { Book, Bot, Users } from 'lucide-react-native';
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -11,12 +13,12 @@ import Animated, {
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
-import { useRouter } from 'expo-router';
 
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 const AnimatedText = Animated.createAnimatedComponent(Text);
 
 export default function LobbyScreen() {
+  const { user } = useAuth();
   const router = useRouter();
 
   // Scale animations for cards
@@ -88,13 +90,28 @@ export default function LobbyScreen() {
           );
         })}
       </View>
-
       {/* Header */}
-      <Text style={styles.welcome}>ChessMeet</Text>
-      <Text style={styles.subtitle}>Choose your game mode</Text>
-
+      <View style={styles.header}>
+        {/* Profile Icon 👇 */}
+        <TouchableOpacity onPress={() => router.push('/')}>
+          <View style={styles.headerItems}>
+            <Text style={styles.welcome}>Welcome back, {user?.displayName || 'Guest'}!</Text>
+            <Image
+              source={{
+                uri:
+                  user?.avatarUrl ||
+                  'https://i.pinimg.com/474x/fa/d5/e7/fad5e79954583ad50ccb3f16ee64f66d.jpg',
+              }}
+              style={styles.avatar}
+            />
+          </View>
+        </TouchableOpacity>
+      </View>
       {/* Game Options */}
       <View style={styles.cardsContainer}>
+        <View>
+          <Text style={styles.subtitle}>Choose your game mode</Text>
+        </View>
         <AnimatedTouchable
           style={[styles.card, { backgroundColor: COLORS.primary }, multiplayerStyle]}
           onPress={() => router.push('/main/PlayLocal')}
@@ -136,28 +153,55 @@ export default function LobbyScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.BackgroundColor,
-    padding: 20,
+  container: { flex: 1, backgroundColor: COLORS.BackgroundColor, padding: 20 },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+    marginTop: 20,
   },
-  welcome: {
+  // historyItem: {
+  //   paddingVertical: 8,
+  //   borderBottomWidth: 1,
+  //   flexDirection: 'row',
+  //   justifyContent: 'space-between',
+  //   alignItems: 'center',
+  //   gap: 60,
+  //   borderBottomColor: COLORS.border,
+  // },
+  // historyText: {
+  //   color: COLORS.white,
+  //   fontSize: 14,
+  // },
+
+  // loading: {
+  //   fontSize: 16,
+  //   color: COLORS.white,
+  //   textAlign: 'center',
+  // },
+  welcome: { fontSize: 24, fontWeight: '700', color: COLORS.whitetext, marginBottom: 6 },
+  subtitle: {
     fontSize: 24,
     fontWeight: '700',
-    color: COLORS.whitetext,
-    marginBottom: 6,
-  },
-  subtitle: {
-    fontSize: 16,
     color: COLORS.muted,
+    marginTop: 40,
     marginBottom: 20,
   },
   cardsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 16,
+    marginTop: -30,
     justifyContent: 'space-between',
   },
+  // cardsContainerTwo: {
+  //   flexDirection: 'row',
+  //   flexWrap: 'wrap',
+  //   gap: 16,
+  //   marginTop: 20,
+  //   justifyContent: 'space-between',
+  // },
   card: {
     width: '47%',
     padding: 16,
@@ -184,5 +228,13 @@ const styles = StyleSheet.create({
     fontSize: 48,
     color: COLORS.white,
     opacity: 0.08,
+  },
+  avatar: { width: 40, height: 40, borderRadius: 60, marginLeft: 24 },
+  headerItems: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+    gap: 40,
   },
 });

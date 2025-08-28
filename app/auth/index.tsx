@@ -2,6 +2,7 @@
 
 import { COLORS } from '@/constants/colors';
 // import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useRouter } from 'expo-router';
 import React from 'react';
 import {
   Dimensions,
@@ -11,7 +12,6 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { useRouter } from 'expo-router';
 
 const { width, height } = Dimensions.get('window');
 
@@ -22,15 +22,13 @@ export default function GetStarted() {
   return (
     <ImageBackground
       source={{
-        uri: 'https://digital-game-technology-2021.imgix.net/media/Headers/dgt-electronic-plastic-chess-pieces.jpg?auto=format&crop=focalpoint&domain=digital-game-technology-2021.imgix.net&fit=crop&fp-x=0.5&fp-y=0.5&h=721&ixlib=php-3.3.1&q=82&w=1081',
+        uri: './images/chesspiecesbg.avif',
       }}
       style={styles.background}
       resizeMode="cover"
     >
-      {/* Overlay */}
       <View style={styles.overlay} />
 
-      {/* Content */}
       <View style={styles.content}>
         <View style={styles.textContainer}>
           <Text style={styles.title}>ChessMeet</Text>
@@ -58,7 +56,7 @@ const styles = StyleSheet.create({
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: COLORS.Overlaybg, // 45% black overlay
+    backgroundColor: COLORS.Overlaybg,
   },
   content: {
     flex: 1,

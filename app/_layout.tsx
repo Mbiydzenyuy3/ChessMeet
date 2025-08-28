@@ -1,10 +1,10 @@
 // app/_layout.tsx
-import { Slot, useRouter } from 'expo-router';
-import { Provider, useDispatch, useSelector } from 'react-redux';
-import { store, AppDispatch, RootState } from '@/store';
-import { useEffect, useState } from 'react';
-import { hydrateAuth } from '@/store/authSlice';
 import SplashScreen from '@/components/SplashScreen';
+import { AppDispatch, RootState, store } from '@/store';
+import { hydrateAuth } from '@/store/authSlice';
+import { Slot, useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
+import { Provider, useDispatch, useSelector } from 'react-redux';
 
 function AuthGate() {
   const router = useRouter();

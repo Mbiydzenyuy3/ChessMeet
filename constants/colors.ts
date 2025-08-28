@@ -20,6 +20,7 @@ export const COLORS = {
   error: '#F44336',
   warning: '#FF9800',
   info: '#66FCF1',
+  orange: 'orange',
 
   secondary: '#E6A276',
   black: '#18191A',
@@ -36,6 +37,7 @@ export const COLORS = {
   footerText: '#6B7280',
   containerHome: '#0B0C10',
   ctaButton: '#45A29E',
+  mediumGray: 'rgb(136, 136, 136)',
 
   foreground: '#F9FAFB', // default foreground color (light text / elements)
   muted: '#9CA3AF',
@@ -49,6 +51,7 @@ export const COLORS = {
   backgroundOne: '#6C63FF',
   backgroundTwo: '#F4B400',
   bgMossGreen: '#70994A',
+  boardBackground: '#446b6a',
 
   Overlaybg: 'rgba(0,0,0,0.45)',
   ErrorTextColor: 'red',

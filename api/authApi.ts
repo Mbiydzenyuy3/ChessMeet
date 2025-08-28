@@ -1,14 +1,26 @@
+//api/authApi.ts
 import { ENDPOINTS } from '../constants/endpoints';
 import api from './api';
 
 export interface RequestOtpRes {
-  userIdentifier: string; // <-- add this (backend returns it)
-  message: string;
+  email: string; // backend returns this
 }
 
 export interface VerifyOtpRes {
   accessToken: string; // backend returns accessToken
-  user: { _id: string; email: string; displayName?: string };
+  user: { _id: string; userIdentifier: string; avatarUrl: string; code: string };
+}
+
+// Define the allowed update fields
+export interface UpdateProfilePayload {
+  displayName?: string;
+  avatarUrl?: string;
+}
+
+export interface UpdateProfileRes {
+  _id: string;
+  avatarUrl: string;
+  displayName?: string;
 }
 
 const authApi = {
@@ -16,6 +28,11 @@ const authApi = {
 
   verifyOtp: (userIdentifier: string, code: string) =>
     api.post<VerifyOtpRes>(ENDPOINTS.VERIFY_OTP, { userIdentifier, code }),
+
+  updateProfile: (updates: UpdateProfilePayload, token: string) =>
+    api.patch('/user/me', updates, {
+      headers: { Authorization: `Bearer ${token}` },
+    }),
 };
 
 export default authApi;

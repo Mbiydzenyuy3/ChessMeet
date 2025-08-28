@@ -1,20 +1,31 @@
 // hooks/useAuth.ts
-import { logout, requestOtp, verifyOtp } from '../redux/slices/authSlice';
+import {
+  bootstrapAuth,
+  logout,
+  requestOtp,
+  updateProfile,
+  verifyOtp,
+} from '../redux/slices/authSlice';
 import { useAppDispatch, useAppSelector } from './../redux/slices/hooks';
 
 export function useAuth() {
   const dispatch = useAppDispatch();
-  const { token, user, loading, error } = useAppSelector((s) => s.auth);
+  const { token, user, loading, error, bootstrapped } = useAppSelector((s) => s.auth);
 
   return {
     token,
     user,
     loading,
     error,
+    bootstrapped,
+
     requestOtp: (email: string) => dispatch(requestOtp(email)),
     verifyOtp: (userIdentifier: string, code: string) =>
       dispatch(verifyOtp({ userIdentifier, code })),
     logout: () => dispatch(logout()),
+    bootstrapAuth: () => dispatch(bootstrapAuth()),
+    updateProfile: (updates: { displayName?: string; avatarUrl?: string }) =>
+      dispatch(updateProfile(updates)),
     isAuthenticated: Boolean(token),
   };
 }

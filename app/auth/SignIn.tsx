@@ -1,11 +1,11 @@
 // app/auth/SignIn.tsx
+import api from '@/api/api';
 import { COLORS } from '@/constants/colors';
+import { useRouter } from 'expo-router';
+import { Formik } from 'formik';
 import React, { useState } from 'react';
 import { Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import api from '@/api/api';
-import { Formik } from 'formik';
 import * as Yup from 'yup';
-import { useRouter } from 'expo-router';
 
 const signInSchema = Yup.object().shape({
   email: Yup.string().email('Please enter a valid email').required('Email is required'),
@@ -15,10 +15,7 @@ export default function SignIn() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  const handleRequestOtp = async (email: string) => {
-    if (!email) return;
-
-    setLoading(true);
+  const handleSubmitOtp = async (email: string) => {
     try {
       const response = await api.post('/auth/request-otp', { email });
 
@@ -35,7 +32,6 @@ export default function SignIn() {
       setLoading(false);
     }
   };
-
   return (
     <View style={styles.container}>
       <Image source={{ uri: 'assets/images/chesslogo.jpeg' }} style={styles.crown} />
@@ -45,7 +41,7 @@ export default function SignIn() {
       <Formik
         initialValues={{ email: '' }}
         validationSchema={signInSchema}
-        onSubmit={(values) => handleRequestOtp(values.email)}
+        onSubmit={({ email }) => handleSubmitOtp(email)}
       >
         {({ handleChange, handleBlur, handleSubmit, values, errors, touched, isValid }) => (
           <>
@@ -83,6 +79,7 @@ export default function SignIn() {
   );
 }
 
+// ✅ Styles remain the same
 const styles = StyleSheet.create({
   container: {
     flex: 1,
