@@ -1,8 +1,6 @@
+// ============================ screens/SplashScreen.tsx ============================
 import { COLORS } from '@/constants/colors';
-import { RootState } from '@/redux/store'; // your Redux store
-import type { RootStackParamList } from '@/types/navigation';
-import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootState } from '@/store';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useRef } from 'react';
 import { Animated, Dimensions, StyleSheet, Text, View } from 'react-native';
@@ -17,13 +15,12 @@ export default function SplashScreen() {
   const piecesFadeAnim = useRef(new Animated.Value(0)).current;
   const piecesTranslateY = useRef(new Animated.Value(50)).current;
 
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-
-  // ✅ Redux auth state (replace with your own selector)
-  const isAuthenticated = useSelector((state: RootState) => !!state.auth.token);
+  // ✅ Redux auth state : on check si un token existe
+  const { token, loading } = useSelector((state: RootState) => state.auth);
+  const isAuthenticated = !!token;
 
   useEffect(() => {
-    // Logo animation
+    // Animation logo
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
@@ -38,7 +35,7 @@ export default function SplashScreen() {
       }),
     ]).start();
 
-    // Pieces animation
+    // Animation des pièces
     setTimeout(() => {
       Animated.parallel([
         Animated.timing(piecesFadeAnim, {
@@ -54,17 +51,19 @@ export default function SplashScreen() {
       ]).start();
     }, 400);
 
-    // ✅ Navigate after delay
-    const timer = setTimeout(() => {
-      if (isAuthenticated) {
-        navigation.replace('Lobby'); // already logged in
-      } else {
-        navigation.replace('GetStarted'); // first time / not logged in
-      }
-    }, 5000); // 5s splash duration
+    // ✅ Navigation après 3s (ajustable)
+    // const timer = setTimeout(() => {
+    //   if (loading) return; // on attend que l'hydratation soit finie
 
-    return () => clearTimeout(timer);
-  }, [isAuthenticated, fadeAnim, scaleAnim, piecesFadeAnim, piecesTranslateY, navigation]);
+    //   if (isAuthenticated) {
+    //     navigation.replace('Lobby'); // user déjà connecté
+    //   } else {
+    //     navigation.replace('GetStarted'); // première utilisation ou pas loggé
+    //   }
+    // }, 3000);
+
+    return;
+  }, [isAuthenticated, loading, fadeAnim, scaleAnim, piecesFadeAnim, piecesTranslateY]);
 
   return (
     <LinearGradient
@@ -73,6 +72,7 @@ export default function SplashScreen() {
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
     >
+      {/* LOGO */}
       <Animated.View
         style={[
           styles.logoContainer,
@@ -89,6 +89,7 @@ export default function SplashScreen() {
         <Text style={styles.subtitle}>Meet</Text>
       </Animated.View>
 
+      {/* PIÈCES */}
       <Animated.View
         style={[
           styles.piecesContainer,

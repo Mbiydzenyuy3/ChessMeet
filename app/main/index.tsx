@@ -1,9 +1,6 @@
-import api from '@/api/api';
-import StatsCard from '@/components/StatsCard';
 import { COLORS } from '@/constants/colors';
 import { useAuth } from '@/hooks/useAuth';
-import { UserStats } from '@/types/types';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useRouter } from 'expo-router';
 import { Book, Bot, Users } from 'lucide-react-native';
 import React from 'react';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -16,52 +13,13 @@ import Animated, {
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
-import type { RootStackParamList } from '../../types/navigation';
 
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 const AnimatedText = Animated.createAnimatedComponent(Text);
-type Props = NativeStackScreenProps<RootStackParamList, 'Lobby'>;
-interface Game {
-  _id: string;
-  status: string;
-  whitePlayer: { _id: string; displayName?: string; avatarUrl?: string };
-  blackPlayer: { _id: string; displayName?: string; avatarUrl?: string };
-}
 
-const initialStats: UserStats = {
-  gamesPlayed: 0,
-  wins: 0,
-  losses: 0,
-  draws: 0,
-  resigned: 0,
-  rating: 1200,
-};
-
-export default function LobbyScreen({ navigation }: Props) {
-  const { user, token } = useAuth();
-  const [stats, setStats] = React.useState<UserStats>(initialStats);
-  const [history, setHistory] = React.useState<Game[]>([]);
-
-  React.useEffect(() => {
-    const fetchData = async () => {
-      try {
-        if (!token) return;
-        const headers = { Authorization: `Bearer ${token}` };
-
-        // fetch stats
-        const statsRes = await api.get<UserStats>('/user/me/stats', { headers });
-        setStats(statsRes.data);
-
-        // fetch game history
-        const historyRes = await api.get<Game[]>('/games/my/history?limit=5', { headers });
-        setHistory(historyRes.data);
-      } catch (err) {
-        console.error('Failed to fetch lobby data', err);
-      }
-    };
-
-    fetchData();
-  }, [token]);
+export default function LobbyScreen() {
+  const { user } = useAuth();
+  const router = useRouter();
 
   // Scale animations for cards
   const multiplayerScale = useSharedValue(0.8);
@@ -84,6 +42,7 @@ export default function LobbyScreen({ navigation }: Props) {
     lessonsScale.value = withDelay(400, withSpring(1, { damping: 6 }));
   }, []);
 
+  // Floating pieces
   const floatingPieces = Array.from({ length: 6 }).map((_, i) => ({
     translateY: useSharedValue(0),
     opacity: useSharedValue(0.1),
@@ -134,7 +93,7 @@ export default function LobbyScreen({ navigation }: Props) {
       {/* Header */}
       <View style={styles.header}>
         {/* Profile Icon 👇 */}
-        <TouchableOpacity onPress={() => navigation.navigate('Profile')}>
+        <TouchableOpacity onPress={() => router.push('/')}>
           <View style={styles.headerItems}>
             <Text style={styles.welcome}>Welcome back, {user?.displayName || 'Guest'}!</Text>
             <Image
@@ -155,7 +114,7 @@ export default function LobbyScreen({ navigation }: Props) {
         </View>
         <AnimatedTouchable
           style={[styles.card, { backgroundColor: COLORS.primary }, multiplayerStyle]}
-          onPress={() => navigation.navigate('Local')}
+          onPress={() => router.push('/main/PlayLocal')}
         >
           <Users size={32} color="white" />
           <Text style={styles.cardTitle}>Play Offline</Text>
@@ -164,16 +123,16 @@ export default function LobbyScreen({ navigation }: Props) {
 
         <AnimatedTouchable
           style={[styles.card, { backgroundColor: COLORS.primary }, multiplayerStyle]}
-          onPress={() => navigation.navigate('Multiplayer')}
+          onPress={() => router.push('/main/game')}
         >
           <Users size={32} color="white" />
           <Text style={styles.cardTitle}>Play vs Multiplayer</Text>
-          <Text style={styles.cardDesc}>Compete in real time online with other players</Text>
+          <Text style={styles.cardDesc}>Compete online with players</Text>
         </AnimatedTouchable>
 
         <AnimatedTouchable
           style={[styles.card, { backgroundColor: COLORS.backgroundOne }, aiStyle]}
-          onPress={() => navigation.navigate('AI')}
+          onPress={() => router.push('/main/game')}
         >
           <Bot size={32} color="white" />
           <Text style={styles.cardTitle}>Play vs AI</Text>
@@ -182,44 +141,11 @@ export default function LobbyScreen({ navigation }: Props) {
 
         <AnimatedTouchable
           style={[styles.card, { backgroundColor: COLORS.backgroundTwo }, lessonsStyle]}
-          onPress={() => navigation.navigate('GameRules')}
+          onPress={() => router.push('/main')}
         >
           <Book size={32} color="white" />
           <Text style={styles.cardTitle}>Game Rules</Text>
-          <Text style={styles.cardDesc}>
-            Your tour guide to winning your first game and many more
-          </Text>
-        </AnimatedTouchable>
-      </View>
-      <View style={styles.cardsContainerTwo}>
-        <AnimatedTouchable
-          style={[styles.card, { backgroundColor: COLORS.backgroundTwo }, lessonsStyle]}
-        >
-          <View>
-            <AnimatedTouchable
-            // style={[styles.card, { backgroundColor: COLORS.backgroundTwo }, lessonsStyle]}
-            >
-              <StatsCard stats={stats} />
-            </AnimatedTouchable>
-          </View>
-        </AnimatedTouchable>
-        <AnimatedTouchable
-          style={[styles.card, { backgroundColor: COLORS.backgroundOne }, aiStyle]}
-        >
-          <View>
-            {history.length > 0 ? (
-              history.map((game) => (
-                <View key={game._id} style={styles.historyItem}>
-                  <Text style={styles.historyText}>
-                    {game.whitePlayer.displayName || 'White'} vs{' '}
-                    {game.blackPlayer.displayName || 'Black'} — {game.status}
-                  </Text>
-                </View>
-              ))
-            ) : (
-              <Text style={styles.loading}>No game history yet.</Text>
-            )}
-          </View>
+          <Text style={styles.cardDesc}>Learn how to win your first game and many more</Text>
         </AnimatedTouchable>
       </View>
     </View>
@@ -235,25 +161,25 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     marginTop: 20,
   },
-  historyItem: {
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: 60,
-    borderBottomColor: COLORS.border,
-  },
-  historyText: {
-    color: COLORS.white,
-    fontSize: 14,
-  },
+  // historyItem: {
+  //   paddingVertical: 8,
+  //   borderBottomWidth: 1,
+  //   flexDirection: 'row',
+  //   justifyContent: 'space-between',
+  //   alignItems: 'center',
+  //   gap: 60,
+  //   borderBottomColor: COLORS.border,
+  // },
+  // historyText: {
+  //   color: COLORS.white,
+  //   fontSize: 14,
+  // },
 
-  loading: {
-    fontSize: 16,
-    color: COLORS.white,
-    textAlign: 'center',
-  },
+  // loading: {
+  //   fontSize: 16,
+  //   color: COLORS.white,
+  //   textAlign: 'center',
+  // },
   welcome: { fontSize: 24, fontWeight: '700', color: COLORS.whitetext, marginBottom: 6 },
   subtitle: {
     fontSize: 24,
@@ -269,13 +195,13 @@ const styles = StyleSheet.create({
     marginTop: -30,
     justifyContent: 'space-between',
   },
-  cardsContainerTwo: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 16,
-    marginTop: 20,
-    justifyContent: 'space-between',
-  },
+  // cardsContainerTwo: {
+  //   flexDirection: 'row',
+  //   flexWrap: 'wrap',
+  //   gap: 16,
+  //   marginTop: 20,
+  //   justifyContent: 'space-between',
+  // },
   card: {
     width: '47%',
     padding: 16,
@@ -284,9 +210,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     elevation: 4,
   },
-  cardTitle: { color: COLORS.white, fontWeight: '700', fontSize: 14, marginTop: 10 },
-  cardDesc: { color: COLORS.white, opacity: 0.8, fontSize: 12, marginTop: 4, textAlign: 'center' },
-  floatingPiece: { position: 'absolute', fontSize: 48, color: COLORS.white, opacity: 0.08 },
+  cardTitle: {
+    color: COLORS.white,
+    fontWeight: '700',
+    fontSize: 16,
+    marginTop: 10,
+  },
+  cardDesc: {
+    color: COLORS.white,
+    opacity: 0.8,
+    fontSize: 12,
+    marginTop: 4,
+    textAlign: 'center',
+  },
+  floatingPiece: {
+    position: 'absolute',
+    fontSize: 48,
+    color: COLORS.white,
+    opacity: 0.08,
+  },
   avatar: { width: 40, height: 40, borderRadius: 60, marginLeft: 24 },
   headerItems: {
     flexDirection: 'row',

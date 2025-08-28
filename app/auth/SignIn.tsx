@@ -1,43 +1,40 @@
+// app/auth/SignIn.tsx
+import api from '@/api/api';
 import { COLORS } from '@/constants/colors';
-import { useAuth } from '@/hooks/useAuth'; // ✅ import your custom hook
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useRouter } from 'expo-router';
 import { Formik } from 'formik';
-import React from 'react';
+import React, { useState } from 'react';
 import { Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import * as Yup from 'yup';
 
-type RootStackParamList = {
-  SignIn: undefined;
-  OTPVerify: { userIdentifier: string };
-  Lobby: undefined;
-};
-
-type SignInNavigationProp = NativeStackNavigationProp<RootStackParamList, 'SignIn'>;
-
-type SignInProps = {
-  navigation: SignInNavigationProp;
-};
-
-// ✅ Yup schema
 const signInSchema = Yup.object().shape({
   email: Yup.string().email('Please enter a valid email').required('Email is required'),
 });
 
-export default function SignIn({ navigation }: SignInProps) {
-  const { requestOtp, loading } = useAuth(); // ✅ useAuth replaces local state & API
+export default function SignIn() {
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   const handleSubmitOtp = async (email: string) => {
     try {
-      const res = await requestOtp(email).unwrap(); // ✅ unwrap
-      const userIdentifier = res?.email ?? email;
-      navigation.navigate('OTPVerify', { userIdentifier });
-    } catch (err) {
+      const response = await api.post('/auth/request-otp', { email });
+
+      if (response.data?.success || response.status === 201 || response.status === 200) {
+        const userIdentifier = response.data?.userIdentifier ?? email;
+        // ✅ expo-router → navigate vers OTPVerify
+        router.push({ pathname: '/auth/OTPverify', params: { userIdentifier } });
+      } else {
+        console.log('Error sending OTP:', response.data?.message || 'Unknown error');
+      }
+    } catch (err: unknown) {
       console.error('Failed to request OTP:', err);
+    } finally {
+      setLoading(false);
     }
   };
   return (
     <View style={styles.container}>
-      <Image source={{ uri: '../images/chesslogo.jpeg' }} style={styles.crown} />
+      <Image source={{ uri: 'assets/images/chesslogo.jpeg' }} style={styles.crown} />
       <Text style={styles.title}>Welcome to ChessMeet</Text>
       <Text style={styles.subtitle}>Enter your email to get started</Text>
 
@@ -109,12 +106,8 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     marginBottom: 10,
     elevation: 2,
-    shadowColor: COLORS.blacktext,
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    shadowOffset: { width: 0, height: 2 },
   },
-  input: { height: 45, fontSize: 16, color: COLORS.inputText, borderWidth: 0, borderRadius: 0 },
+  input: { height: 45, fontSize: 16, color: COLORS.inputText },
   button: {
     backgroundColor: COLORS.bgMossGreen,
     borderRadius: 8,

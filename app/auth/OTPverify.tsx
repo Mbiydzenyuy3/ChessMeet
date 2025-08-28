@@ -1,31 +1,24 @@
+// app/auth/OTPVerify.tsx
 import { COLORS } from '@/constants/colors';
-import { useAuth } from '@/hooks/useAuth';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useAppDispatch, useAppSelector } from '@/store';
+import { doVerifyOtp } from '@/store/authSlice';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useRef, useState } from 'react';
 import { Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
-type RootStackParamList = {
-  OTPVerify: { userIdentifier: string };
-  Lobby: undefined;
-};
+export default function OTPVerify() {
+  const router = useRouter();
+  const { userIdentifier } = useLocalSearchParams<{ userIdentifier: string }>();
 
-type OTPVerifyNavigationProp = NativeStackNavigationProp<RootStackParamList, 'OTPVerify'>;
-
-type Props = {
-  route: { params: { userIdentifier: string } };
-  navigation: OTPVerifyNavigationProp;
-};
-
-export default function OTPVerify({ route, navigation }: Props) {
-  const { userIdentifier } = route.params;
-  const { verifyOtp } = useAuth(); // ✅ get verifyOtp from hook
-  const [loading, setLoading] = useState(false);
+  const dispatch = useAppDispatch();
+  const { loading, error } = useAppSelector((state) => state.auth);
 
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const inputRefs = useRef<TextInput[]>([]);
 
   const handleChange = (value: string, index: number) => {
     const newOtp = [...otp];
+    newOtp[index] = value.slice(-1);
     newOtp[index] = value.slice(-1);
     setOtp(newOtp);
 
@@ -38,20 +31,24 @@ export default function OTPVerify({ route, navigation }: Props) {
     const code = otp.join('');
     if (code.length !== 6) return;
 
-    setLoading(true);
     try {
-      await verifyOtp(userIdentifier, code).unwrap(); // ✅ unwrap the thunk
-      navigation.replace('Lobby');
+      const resultAction = await dispatch(doVerifyOtp({ userIdentifier, code }));
+
+      if (doVerifyOtp.fulfilled.match(resultAction)) {
+        console.log('✅ OTP Vérifié et token sauvegardé');
+        // Avec expo-router → redirect vers (main)/index.tsx = Lobby
+        router.replace('/main');
+      } else {
+        console.error('❌ OTP invalide:', resultAction.error.message);
+      }
     } catch (err) {
-      console.error('OTP verification failed:', err);
-    } finally {
-      setLoading(false);
+      console.error('❌ Erreur lors de la vérification OTP:', err);
     }
   };
 
   return (
     <View style={styles.container}>
-      <Image source={{ uri: '../images/chesslogo.jpeg' }} style={styles.crown} />
+      <Image source={{ uri: 'assets/images/chesslogo.jpeg' }} style={styles.crown} />
       <Text style={styles.title}>Verify OTP</Text>
       <Text style={styles.subtitle}>
         We sent a 6-digit code to {'\n'}
@@ -77,10 +74,13 @@ export default function OTPVerify({ route, navigation }: Props) {
       <TouchableOpacity style={styles.button} onPress={handleVerify} disabled={loading}>
         <Text style={styles.buttonText}>{loading ? 'Verifying...' : 'Verify & Continue'}</Text>
       </TouchableOpacity>
+
+      {error && <Text style={{ color: 'red', marginTop: 10 }}>{error}</Text>}
     </View>
   );
 }
 
+// ✅ Styles identiques à avant
 const styles = StyleSheet.create({
   container: {
     flex: 1,

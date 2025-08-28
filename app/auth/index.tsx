@@ -1,8 +1,9 @@
+// app/index.tsx
+
 import { COLORS } from '@/constants/colors';
-import { useAuth } from '@/hooks/useAuth';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { Audio } from 'expo-av';
-import React, { useEffect } from 'react';
+// import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useRouter } from 'expo-router';
+import React from 'react';
 import {
   Dimensions,
   ImageBackground,
@@ -11,43 +12,13 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import type { RootStackParamList } from '../types/navigation';
 
 const { width, height } = Dimensions.get('window');
 
-type Props = NativeStackScreenProps<RootStackParamList, 'GetStarted'>;
+// type Props = NativeStackScreenProps<RootStackParamList, 'GetStarted'>;
 
-export default function GetStarted({ navigation }: Props) {
-  const { isAuthenticated, bootstrapAuth } = useAuth();
-
-  // 1️⃣ Set audio
-  useEffect(() => {
-    const setAudioMode = async () => {
-      try {
-        await Audio.setAudioModeAsync({
-          allowsRecordingIOS: false,
-          playsInSilentModeIOS: true,
-          shouldDuckAndroid: true,
-          playThroughEarpieceAndroid: false,
-        });
-      } catch (error) {
-        console.warn('Failed to set audio mode:', error);
-      }
-    };
-    setAudioMode();
-  }, []);
-
-  // 2️⃣ Bootstrap auth on mount
-  useEffect(() => {
-    const initAuth = async () => {
-      await bootstrapAuth();
-      if (isAuthenticated) {
-        navigation.replace('Lobby');
-      }
-    };
-    initAuth();
-  }, [isAuthenticated, bootstrapAuth, navigation]);
-
+export default function GetStarted() {
+  const router = useRouter();
   return (
     <ImageBackground
       source={{
@@ -67,7 +38,7 @@ export default function GetStarted({ navigation }: Props) {
           </Text>
         </View>
 
-        <TouchableOpacity style={styles.ctaButton} onPress={() => navigation.navigate('SignIn')}>
+        <TouchableOpacity style={styles.ctaButton} onPress={() => router.push('/auth/SignIn')}>
           <Text style={styles.ctaText}>Get Started</Text>
         </TouchableOpacity>
       </View>
