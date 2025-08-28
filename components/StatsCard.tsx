@@ -15,27 +15,27 @@ export default function StatsCard({ stats }: Props) {
 
       <View style={styles.row}>
         <Text style={styles.label}>Played:</Text>
-        <Text style={styles.value}>{stats.gamesPlayed}</Text>
+        <Text style={styles.value}>{stats.gamesPlayed ?? 0}</Text>
       </View>
 
       <View style={styles.row}>
         <Text style={styles.label}>Wins:</Text>
-        <Text style={[styles.value, { color: COLORS.success }]}>{stats.wins}</Text>
+        <Text style={[styles.value, { color: COLORS.success }]}>{stats.wins ?? 0}</Text>
       </View>
 
       <View style={styles.row}>
         <Text style={styles.label}>Losses:</Text>
-        <Text style={[styles.value, { color: COLORS.error }]}>{stats.losses}</Text>
+        <Text style={[styles.value, { color: COLORS.error }]}>{stats.losses ?? 0}</Text>
       </View>
 
       <View style={styles.row}>
         <Text style={styles.label}>Draws:</Text>
-        <Text style={[styles.value, { color: COLORS.orange }]}>{stats.draws}</Text>
+        <Text style={[styles.value, { color: COLORS.orange }]}>{stats.draws ?? 0}</Text>
       </View>
 
       <View style={styles.row}>
         <Text style={styles.label}>Resigned:</Text>
-        <Text style={[styles.value, { color: COLORS.mediumGray }]}>{stats.resigned}</Text>
+        <Text style={[styles.value, { color: COLORS.mediumGray }]}>{stats.resigned ?? 0}</Text>
       </View>
     </View>
   );
@@ -70,5 +70,6 @@ const styles = StyleSheet.create({
   value: {
     fontSize: 16,
     fontWeight: 'bold',
+    color: COLORS.mediumGray,
   },
 });
