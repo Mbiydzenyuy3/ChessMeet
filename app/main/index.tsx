@@ -93,7 +93,7 @@ export default function LobbyScreen() {
       {/* Header */}
       <View style={styles.header}>
         {/* Profile Icon 👇 */}
-        <TouchableOpacity onPress={() => router.push('/')}>
+        <TouchableOpacity onPress={() => router.push('/main/profile')}>
           <View style={styles.headerItems}>
             <Text style={styles.welcome}>Welcome back, {user?.displayName || 'Guest'}!</Text>
             <Image
@@ -140,13 +140,18 @@ export default function LobbyScreen() {
         </AnimatedTouchable>
 
         <AnimatedTouchable
-          style={[styles.card, { backgroundColor: COLORS.backgroundTwo }, lessonsStyle]}
+          style={[styles.card, { backgroundColor: COLORS.backgroundTwo }]}
           onPress={() => router.push('/main')}
         >
           <Book size={32} color="white" />
           <Text style={styles.cardTitle}>Game Rules</Text>
           <Text style={styles.cardDesc}>Learn how to win your first game and many more</Text>
         </AnimatedTouchable>
+      </View>
+      <View style={styles.cardsContainerTwo}>
+        <AnimatedTouchable
+          style={[styles.cardItems, { backgroundColor: COLORS.transparentBorder }, lessonsStyle]}
+        ></AnimatedTouchable>
       </View>
     </View>
   );
@@ -161,25 +166,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     marginTop: 20,
   },
-  // historyItem: {
-  //   paddingVertical: 8,
-  //   borderBottomWidth: 1,
-  //   flexDirection: 'row',
-  //   justifyContent: 'space-between',
-  //   alignItems: 'center',
-  //   gap: 60,
-  //   borderBottomColor: COLORS.border,
-  // },
-  // historyText: {
-  //   color: COLORS.white,
-  //   fontSize: 14,
-  // },
 
-  // loading: {
-  //   fontSize: 16,
-  //   color: COLORS.white,
-  //   textAlign: 'center',
-  // },
   welcome: { fontSize: 24, fontWeight: '700', color: COLORS.whitetext, marginBottom: 6 },
   subtitle: {
     fontSize: 24,
@@ -188,6 +175,7 @@ const styles = StyleSheet.create({
     marginTop: 40,
     marginBottom: 20,
   },
+
   cardsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -195,15 +183,23 @@ const styles = StyleSheet.create({
     marginTop: -30,
     justifyContent: 'space-between',
   },
-  // cardsContainerTwo: {
-  //   flexDirection: 'row',
-  //   flexWrap: 'wrap',
-  //   gap: 16,
-  //   marginTop: 20,
-  //   justifyContent: 'space-between',
-  // },
+  cardsContainerTwo: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 16,
+    marginTop: 20,
+    justifyContent: 'space-between',
+  },
   card: {
     width: '47%',
+    padding: 16,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 4,
+  },
+  cardItems: {
+    width: '100%',
     padding: 16,
     borderRadius: 16,
     justifyContent: 'center',
@@ -213,7 +209,7 @@ const styles = StyleSheet.create({
   cardTitle: {
     color: COLORS.white,
     fontWeight: '700',
-    fontSize: 16,
+    fontSize: 14,
     marginTop: 10,
   },
   cardDesc: {
@@ -234,7 +230,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
+    // marginBottom: 10,
     gap: 40,
   },
 });

@@ -1,18 +1,19 @@
 // app/main/_layout.tsx
-import React, { useEffect, useState } from 'react';
-import { Tabs, useRouter } from 'expo-router';
-import { View, Text, ActivityIndicator } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { COLORS } from '@/constants/colors';
 import { getToken } from '@/lib/storage';
+import { Ionicons } from '@expo/vector-icons';
+import { Tabs, useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, Text, View } from 'react-native';
 
 function TabHeader({ title }: { title: string }) {
   return (
     <View
       style={{
-        padding: 12,
+        // padding: 12,
         borderBottomWidth: 1,
-        borderColor: '#e5e7eb',
-        backgroundColor: 'white',
+        // borderColor: COLORS.border,
+        backgroundColor: COLORS.BackgroundColor,
       }}
     >
       <Text style={{ fontSize: 18, fontWeight: '700' }}>{title}</Text>
@@ -64,7 +65,7 @@ export default function Layout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Lobby',
+          title: '',
           tabBarLabel: 'Lobby',
           tabBarIcon: ({ color, size }) => <Ionicons name="home" color={color} size={size} />,
         }}
@@ -72,7 +73,7 @@ export default function Layout() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Profil',
+          title: '',
           tabBarLabel: 'Profil',
           tabBarIcon: ({ color, size }) => <Ionicons name="person" color={color} size={size} />,
         }}
@@ -80,7 +81,7 @@ export default function Layout() {
       <Tabs.Screen
         name="stats"
         options={{
-          title: 'Statistiques',
+          title: '',
           tabBarLabel: 'Stats',
           tabBarIcon: ({ color, size }) => <Ionicons name="bar-chart" color={color} size={size} />,
         }}
@@ -89,14 +90,14 @@ export default function Layout() {
         name="game"
         options={{
           href: null, // 👈 ne s'affiche pas dans la tabbar
-          title: 'Partie',
+          title: '',
         }}
       />
       <Tabs.Screen
         name="PlayLocal"
         options={{
           href: null, // 👈 empêche expo-router de générer un onglet
-          title: 'Play Local',
+          title: '',
         }}
       />
     </Tabs>

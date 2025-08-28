@@ -10,7 +10,7 @@ type Props = {
 
 export default function StatsCard({ stats }: Props) {
   return (
-    <View style={styles.card}>
+    <View style={styles.cardItems}>
       <Text style={styles.title}>Game Stats</Text>
 
       <View style={styles.row}>
@@ -42,21 +42,23 @@ export default function StatsCard({ stats }: Props) {
 }
 
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: COLORS.white,
-    padding: 16,
+  cardItems: {
+    backgroundColor: COLORS.transparentBorder,
+    // padding: 16,
     borderRadius: 12,
-    shadowColor: COLORS.black,
+    shadowColor: COLORS.white,
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 3,
     marginVertical: 10,
+    width: '100%',
   },
   title: {
     fontSize: 18,
     fontWeight: '600',
     marginBottom: 12,
     textAlign: 'center',
+    color: COLORS.white,
   },
   row: {
     flexDirection: 'row',
@@ -65,11 +67,11 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 16,
-    color: COLORS.mediumGray,
+    color: COLORS.white,
   },
   value: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: COLORS.mediumGray,
+    color: COLORS.white,
   },
 });
