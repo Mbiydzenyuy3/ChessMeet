@@ -27,6 +27,7 @@ export function useSocket() {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       socket.io.opts.extraHeaders = { Authorization: `Bearer ${jwt}` } as any;
       socket.connect();
+      console.log('connexion socket etablir');
     }
     connect();
 

@@ -1,9 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { COLORS } from '@/constants/colors';
-import { useAuth } from '@/hooks/useAuth';
-import { useRouter } from 'expo-router';
 import { Book, Bot, Users } from 'lucide-react-native';
 import React from 'react';
-import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -13,13 +12,62 @@ import Animated, {
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
+import { Alert } from 'react-native';
+// import { Button, Loading } from '../../components/UI';
+import { useAppDispatch } from '../../store';
+import { createVsAI, setMode } from '../../store/gameSlice';
+import { useRouter } from 'expo-router';
+import { api } from '../../lib/api';
 
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 const AnimatedText = Animated.createAnimatedComponent(Text);
 
 export default function LobbyScreen() {
-  const { user } = useAuth();
   const router = useRouter();
+
+  const dispatch = useAppDispatch();
+  // const [games, setGames] = useState<any[]>([]);
+  // const [loading, setLoading] = useState(false);
+
+  // async function refresh() {
+  //   setLoading(true);
+  //   try {
+  //     const data = await dispatch(listGames()).unwrap();
+  //     setGames(data);
+  //   } catch (e: any) {
+  //     Alert.alert('Erreur', e?.response?.data?.message || 'Impossible de charger les parties');
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // }
+
+  // useEffect(() => {
+  //   refresh();
+  // }, []);
+
+  async function startAI() {
+    console.log(`debut du jeux contre l'ia`);
+    await dispatch(createVsAI('300+0')).unwrap();
+    dispatch(setMode('ai'));
+    router.push('/main/game');
+  }
+
+  async function joinQueue() {
+    try {
+      const { data } = await api.post('/matchmaking/join', { timeControl: '300+0' });
+      dispatch(setMode('online'));
+      if (data && data._id) {
+        Alert.alert('Match trouvé', 'Redirection vers la partie…');
+        router.push('/main/game');
+      } else {
+        Alert.alert('En file', "En attente d'un adversaire…");
+        // L'écran de jeu écoutera les events socket (matchFound/movePlayed)
+        router.push('/main/game');
+      }
+    } catch (e: any) {
+      Alert.alert('Erreur', e?.response?.data?.message || 'Matchmaking indisponible');
+    }
+  }
 
   // Scale animations for cards
   const multiplayerScale = useSharedValue(0.8);
@@ -90,28 +138,13 @@ export default function LobbyScreen() {
           );
         })}
       </View>
+
       {/* Header */}
-      <View style={styles.header}>
-        {/* Profile Icon 👇 */}
-        <TouchableOpacity onPress={() => router.push('/main/profile')}>
-          <View style={styles.headerItems}>
-            <Text style={styles.welcome}>Welcome back, {user?.displayName || 'Guest'}!</Text>
-            <Image
-              source={{
-                uri:
-                  user?.avatarUrl ||
-                  'https://i.pinimg.com/474x/fa/d5/e7/fad5e79954583ad50ccb3f16ee64f66d.jpg',
-              }}
-              style={styles.avatar}
-            />
-          </View>
-        </TouchableOpacity>
-      </View>
+      <Text style={styles.welcome}>ChessMeet</Text>
+      <Text style={styles.subtitle}>Choose your game mode</Text>
+
       {/* Game Options */}
       <View style={styles.cardsContainer}>
-        <View>
-          <Text style={styles.subtitle}>Choose your game mode</Text>
-        </View>
         <AnimatedTouchable
           style={[styles.card, { backgroundColor: COLORS.primary }, multiplayerStyle]}
           onPress={() => router.push('/main/PlayLocal')}
@@ -123,7 +156,7 @@ export default function LobbyScreen() {
 
         <AnimatedTouchable
           style={[styles.card, { backgroundColor: COLORS.primary }, multiplayerStyle]}
-          onPress={() => router.push('/main/game')}
+          onPress={joinQueue}
         >
           <Users size={32} color="white" />
           <Text style={styles.cardTitle}>Play vs Multiplayer</Text>
@@ -132,7 +165,7 @@ export default function LobbyScreen() {
 
         <AnimatedTouchable
           style={[styles.card, { backgroundColor: COLORS.backgroundOne }, aiStyle]}
-          onPress={() => router.push('/main/game')}
+          onPress={startAI}
         >
           <Bot size={32} color="white" />
           <Text style={styles.cardTitle}>Play vs AI</Text>
@@ -140,7 +173,7 @@ export default function LobbyScreen() {
         </AnimatedTouchable>
 
         <AnimatedTouchable
-          style={[styles.card, { backgroundColor: COLORS.backgroundTwo }]}
+          style={[styles.card, { backgroundColor: COLORS.backgroundTwo }, lessonsStyle]}
           onPress={() => router.push('/main')}
         >
           <Book size={32} color="white" />
@@ -148,46 +181,31 @@ export default function LobbyScreen() {
           <Text style={styles.cardDesc}>Learn how to win your first game and many more</Text>
         </AnimatedTouchable>
       </View>
-      <View style={styles.cardsContainerTwo}>
-        <AnimatedTouchable
-          style={[styles.cardItems, { backgroundColor: COLORS.transparentBorder }, lessonsStyle]}
-        ></AnimatedTouchable>
-      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.BackgroundColor, padding: 20 },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 10,
-    marginTop: 20,
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.BackgroundColor,
+    padding: 20,
   },
-
-  welcome: { fontSize: 24, fontWeight: '700', color: COLORS.whitetext, marginBottom: 6 },
-  subtitle: {
+  welcome: {
     fontSize: 24,
     fontWeight: '700',
+    color: COLORS.whitetext,
+    marginBottom: 6,
+  },
+  subtitle: {
+    fontSize: 16,
     color: COLORS.muted,
-    marginTop: 40,
     marginBottom: 20,
   },
-
   cardsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 16,
-    marginTop: -30,
-    justifyContent: 'space-between',
-  },
-  cardsContainerTwo: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 16,
-    marginTop: 20,
     justifyContent: 'space-between',
   },
   card: {
@@ -198,18 +216,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     elevation: 4,
   },
-  cardItems: {
-    width: '100%',
-    padding: 16,
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 4,
-  },
   cardTitle: {
     color: COLORS.white,
     fontWeight: '700',
-    fontSize: 14,
+    fontSize: 16,
     marginTop: 10,
   },
   cardDesc: {
@@ -224,13 +234,5 @@ const styles = StyleSheet.create({
     fontSize: 48,
     color: COLORS.white,
     opacity: 0.08,
-  },
-  avatar: { width: 40, height: 40, borderRadius: 60, marginLeft: 24 },
-  headerItems: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    // marginBottom: 10,
-    gap: 40,
   },
 });
