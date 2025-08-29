@@ -1,6 +1,6 @@
 // app/auth/SignIn.tsx
-import api from '@/api/api';
 import { COLORS } from '@/constants/colors';
+import { api } from '@/lib/api';
 import { useRouter } from 'expo-router';
 import { Formik } from 'formik';
 import React, { useState } from 'react';

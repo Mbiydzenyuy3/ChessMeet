@@ -1,5 +1,6 @@
 import { COLORS } from '@/constants/colors';
 import { useAuth } from '@/hooks/useAuth';
+import { api } from '@/lib/api';
 import { useRouter } from 'expo-router';
 import { Book, Bot, Users } from 'lucide-react-native';
 import React from 'react';
@@ -49,6 +50,20 @@ export default function LobbyScreen() {
     delay: i * 300,
   }));
 
+  const pairPlayer = async () => {
+    try {
+      const res = await api.post(`http://localhost:3000/api/matchmaking/join`);
+      const data = await res.data;
+      console.log('data', data);
+      if (typeof data === 'string') {
+        router.push('/main/WaitingScreen');
+      } else {
+        router.push('/main');
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
   React.useEffect(() => {
     floatingPieces.forEach((piece) => {
       piece.translateY.value = withRepeat(
@@ -123,7 +138,7 @@ export default function LobbyScreen() {
 
         <AnimatedTouchable
           style={[styles.card, { backgroundColor: COLORS.primary }, multiplayerStyle]}
-          onPress={() => router.push('/main/game')}
+          onPress={pairPlayer}
         >
           <Users size={32} color="white" />
           <Text style={styles.cardTitle}>Play vs Multiplayer</Text>
@@ -132,7 +147,7 @@ export default function LobbyScreen() {
 
         <AnimatedTouchable
           style={[styles.card, { backgroundColor: COLORS.backgroundOne }, aiStyle]}
-          onPress={() => router.push('/main/game')}
+          onPress={() => router.push('/main')}
         >
           <Bot size={32} color="white" />
           <Text style={styles.cardTitle}>Play vs AI</Text>
