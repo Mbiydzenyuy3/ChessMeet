@@ -66,7 +66,7 @@ export default function SignIn() {
               onPress={() => handleSubmit()}
               disabled={!isValid || loading}
             >
-              <Text style={styles.buttonText}>{loading ? 'Sending...' : 'Send OTP'}</Text>
+              <Text style={styles.buttonText}>{loading ? 'Sending...' : 'Send'}</Text>
             </TouchableOpacity>
           </>
         )}

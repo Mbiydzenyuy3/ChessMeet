@@ -1,7 +1,7 @@
 /* eslint-disable no-empty */
 // ============================ lib/storage.ts ============================
-import * as SecureStore from 'expo-secure-store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SecureStore from 'expo-secure-store';
 
 const KEY = 'chessmeet.jwt';
 

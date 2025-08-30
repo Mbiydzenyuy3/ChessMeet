@@ -22,7 +22,7 @@ export default function GetStarted() {
   return (
     <ImageBackground
       source={{
-        uri: './images/chesspiecesbg.avif',
+        uri: 'https://static.vecteezy.com/system/resources/thumbnails/018/871/717/small_2x/king-and-soldier-chess-pieces-on-transparent-background-leadership-concept-png.png',
       }}
       style={styles.background}
       resizeMode="cover"

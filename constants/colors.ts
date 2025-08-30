@@ -16,7 +16,7 @@ export const COLORS = {
   boardHighlight: '#FFD700',
   boardPossibleMove: 'rgba(69, 162, 158, 0.4)',
 
-  success: '#45A29E',
+  success: 'green',
   error: '#F44336',
   warning: '#FF9800',
   info: '#66FCF1',

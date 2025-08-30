@@ -50,7 +50,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 3,
-    marginVertical: 10,
+    marginVertical: 20,
     width: '100%',
   },
   title: {

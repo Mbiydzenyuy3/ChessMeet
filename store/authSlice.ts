@@ -1,7 +1,7 @@
 // ============================ store/authSlice.ts ============================
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import { fetchMe, verifyOtp } from '../lib/auth';
-import { saveToken, clearToken, getToken } from '../lib/storage';
+import { clearToken, getToken, saveToken } from '../lib/storage';
 
 export type AuthState = {
   token: string | null;
@@ -38,6 +38,7 @@ export const doVerifyOtp = createAsyncThunk(
 
 export const logout = createAsyncThunk('auth/logout', async () => {
   await clearToken();
+  return true;
 });
 
 const slice = createSlice({
@@ -76,6 +77,8 @@ const slice = createSlice({
     b.addCase(logout.fulfilled, (s) => {
       s.token = null;
       s.user = null;
+      s.error = undefined;
+      s.loading = false;
     });
   },
 });

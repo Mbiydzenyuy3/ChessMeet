@@ -1,5 +1,7 @@
 import { COLORS } from '@/constants/colors';
 import { useAuth } from '@/hooks/useAuth';
+import { clearToken } from '@/lib/storage';
+import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -13,10 +15,12 @@ import {
 } from 'react-native';
 
 export default function Profile() {
-  const { user, updateProfile, loading, logout } = useAuth();
+  const { user, updateProfile, loading } = useAuth();
   const [displayName, setDisplayName] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
   const [isEditing, setIsEditing] = useState(false);
+
+  const router = useRouter();
 
   useEffect(() => {
     if (user) {
@@ -24,6 +28,11 @@ export default function Profile() {
       setAvatarUrl(user.avatarUrl ?? '');
     }
   }, [user]);
+
+  const handleLogout = async () => {
+    await clearToken();
+    router.push('/auth/SignIn');
+  };
 
   const handleSave = async () => {
     try {
@@ -90,7 +99,7 @@ export default function Profile() {
       )}
 
       <TouchableOpacity
-        onPress={logout}
+        onPress={handleLogout}
         style={[styles.ButtonLogout, { backgroundColor: COLORS.primary }]}
       >
         <Text style={styles.saveButtonText}>Logout</Text>
