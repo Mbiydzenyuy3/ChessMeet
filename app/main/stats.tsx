@@ -4,7 +4,7 @@ import { COLORS } from '@/constants/colors';
 import { useAuth } from '@/hooks/useAuth';
 import { UserStats } from '@/types/types';
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ImageBackground, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -13,16 +13,10 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
+import lobby from '../../assets/images/woodenbg.jpg';
 
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 const AnimatedText = Animated.createAnimatedComponent(Text);
-
-// interface Game {
-//   _id: string;
-//   status: string;
-//   whitePlayer: { _id: string; displayName?: string; avatarUrl?: string };
-//   blackPlayer: { _id: string; displayName?: string; avatarUrl?: string };
-// }
 
 const initialStats: UserStats = {
   gamesPlayed: 0,
@@ -33,11 +27,10 @@ const initialStats: UserStats = {
   rating: 1200,
 };
 
-export default function LobbyScreen() {
+export default function StatScreen() {
   const { token } = useAuth();
 
   const [stats, setStats] = React.useState<UserStats>(initialStats);
-  // const [history, setHistory] = React.useState<Game[]>([]);
 
   React.useEffect(() => {
     const fetchData = async () => {
@@ -48,10 +41,6 @@ export default function LobbyScreen() {
         // fetch stats
         const statsRes = await api.get<UserStats>('/user/me/stats', { headers });
         setStats(statsRes.data);
-
-        // // fetch game history
-        // const historyRes = await api.get<Game[]>('/games/my/history?limit=5', { headers });
-        // setHistory(historyRes.data);
       } catch (err) {
         console.error('Failed to fetch lobby data', err);
       }
@@ -83,91 +72,61 @@ export default function LobbyScreen() {
   const chessSymbols = ['♔', '♕', '♖', '♗', '♘', '♙'];
 
   return (
-    <View style={styles.container}>
-      {/* Floating background pieces */}
-      <View style={StyleSheet.absoluteFill}>
-        {chessSymbols.map((piece, index) => {
-          const style = useAnimatedStyle(() => ({
-            transform: [{ translateY: floatingPieces[index].translateY.value }],
-            opacity: floatingPieces[index].opacity.value,
-          }));
-          return (
-            <AnimatedText
-              key={index}
-              style={[
-                styles.floatingPiece,
-                {
-                  left: `${10 + index * 15}%`,
-                  top: `${20 + (index % 2) * 40}%`,
-                },
-                style,
-              ]}
-            >
-              {piece}
-            </AnimatedText>
-          );
-        })}
-      </View>
+    <ImageBackground
+      source={lobby} // ✅ wooden background
+      style={styles.background}
+      resizeMode="cover"
+    >
+      <View style={styles.container}>
+        {/* Floating background pieces */}
+        <View style={StyleSheet.absoluteFill}>
+          {chessSymbols.map((piece, index) => {
+            const style = useAnimatedStyle(() => ({
+              transform: [{ translateY: floatingPieces[index].translateY.value }],
+              opacity: floatingPieces[index].opacity.value,
+            }));
+            return (
+              <AnimatedText
+                key={index}
+                style={[
+                  styles.floatingPiece,
+                  {
+                    left: `${10 + index * 15}%`,
+                    top: `${20 + (index % 2) * 40}%`,
+                  },
+                  style,
+                ]}
+              >
+                {piece}
+              </AnimatedText>
+            );
+          })}
+        </View>
 
-      <View style={styles.cardsContainerTwo}>
-        <AnimatedTouchable style={[styles.card, { backgroundColor: COLORS.backgroundOne }]}>
-          <View>
-            <AnimatedTouchable
-            // style={[styles.card, { backgroundColor: COLORS.backgroundTwo }, lessonsStyle]}
-            >
-              <StatsCard stats={stats} />
-            </AnimatedTouchable>
-          </View>
-        </AnimatedTouchable>
-        {/* <AnimatedTouchable style={[styles.card, { backgroundColor: COLORS.backgroundOne }]}>
-          <View>
-            {history.length > 0 ? (
-              history.map((game) => (
-                <View key={game._id} style={styles.historyItem}>
-                  <Text style={styles.historyText}>
-                    {game.whitePlayer.displayName || 'White'} vs{' '}
-                    {game.blackPlayer.displayName || 'Black'} — {game.status}
-                  </Text>
-                </View>
-              ))
-            ) : (
-              <Text style={styles.loading}>No game history yet.</Text>
-            )}
-          </View> */}
-        {/* </AnimatedTouchable> */}
+        <View style={styles.cardsContainerTwo}>
+          <AnimatedTouchable style={[styles.card, { backgroundColor: COLORS.transparentBorder }]}>
+            <View>
+              <AnimatedTouchable>
+                <StatsCard stats={stats} />
+              </AnimatedTouchable>
+            </View>
+          </AnimatedTouchable>
+        </View>
       </View>
-    </View>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.BackgroundColor, padding: 20 },
+  container: { flex: 1 },
 
-  // historyItem: {
-  //   paddingVertical: 8,
-  //   borderBottomWidth: 1,
-  //   flexDirection: 'row',
-  //   justifyContent: 'space-between',
-  //   alignItems: 'center',
-  //   gap: 60,
-  //   borderBottomColor: COLORS.border,
-  // },
-  // historyText: {
-  //   color: COLORS.white,
-  //   fontSize: 14,
-  // },
-
-  // loading: {
-  //   fontSize: 16,
-  //   color: COLORS.white,
-  //   textAlign: 'center',
-  // },
-
+  background: { flex: 1 },
   cardsContainerTwo: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 16,
     marginTop: 20,
+    backgroundColor: COLORS.transparentBorder,
     justifyContent: 'space-between',
   },
   card: {

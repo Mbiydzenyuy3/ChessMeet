@@ -33,7 +33,7 @@ export default function Settings({ navigation }: Props) {
         <Text style={styles.value}>{user?.displayName ?? 'Guest'}</Text>
 
         <Text style={styles.label}>Email</Text>
-        <Text style={styles.value}>{user?.email ?? 'Not set'}</Text>
+        <Text style={styles.value}>{user?.userIdentifier ?? 'Not set'}</Text>
       </View>
 
       <Text style={styles.sectionTitle}>Preferences</Text>

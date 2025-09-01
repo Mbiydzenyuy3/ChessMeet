@@ -6,13 +6,19 @@ import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Dimensions,
   Image,
+  ImageBackground,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
+  View,
 } from 'react-native';
+import lobby from '../../assets/images/woodenbg.jpg';
+
+const { width, height } = Dimensions.get('window');
 
 export default function Profile() {
   const { user, updateProfile, loading } = useAuth();
@@ -46,72 +52,82 @@ export default function Profile() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>My Profile</Text>
-      <Image
-        source={{
-          uri:
-            user?.avatarUrl ||
-            'https://i.pinimg.com/474x/fa/d5/e7/fad5e79954583ad50ccb3f16ee64f66d.jpg',
-        }}
-        style={styles.avatar}
-      />
+    <ImageBackground
+      source={lobby} // ✅ wooden background
+      style={styles.background}
+      resizeMode="cover"
+    >
+      <ScrollView contentContainerStyle={styles.container}>
+        <Text style={styles.title}>My Profile</Text>
+        <Image
+          source={{
+            uri:
+              user?.avatarUrl ||
+              'https://i.pinimg.com/474x/fa/d5/e7/fad5e79954583ad50ccb3f16ee64f66d.jpg',
+          }}
+          style={styles.avatar}
+        />
 
-      {/* Display Name */}
-      <Text style={styles.label}>Display Name</Text>
-      <TextInput
-        value={displayName}
-        onChangeText={setDisplayName}
-        placeholder="Enter display name"
-        placeholderTextColor="#888"
-        style={[styles.input, !isEditing && styles.inputDisabled]}
-        editable={isEditing}
-      />
+        {/* Display Name */}
+        <Text style={styles.label}>Display Name</Text>
+        <TextInput
+          value={displayName}
+          onChangeText={setDisplayName}
+          placeholder="Enter display name"
+          placeholderTextColor="#9e8a78"
+          style={[styles.input, !isEditing && styles.inputDisabled]}
+          editable={isEditing}
+          selectionColor="#D4AF37"
+        />
 
-      {/* Avatar URL */}
-      <Text style={styles.label}>Avatar URL</Text>
-      <TextInput
-        value={avatarUrl}
-        onChangeText={setAvatarUrl}
-        placeholder="Enter avatar URL"
-        placeholderTextColor="#888"
-        style={[styles.input, !isEditing && styles.inputDisabled]}
-        editable={isEditing}
-      />
+        {/* Avatar URL */}
+        <Text style={styles.label}>Avatar URL</Text>
+        <TextInput
+          value={avatarUrl}
+          onChangeText={setAvatarUrl}
+          placeholder="Enter avatar URL"
+          placeholderTextColor="#9e8a78"
+          style={[styles.input, !isEditing && styles.inputDisabled]}
+          editable={isEditing}
+          selectionColor="#D4AF37"
+        />
 
-      {/* Buttons */}
-      {isEditing ? (
-        <TouchableOpacity onPress={handleSave} disabled={loading} style={styles.saveButton}>
-          {loading ? (
-            <ActivityIndicator color="#fff" />
+        {/* Buttons */}
+        <View style={styles.buttonContainer}>
+          {isEditing ? (
+            <TouchableOpacity onPress={handleSave} disabled={loading} style={styles.actionButton}>
+              {loading ? (
+                <ActivityIndicator color="#FFF8E1" />
+              ) : (
+                <Text style={styles.actionButtonText}>Save Changes</Text>
+              )}
+            </TouchableOpacity>
           ) : (
-            <Text style={styles.saveButtonText}>Save</Text>
+            <TouchableOpacity onPress={() => setIsEditing(true)} style={styles.actionButton}>
+              <Text style={styles.actionButtonText}>Edit Profile</Text>
+            </TouchableOpacity>
           )}
-        </TouchableOpacity>
-      ) : (
-        <TouchableOpacity
-          onPress={() => setIsEditing(true)}
-          style={[styles.saveButton, { backgroundColor: COLORS.primary }]}
-        >
-          <Text style={styles.saveButtonText}>Edit Profile</Text>
-          {/* Controls */}
-        </TouchableOpacity>
-      )}
+        </View>
 
-      <TouchableOpacity
-        onPress={handleLogout}
-        style={[styles.ButtonLogout, { backgroundColor: COLORS.primary }]}
-      >
-        <Text style={styles.saveButtonText}>Logout</Text>
-      </TouchableOpacity>
-    </ScrollView>
+        <TouchableOpacity onPress={handleLogout} style={[styles.actionButton, styles.logoutButton]}>
+          <Text style={styles.actionButtonText}>Logout</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
+  background: {
+    flex: 1,
+    width,
+    height,
+    // justifyContent: 'center',
+    // alignItems: 'center',
+  },
   container: {
     padding: 20,
-    backgroundColor: COLORS.BackgroundColor,
+    // backgroundColor: COLORS.BackgroundColor,
     flexGrow: 1,
   },
   title: {
@@ -126,12 +142,6 @@ const styles = StyleSheet.create({
     marginTop: 10,
     marginBottom: 10,
   },
-  // value: {
-  //   fontSize: 16,
-  //   marginBottom: 10,
-  //   fontWeight: '500',
-  //   color: COLORS.white,
-  // },
   input: {
     borderWidth: 1,
     borderColor: COLORS.border,
@@ -144,25 +154,36 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.border,
     color: COLORS.mediumGray,
   },
-  saveButton: {
-    backgroundColor: COLORS.bgMossGreen,
-    padding: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 10,
+
+  buttonContainer: {
+    width: '100%',
+    marginTop: 20,
   },
-  saveButtonText: {
-    color: COLORS.white,
-    fontWeight: '600',
+  actionButton: {
+    backgroundColor: COLORS.buttonOtp, // SaddleBrown color
+    borderWidth: 2,
+    borderColor: COLORS.borderColor, // Gold border
+    borderRadius: 8,
+    paddingVertical: 14,
+    alignItems: 'center',
+    width: '100%',
+    marginBottom: 15,
+    shadowColor: COLORS.black,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 8,
+  },
+  actionButtonText: {
+    color: COLORS.whiteOtpText,
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  logoutButton: {
+    backgroundColor: COLORS.logout, // Darker brown for logout
+    marginTop: 180,
+    borderColor: COLORS.buttonOtp,
   },
 
-  ButtonLogout: {
-    backgroundColor: COLORS.bgMossGreen,
-    padding: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 240,
-  },
-
-  avatar: { width: 100, height: 100, borderRadius: 60, marginBottom: 40 },
+  avatar: { width: 100, height: 100, borderRadius: 60, marginBottom: 30 },
 });
