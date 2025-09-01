@@ -77,40 +77,42 @@ export default function StatScreen() {
       style={styles.background}
       resizeMode="cover"
     >
-      <View style={styles.container}>
-        {/* Floating background pieces */}
-        <View style={StyleSheet.absoluteFill}>
-          {chessSymbols.map((piece, index) => {
-            const style = useAnimatedStyle(() => ({
-              transform: [{ translateY: floatingPieces[index].translateY.value }],
-              opacity: floatingPieces[index].opacity.value,
-            }));
-            return (
-              <AnimatedText
-                key={index}
-                style={[
-                  styles.floatingPiece,
-                  {
-                    left: `${10 + index * 15}%`,
-                    top: `${20 + (index % 2) * 40}%`,
-                  },
-                  style,
-                ]}
-              >
-                {piece}
-              </AnimatedText>
-            );
-          })}
-        </View>
+      <View style={styles.overlay}>
+        <View style={styles.container}>
+          {/* Floating background pieces */}
+          <View style={StyleSheet.absoluteFill}>
+            {chessSymbols.map((piece, index) => {
+              const style = useAnimatedStyle(() => ({
+                transform: [{ translateY: floatingPieces[index].translateY.value }],
+                opacity: floatingPieces[index].opacity.value,
+              }));
+              return (
+                <AnimatedText
+                  key={index}
+                  style={[
+                    styles.floatingPiece,
+                    {
+                      left: `${10 + index * 15}%`,
+                      top: `${20 + (index % 2) * 40}%`,
+                    },
+                    style,
+                  ]}
+                >
+                  {piece}
+                </AnimatedText>
+              );
+            })}
+          </View>
 
-        <View style={styles.cardsContainerTwo}>
-          <AnimatedTouchable style={[styles.card, { backgroundColor: COLORS.transparentBorder }]}>
-            <View>
-              <AnimatedTouchable>
-                <StatsCard stats={stats} />
-              </AnimatedTouchable>
-            </View>
-          </AnimatedTouchable>
+          <View style={styles.cardsContainerTwo}>
+            <AnimatedTouchable style={[styles.card, { backgroundColor: COLORS.transparentBorder }]}>
+              <View>
+                <AnimatedTouchable>
+                  <StatsCard stats={stats} />
+                </AnimatedTouchable>
+              </View>
+            </AnimatedTouchable>
+          </View>
         </View>
       </View>
     </ImageBackground>
@@ -128,6 +130,13 @@ const styles = StyleSheet.create({
     marginTop: 20,
     backgroundColor: COLORS.transparentBorder,
     justifyContent: 'space-between',
+  },
+  overlay: {
+    flex: 1,
+    backgroundColor: COLORS.overlay,
+    width: '100%',
+    height: 1000,
+    paddingBlock: 40,
   },
   card: {
     width: '100%',

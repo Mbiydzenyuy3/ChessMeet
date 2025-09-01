@@ -73,8 +73,8 @@ export const COLORS = {
   sub: '#E0E0E0',
 
   overlay: 'rgba(0,0,0,0.5)',
-  overlayBackground: 'rgba(0,0,0,0.65)',
-  overlayBox: 'rgba(0,0,0,0.5)',
+  overlayBackground: 'rgba(0,0,0,0.80)',
+  overlayBox: 'rgba(0,0,0,0.20)',
   shadeText: 'rgba(0, 0, 0, 0.9)',
 
   otpInput: 'rgba(40, 25, 15, 0.8)',

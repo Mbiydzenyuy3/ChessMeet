@@ -1,3 +1,5 @@
+/* eslint-disable react-native/no-color-literals */
+/* eslint-disable react-native/no-inline-styles */
 // app/main/_layout.tsx
 import { COLORS } from '@/constants/colors';
 import { getToken } from '@/lib/storage';

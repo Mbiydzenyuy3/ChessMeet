@@ -1,9 +1,20 @@
+/* eslint-disable react-native/no-color-literals */
+/* eslint-disable react-native/no-inline-styles */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { COLORS } from '@/constants/colors';
 import { useAuth } from '@/hooks/useAuth';
-import { useRouter } from 'expo-router';
 import { Settings } from 'lucide-react-native';
 import React from 'react';
-import { Image, ImageBackground, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  Alert,
+  Image,
+  ImageBackground,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -13,6 +24,11 @@ import Animated, {
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
+// import { Button, Loading } from '../../components/UI';
+import { useRouter } from 'expo-router';
+import { api } from '../../lib/api';
+import { useAppDispatch } from '../../store';
+import { createVsAI, setMode } from '../../store/gameSlice';
 
 import Game from '../../assets/images/threeheadpiece.png';
 import lobby from '../../assets/images/woodenbg.jpg';
@@ -21,6 +37,50 @@ export default function LobbyScreen() {
   const { user } = useAuth();
 
   const AnimatedText = Animated.createAnimatedComponent(Text);
+
+  const dispatch = useAppDispatch();
+  // const [games, setGames] = useState<any[]>([]);
+  // const [loading, setLoading] = useState(false);
+
+  // async function refresh() {
+  //   setLoading(true);
+  //   try {
+  //     const data = await dispatch(listGames()).unwrap();
+  //     setGames(data);
+  //   } catch (e: any) {
+  //     Alert.alert('Erreur', e?.response?.data?.message || 'Impossible de charger les parties');
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // }
+
+  // useEffect(() => {
+  //   refresh();
+  // }, []);
+
+  async function startAI() {
+    console.log(`debut du jeux contre l'ia`);
+    await dispatch(createVsAI('300+0')).unwrap();
+    dispatch(setMode('ai'));
+    router.push('/main/game');
+  }
+
+  async function joinQueue() {
+    try {
+      const { data } = await api.post('/matchmaking/join', { timeControl: '300+0' });
+      dispatch(setMode('online'));
+      if (data && data._id) {
+        Alert.alert('Match trouvé', 'Redirection vers la partie…');
+        router.push('/main/game');
+      } else {
+        Alert.alert('En file', "En attente d'un adversaire…");
+        // L'écran de jeu écoutera les events socket (matchFound/movePlayed)
+        router.push('/main/game');
+      }
+    } catch (e: any) {
+      Alert.alert('Erreur', e?.response?.data?.message || 'Matchmaking indisponible');
+    }
+  }
 
   // Scale animations for cards
   const multiplayerScale = useSharedValue(0.8);
@@ -80,61 +140,70 @@ export default function LobbyScreen() {
           );
         })}
       </View>
+
       <ImageBackground
         source={lobby} // ✅ wooden background
         style={styles.background}
         resizeMode="cover"
       >
-        {/* Profile Card */}
-        <View style={styles.profileCard}>
-          <View style={styles.headerItems}>
-            <TouchableOpacity>
-              <Image
-                source={{
-                  uri:
-                    user?.avatarUrl ||
-                    'https://i.pinimg.com/474x/fa/d5/e7/fad5e79954583ad50ccb3f16ee64f66d.jpg',
-                }}
-                style={styles.avatar}
-              />
-            </TouchableOpacity>
-            <Text style={styles.welcome}> {user?.displayName || 'Guest'}</Text>
-          </View>
-          {/* <Image
+        <View style={styles.overlay}>
+          {/* Profile Card */}
+          <View style={styles.profileCard}>
+            <View style={styles.headerItems}>
+              <TouchableOpacity onPress={() => router.push('/main/profile')}>
+                <Image
+                  source={{
+                    uri:
+                      user?.avatarUrl ||
+                      'https://i.pinimg.com/474x/fa/d5/e7/fad5e79954583ad50ccb3f16ee64f66d.jpg',
+                  }}
+                  style={styles.avatar}
+                />
+              </TouchableOpacity>
+              <Text style={styles.welcome}> {user?.displayName || 'Guest'}</Text>
+            </View>
+            {/* <Image
           source={{ uri: 'https://i.pravatar.cc/150?img=12' }} // replace with real avatar
           style={styles.avatar}
         /> */}
 
-          <TouchableOpacity style={styles.settingsBtn}>
-            <Settings color="#fff" size={20} />
+            <TouchableOpacity
+              style={styles.settingsBtn}
+              onPress={() => router.push('/settings/SettingsScreen')}
+            >
+              <Settings color="#fff" size={20} />
+            </TouchableOpacity>
+          </View>
+
+          {/* Chess Icon Center */}
+          <View style={styles.centerPiece}>
+            <Image
+              source={Game} // King + Knights logo
+              style={{ width: 180, height: 180, resizeMode: 'contain' }}
+            />
+          </View>
+
+          {/* Choose Mode */}
+          <Text style={styles.chooseText}>CHOOSE A GAME MODE</Text>
+
+          {/* Buttons */}
+          <TouchableOpacity style={styles.modeBtn} onPress={() => router.push('/main/PlayLocal')}>
+            <Text style={styles.modeText}>♟ PLAY OFFLINE</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.modeBtn} onPress={startAI}>
+            <Text style={styles.modeText}>♟ PLAY VS AI</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.modeBtn} onPress={joinQueue}>
+            <Text style={styles.modeText}>♟ JOIN ONLINE</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.modeBtn}
+            onPress={() => router.push('/settings/LessonScreen')}
+          >
+            <Text style={styles.modeText}>♟ LEARN CHESS</Text>
           </TouchableOpacity>
         </View>
-
-        {/* Chess Icon Center */}
-        <View style={styles.centerPiece}>
-          <Image
-            source={Game} // King + Knights logo
-            style={{ width: 180, height: 180, resizeMode: 'contain' }}
-          />
-        </View>
-
-        {/* Choose Mode */}
-        <Text style={styles.chooseText}>CHOOSE YOUR MODE</Text>
-
-        {/* Buttons */}
-        <TouchableOpacity style={styles.modeBtn} onPress={() => router.push('/main/PlayLocal')}>
-          <Text style={styles.modeText}>♟ VS PLAYER</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.modeBtn} onPress={() => router.push('/main/ai')}>
-          <Text style={styles.modeText}>♟ VS COMPUTER</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.modeBtn} onPress={() => router.push('/main/multiplayer')}>
-          <Text style={styles.modeText}>♟ VS MULTIPLAYERS</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.modeBtn} onPress={() => router.push('/main/lesson')}>
-          <Text style={styles.modeText}>♟ GAME RULES</Text>
-        </TouchableOpacity>
       </ImageBackground>
     </View>
   );
@@ -143,7 +212,7 @@ export default function LobbyScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   floatingPiece: { position: 'absolute', fontSize: 48, color: COLORS.white, opacity: 0.08 },
-  background: { flex: 1, alignItems: 'center', justifyContent: 'flex-start', paddingTop: 50 },
+  background: { flex: 1, alignItems: 'center', justifyContent: 'flex-start' },
   profileCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -153,6 +222,17 @@ const styles = StyleSheet.create({
     // marginBottom: 30,
     width: '90%',
     justifyContent: 'space-between',
+  },
+  overlay: {
+    flex: 1,
+    backgroundColor: COLORS.overlay,
+    width: '100%',
+    height: 1000,
+    paddingBlock: 40,
+    // Dark overlay for better text readability
+    alignItems: 'center',
+    // justifyContent: 'center',
+    // paddingHorizontal: 20,
   },
   avatar: { width: 40, height: 40, borderRadius: 20, marginRight: 12 },
   // playerName: { color: COLORS.white, fontWeight: '700', fontSize: 16, fontFamily: 'Supercaver' },

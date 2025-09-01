@@ -57,62 +57,67 @@ export default function Profile() {
       style={styles.background}
       resizeMode="cover"
     >
-      <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.title}>My Profile</Text>
-        <Image
-          source={{
-            uri:
-              user?.avatarUrl ||
-              'https://i.pinimg.com/474x/fa/d5/e7/fad5e79954583ad50ccb3f16ee64f66d.jpg',
-          }}
-          style={styles.avatar}
-        />
+      <View style={styles.overlay}>
+        <ScrollView contentContainerStyle={styles.container}>
+          <Text style={styles.title}>My Profile</Text>
+          <Image
+            source={{
+              uri:
+                user?.avatarUrl ||
+                'https://i.pinimg.com/474x/fa/d5/e7/fad5e79954583ad50ccb3f16ee64f66d.jpg',
+            }}
+            style={styles.avatar}
+          />
 
-        {/* Display Name */}
-        <Text style={styles.label}>Display Name</Text>
-        <TextInput
-          value={displayName}
-          onChangeText={setDisplayName}
-          placeholder="Enter display name"
-          placeholderTextColor="#9e8a78"
-          style={[styles.input, !isEditing && styles.inputDisabled]}
-          editable={isEditing}
-          selectionColor="#D4AF37"
-        />
+          {/* Display Name */}
+          <Text style={styles.label}>Display Name</Text>
+          <TextInput
+            value={displayName}
+            onChangeText={setDisplayName}
+            placeholder="Enter display name"
+            placeholderTextColor="#9e8a78"
+            style={[styles.input, !isEditing && styles.inputDisabled]}
+            editable={isEditing}
+            selectionColor="#D4AF37"
+          />
 
-        {/* Avatar URL */}
-        <Text style={styles.label}>Avatar URL</Text>
-        <TextInput
-          value={avatarUrl}
-          onChangeText={setAvatarUrl}
-          placeholder="Enter avatar URL"
-          placeholderTextColor="#9e8a78"
-          style={[styles.input, !isEditing && styles.inputDisabled]}
-          editable={isEditing}
-          selectionColor="#D4AF37"
-        />
+          {/* Avatar URL */}
+          <Text style={styles.label}>Avatar URL</Text>
+          <TextInput
+            value={avatarUrl}
+            onChangeText={setAvatarUrl}
+            placeholder="Enter avatar URL"
+            placeholderTextColor="#9e8a78"
+            style={[styles.input, !isEditing && styles.inputDisabled]}
+            editable={isEditing}
+            selectionColor="#D4AF37"
+          />
 
-        {/* Buttons */}
-        <View style={styles.buttonContainer}>
-          {isEditing ? (
-            <TouchableOpacity onPress={handleSave} disabled={loading} style={styles.actionButton}>
-              {loading ? (
-                <ActivityIndicator color="#FFF8E1" />
-              ) : (
-                <Text style={styles.actionButtonText}>Save Changes</Text>
-              )}
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity onPress={() => setIsEditing(true)} style={styles.actionButton}>
-              <Text style={styles.actionButtonText}>Edit Profile</Text>
-            </TouchableOpacity>
-          )}
-        </View>
+          {/* Buttons */}
+          <View style={styles.buttonContainer}>
+            {isEditing ? (
+              <TouchableOpacity onPress={handleSave} disabled={loading} style={styles.actionButton}>
+                {loading ? (
+                  <ActivityIndicator color="#FFF8E1" />
+                ) : (
+                  <Text style={styles.actionButtonText}>Save Changes</Text>
+                )}
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity onPress={() => setIsEditing(true)} style={styles.actionButton}>
+                <Text style={styles.actionButtonText}>Edit Profile</Text>
+              </TouchableOpacity>
+            )}
+          </View>
 
-        <TouchableOpacity onPress={handleLogout} style={[styles.actionButton, styles.logoutButton]}>
-          <Text style={styles.actionButtonText}>Logout</Text>
-        </TouchableOpacity>
-      </ScrollView>
+          <TouchableOpacity
+            onPress={handleLogout}
+            style={[styles.actionButton, styles.logoutButton]}
+          >
+            <Text style={styles.actionButtonText}>Logout</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </View>
     </ImageBackground>
   );
 }
@@ -124,6 +129,11 @@ const styles = StyleSheet.create({
     height,
     // justifyContent: 'center',
     // alignItems: 'center',
+  },
+  overlay: {
+    flex: 1,
+    backgroundColor: COLORS.overlay,
+    width: '100%',
   },
   container: {
     padding: 20,
