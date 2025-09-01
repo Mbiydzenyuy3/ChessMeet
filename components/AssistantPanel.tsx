@@ -1,20 +1,29 @@
-// ============================ components/AssistantPanel.tsx ============================
+/* eslint-disable react-native/no-color-literals */
+/* eslint-disable react-native/no-inline-styles */
 import React from 'react';
-import { View, Text, Switch, Pressable, ScrollView } from 'react-native';
+import { View, Text, Switch, Pressable, ScrollView, ActivityIndicator } from 'react-native';
 import { useAppDispatch, useAppSelector } from '../store';
-import { setSuggestions, toggleAssistant } from '../store/gameSlice';
+import { setSuggestions, setAssistantEnabled } from '../store/gameSlice';
 
-export default function AssistantPanel({ onAsk }: { onAsk: () => void }) {
+export default function AssistantPanel({
+  onAsk,
+  fullWidth = false,
+}: {
+  onAsk: () => void;
+  fullWidth?: boolean;
+}) {
   const dispatch = useAppDispatch();
-  const { suggestions, assistantEnabled } = useAppSelector((s) => s.game);
+  const { suggestions, assistantEnabled, loading } = useAppSelector((s) => s.game);
+
   return (
     <View
       style={{
-        width: 280,
+        width: fullWidth ? '100%' : 280,
         backgroundColor: 'white',
-        borderLeftWidth: 1,
+        borderLeftWidth: fullWidth ? 0 : 1,
         borderColor: '#e5e7eb',
         padding: 12,
+        flex: fullWidth ? 1 : undefined,
       }}
     >
       <View
@@ -26,17 +35,26 @@ export default function AssistantPanel({ onAsk }: { onAsk: () => void }) {
         }}
       >
         <Text style={{ fontSize: 16, fontWeight: '700' }}>Coach IA</Text>
-        <Switch value={assistantEnabled} onValueChange={() => dispatch(toggleAssistant())} />
+        <Switch
+          value={assistantEnabled}
+          onValueChange={(value) => {
+            dispatch(setAssistantEnabled(value));
+          }}
+        />
       </View>
+
       <Pressable
         onPress={onAsk}
         style={{ padding: 10, backgroundColor: '#111827', borderRadius: 10 }}
       >
-        <Text style={{ color: 'white', textAlign: 'center' }}>Demander une suggestion</Text>
+        <Text style={{ color: 'white', textAlign: 'center' }}>Ask for a suggestion</Text>
       </Pressable>
+
       <ScrollView style={{ marginTop: 10 }}>
-        {suggestions.length === 0 ? (
-          <Text style={{ color: '#6b7280' }}>Aucune suggestion pour l'instant.</Text>
+        {loading ? (
+          <Loading label="Chargement des suggestions..." />
+        ) : suggestions.length === 0 ? (
+          <Text style={{ color: '#6b7280' }}>No suggestions yet.</Text>
         ) : (
           suggestions.map((s, i) => (
             <View
@@ -49,9 +67,17 @@ export default function AssistantPanel({ onAsk }: { onAsk: () => void }) {
           ))
         )}
       </ScrollView>
+
       <Pressable onPress={() => dispatch(setSuggestions([]))} style={{ padding: 8 }}>
         <Text style={{ color: '#6b7280', textAlign: 'center' }}>Effacer</Text>
       </Pressable>
     </View>
   );
 }
+
+export const Loading = ({ label }: { label?: string }) => (
+  <View style={{ alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+    <ActivityIndicator size="large" color="#111827" />
+    {label ? <Text style={{ marginTop: 8, color: '#374151' }}>{label}</Text> : null}
+  </View>
+);

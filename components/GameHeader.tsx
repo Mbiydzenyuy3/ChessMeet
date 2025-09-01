@@ -1,3 +1,5 @@
+/* eslint-disable react-native/no-color-literals */
+/* eslint-disable react-native/no-inline-styles */
 // ============================ components/GameHeader.tsx ============================
 import React from 'react';
 import { View, Text } from 'react-native';
