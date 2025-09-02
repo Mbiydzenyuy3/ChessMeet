@@ -67,7 +67,7 @@ export default function MoveList({
 const styles = StyleSheet.create({
   container: {
     padding: 12,
-    backgroundColor: 'rgba(40, 25, 15, 0.8)',
+    backgroundColor: 'rgba(40, 25, 15, 0.8)', // Dark wood background
     borderWidth: 1,
     borderColor: '#6b4f3a',
     borderRadius: 8,
