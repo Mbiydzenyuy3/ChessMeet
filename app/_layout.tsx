@@ -6,8 +6,8 @@ import * as Font from 'expo-font';
 import { Slot, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Provider, useDispatch, useSelector } from 'react-redux';
+import MedievalSharp from '../assets/fonts/MedievalSharp-Regular.ttf';
 import MidnightMinutes from '../assets/fonts/MidnightMinutes.ttf';
-import Supercarver from '../assets/fonts/Supercarver.ttf';
 
 function AuthGate() {
   const router = useRouter();
@@ -21,7 +21,7 @@ function AuthGate() {
     async function loadFonts() {
       await Font.loadAsync({
         MidnightMinutes: MidnightMinutes,
-        Supercarver: Supercarver,
+        MedievalSharp: MedievalSharp,
       });
       setFontsLoaded(true);
     }

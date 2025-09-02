@@ -148,7 +148,7 @@ export default function LobbyScreen() {
       >
         <View style={styles.overlay}>
           {/* Profile Card */}
-          <View style={styles.profileCard}>
+          <View style={[styles.profileCard, styles.shadow]}>
             <View style={styles.headerItems}>
               <TouchableOpacity onPress={() => router.push('/main/profile')}>
                 <Image
@@ -187,18 +187,21 @@ export default function LobbyScreen() {
           <Text style={styles.chooseText}>CHOOSE A GAME MODE</Text>
 
           {/* Buttons */}
-          <TouchableOpacity style={styles.modeBtn} onPress={() => router.push('/main/PlayLocal')}>
+          <TouchableOpacity
+            style={[styles.modeBtn, styles.shadow]}
+            onPress={() => router.push('/main/PlayLocal')}
+          >
             <Text style={styles.modeText}>♟ PLAY OFFLINE</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.modeBtn} onPress={startAI}>
+          <TouchableOpacity style={[styles.modeBtn, styles.shadow]} onPress={startAI}>
             <Text style={styles.modeText}>♟ PLAY VS AI</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.modeBtn} onPress={joinQueue}>
+          <TouchableOpacity style={[styles.modeBtn, styles.shadow]} onPress={joinQueue}>
             <Text style={styles.modeText}>♟ JOIN ONLINE</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={styles.modeBtn}
+            style={[styles.modeBtn, styles.shadow]}
             onPress={() => router.push('/settings/LessonScreen')}
           >
             <Text style={styles.modeText}>♟ LEARN CHESS</Text>
@@ -222,6 +225,17 @@ const styles = StyleSheet.create({
     // marginBottom: 30,
     width: '90%',
     justifyContent: 'space-between',
+  },
+
+  shadow: {
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4.65,
+    elevation: 8,
   },
   overlay: {
     flex: 1,
@@ -270,7 +284,6 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     width: '80%',
     alignItems: 'center',
-    elevation: 5,
   },
   modeText: {
     color: COLORS.white,
