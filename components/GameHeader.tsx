@@ -2,7 +2,7 @@
 /* eslint-disable react-native/no-inline-styles */
 // ============================ components/GameHeader.tsx ============================
 import React from 'react';
-import { View, Text } from 'react-native';
+import { Text, View } from 'react-native';
 import { Chip } from './UI';
 
 export default function GameHeader({ status, turn }: { status?: string; turn?: 'w' | 'b' }) {
@@ -10,8 +10,8 @@ export default function GameHeader({ status, turn }: { status?: string; turn?: '
     <View
       style={{
         padding: 12,
-        backgroundColor: 'white',
-        borderBottomWidth: 1,
+        backgroundColor: 'transparent',
+        // borderBottomWidth: 1,
         borderColor: '#e5e7eb',
         flexDirection: 'row',
         alignItems: 'center',

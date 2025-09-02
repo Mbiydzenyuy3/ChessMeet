@@ -1,8 +1,20 @@
+/* eslint-disable react-native/no-color-literals */
+/* eslint-disable react-native/no-inline-styles */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { COLORS } from '@/constants/colors';
-import { Book, Bot, Users } from 'lucide-react-native';
+import { useAuth } from '@/hooks/useAuth';
+import { Settings } from 'lucide-react-native';
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  Alert,
+  Image,
+  ImageBackground,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -12,18 +24,19 @@ import Animated, {
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
-import { Alert } from 'react-native';
 // import { Button, Loading } from '../../components/UI';
-import { useAppDispatch } from '../../store';
-import { createVsAI, setMode } from '../../store/gameSlice';
 import { useRouter } from 'expo-router';
 import { api } from '../../lib/api';
+import { useAppDispatch } from '../../store';
+import { createVsAI, setMode } from '../../store/gameSlice';
 
-const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
-const AnimatedText = Animated.createAnimatedComponent(Text);
-
+import Game from '../../assets/images/threeheadpiece.png';
+import lobby from '../../assets/images/woodenbg.jpg';
 export default function LobbyScreen() {
   const router = useRouter();
+  const { user } = useAuth();
+
+  const AnimatedText = Animated.createAnimatedComponent(Text);
 
   const dispatch = useAppDispatch();
   // const [games, setGames] = useState<any[]>([]);
@@ -74,23 +87,12 @@ export default function LobbyScreen() {
   const aiScale = useSharedValue(0.8);
   const lessonsScale = useSharedValue(0.8);
 
-  const multiplayerStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: multiplayerScale.value }],
-  }));
-  const aiStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: aiScale.value }],
-  }));
-  const lessonsStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: lessonsScale.value }],
-  }));
-
   React.useEffect(() => {
     multiplayerScale.value = withDelay(100, withSpring(1, { damping: 6 }));
     aiScale.value = withDelay(250, withSpring(1, { damping: 6 }));
     lessonsScale.value = withDelay(400, withSpring(1, { damping: 6 }));
   }, []);
 
-  // Floating pieces
   const floatingPieces = Array.from({ length: 6 }).map((_, i) => ({
     translateY: useSharedValue(0),
     opacity: useSharedValue(0.1),
@@ -139,100 +141,154 @@ export default function LobbyScreen() {
         })}
       </View>
 
-      {/* Header */}
-      <Text style={styles.welcome}>ChessMeet</Text>
-      <Text style={styles.subtitle}>Choose your game mode</Text>
+      <ImageBackground
+        source={lobby} // ✅ wooden background
+        style={styles.background}
+        resizeMode="cover"
+      >
+        <View style={styles.overlay}>
+          {/* Profile Card */}
+          <View style={[styles.profileCard, styles.shadow]}>
+            <View style={styles.headerItems}>
+              <TouchableOpacity onPress={() => router.push('/main/profile')}>
+                <Image
+                  source={{
+                    uri:
+                      user?.avatarUrl ||
+                      'https://i.pinimg.com/474x/fa/d5/e7/fad5e79954583ad50ccb3f16ee64f66d.jpg',
+                  }}
+                  style={styles.avatar}
+                />
+              </TouchableOpacity>
+              <Text style={styles.welcome}> {user?.displayName || 'Guest'}</Text>
+            </View>
+            {/* <Image
+          source={{ uri: 'https://i.pravatar.cc/150?img=12' }} // replace with real avatar
+          style={styles.avatar}
+        /> */}
 
-      {/* Game Options */}
-      <View style={styles.cardsContainer}>
-        <AnimatedTouchable
-          style={[styles.card, { backgroundColor: COLORS.primary }, multiplayerStyle]}
-          onPress={() => router.push('/main/PlayLocal')}
-        >
-          <Users size={32} color="white" />
-          <Text style={styles.cardTitle}>Play Offline</Text>
-          <Text style={styles.cardDesc}>Play locally with other players</Text>
-        </AnimatedTouchable>
+            <TouchableOpacity
+              style={styles.settingsBtn}
+              onPress={() => router.push('/settings/SettingsScreen')}
+            >
+              <Settings color="#fff" size={20} />
+            </TouchableOpacity>
+          </View>
 
-        <AnimatedTouchable
-          style={[styles.card, { backgroundColor: COLORS.primary }, multiplayerStyle]}
-          onPress={joinQueue}
-        >
-          <Users size={32} color="white" />
-          <Text style={styles.cardTitle}>Play vs Multiplayer</Text>
-          <Text style={styles.cardDesc}>Compete online with players</Text>
-        </AnimatedTouchable>
+          {/* Chess Icon Center */}
+          <View style={styles.centerPiece}>
+            <Image
+              source={Game} // King + Knights logo
+              style={{ width: 180, height: 180, resizeMode: 'contain' }}
+            />
+          </View>
 
-        <AnimatedTouchable
-          style={[styles.card, { backgroundColor: COLORS.backgroundOne }, aiStyle]}
-          onPress={startAI}
-        >
-          <Bot size={32} color="white" />
-          <Text style={styles.cardTitle}>Play vs AI</Text>
-          <Text style={styles.cardDesc}>Challenge the robot</Text>
-        </AnimatedTouchable>
+          {/* Choose Mode */}
+          <Text style={styles.chooseText}>CHOOSE A GAME MODE</Text>
 
-        <AnimatedTouchable
-          style={[styles.card, { backgroundColor: COLORS.backgroundTwo }, lessonsStyle]}
-          onPress={() => router.push('/main')}
-        >
-          <Book size={32} color="white" />
-          <Text style={styles.cardTitle}>Game Rules</Text>
-          <Text style={styles.cardDesc}>Learn how to win your first game and many more</Text>
-        </AnimatedTouchable>
-      </View>
+          {/* Buttons */}
+          <TouchableOpacity
+            style={[styles.modeBtn, styles.shadow]}
+            onPress={() => router.push('/main/PlayLocal')}
+          >
+            <Text style={styles.modeText}>♟ PLAY OFFLINE</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={[styles.modeBtn, styles.shadow]} onPress={startAI}>
+            <Text style={styles.modeText}>♟ PLAY VS AI</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.modeBtn, styles.shadow]} onPress={joinQueue}>
+            <Text style={styles.modeText}>♟ JOIN ONLINE</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.modeBtn, styles.shadow]}
+            onPress={() => router.push('/settings/LessonScreen')}
+          >
+            <Text style={styles.modeText}>♟ LEARN CHESS</Text>
+          </TouchableOpacity>
+        </View>
+      </ImageBackground>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.BackgroundColor,
-    padding: 20,
-  },
-  welcome: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: COLORS.whitetext,
-    marginBottom: 6,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: COLORS.muted,
-    marginBottom: 20,
-  },
-  cardsContainer: {
+  container: { flex: 1 },
+  floatingPiece: { position: 'absolute', fontSize: 48, color: COLORS.white, opacity: 0.08 },
+  background: { flex: 1, alignItems: 'center', justifyContent: 'flex-start' },
+  profileCard: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 16,
+    alignItems: 'center',
+    backgroundColor: COLORS.profileCard,
+    padding: 10,
+    borderRadius: 12,
+    // marginBottom: 30,
+    width: '90%',
     justifyContent: 'space-between',
   },
-  card: {
-    width: '47%',
-    padding: 16,
-    borderRadius: 16,
+
+  shadow: {
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4.65,
+    elevation: 8,
+  },
+  overlay: {
+    flex: 1,
+    backgroundColor: COLORS.overlay,
+    width: '100%',
+    height: 1000,
+    paddingBlock: 40,
+    // Dark overlay for better text readability
+    alignItems: 'center',
+    // justifyContent: 'center',
+    // paddingHorizontal: 20,
+  },
+  avatar: { width: 40, height: 40, borderRadius: 20, marginRight: 12 },
+  // playerName: { color: COLORS.white, fontWeight: '700', fontSize: 16, fontFamily: 'Supercaver' },
+  // playerStats: { color: COLORS.playState, fontSize: 12 },
+  settingsBtn: {
+    backgroundColor: COLORS.settingsBtn,
+    padding: 6,
+    marginBottom: 6,
+    borderRadius: 20,
+  },
+  welcome: { fontSize: 24, fontWeight: '700', color: COLORS.whitetext },
+  centerPiece: {
+    marginTop: 40,
+    marginBottom: 30,
+    alignItems: 'center',
+  },
+  chooseText: {
+    fontSize: 18,
+    color: COLORS.white,
+    fontWeight: '800',
+    marginBottom: 20,
+    fontFamily: 'MidnightMinutes',
+  },
+  headerItems: {
+    flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 4,
+    // marginBottom: 20,
   },
-  cardTitle: {
+  modeBtn: {
+    backgroundColor: COLORS.modeBtn,
+    paddingVertical: 14,
+    paddingHorizontal: 60,
+    borderRadius: 10,
+    marginVertical: 10,
+    width: '80%',
+    alignItems: 'center',
+  },
+  modeText: {
     color: COLORS.white,
-    fontWeight: '700',
     fontSize: 16,
-    marginTop: 10,
-  },
-  cardDesc: {
-    color: COLORS.white,
-    opacity: 0.8,
-    fontSize: 12,
-    marginTop: 4,
-    textAlign: 'center',
-  },
-  floatingPiece: {
-    position: 'absolute',
-    fontSize: 48,
-    color: COLORS.white,
-    opacity: 0.08,
+    fontWeight: '900',
+    fontFamily: 'MidnightMinutes',
   },
 });

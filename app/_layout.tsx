@@ -2,15 +2,31 @@
 import SplashScreen from '@/components/SplashScreen';
 import { AppDispatch, RootState, store } from '@/store';
 import { hydrateAuth } from '@/store/authSlice';
+import * as Font from 'expo-font';
 import { Slot, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Provider, useDispatch, useSelector } from 'react-redux';
+import MedievalSharp from '../assets/fonts/MedievalSharp-Regular.ttf';
+import MidnightMinutes from '../assets/fonts/MidnightMinutes.ttf';
 
 function AuthGate() {
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
   const { token, loading } = useSelector((state: RootState) => state.auth);
   const [ready, setReady] = useState(false);
+  const [fontsLoaded, setFontsLoaded] = useState(false);
+
+  // Load fonts asynchronously
+  useEffect(() => {
+    async function loadFonts() {
+      await Font.loadAsync({
+        MidnightMinutes: MidnightMinutes,
+        MedievalSharp: MedievalSharp,
+      });
+      setFontsLoaded(true);
+    }
+    loadFonts();
+  }, []);
 
   // hydrate Redux
   useEffect(() => {
@@ -31,9 +47,9 @@ function AuthGate() {
         router.replace('/auth');
       }
     }, 0);
-  }, [ready, loading, token]);
+  }, [ready, loading, token, fontsLoaded]);
 
-  if (!ready || loading) {
+  if (!ready || loading || !fontsLoaded) {
     return <SplashScreen />;
   }
 

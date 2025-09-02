@@ -1,7 +1,4 @@
-// app/index.tsx
-
 import { COLORS } from '@/constants/colors';
-// import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import {
@@ -12,34 +9,36 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-
+import chessBg from '../../assets/images/chessbg.png';
 const { width, height } = Dimensions.get('window');
-
-// type Props = NativeStackScreenProps<RootStackParamList, 'GetStarted'>;
 
 export default function GetStarted() {
   const router = useRouter();
   return (
     <ImageBackground
-      source={{
-        uri: './images/chesspiecesbg.avif',
-      }}
+      source={chessBg} // <-- use variable, not require()
       style={styles.background}
       resizeMode="cover"
     >
+      {/* Dark cinematic overlay */}
       <View style={styles.overlay} />
 
       <View style={styles.content}>
+        {/* Game Title */}
         <View style={styles.textContainer}>
-          <Text style={styles.title}>ChessMeet</Text>
+          <Text style={styles.title}>♔ ChessMeet ♚</Text>
           <Text style={styles.subtitle}>
-            Play chess against AI or real players, get instant move suggestions, and master your
-            game
+            Master the board. Outsmart your rivals. Rule the game.
           </Text>
         </View>
 
-        <TouchableOpacity style={styles.ctaButton} onPress={() => router.push('/auth/SignIn')}>
-          <Text style={styles.ctaText}>Get Started</Text>
+        {/* Glowing Start Button */}
+        <TouchableOpacity
+          style={styles.ctaButton}
+          activeOpacity={0.8}
+          onPress={() => router.push('/auth/SignIn')}
+        >
+          <Text style={styles.ctaText}>Start Now</Text>
         </TouchableOpacity>
       </View>
     </ImageBackground>
@@ -56,7 +55,7 @@ const styles = StyleSheet.create({
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: COLORS.Overlaybg,
+    backgroundColor: COLORS.overlayBackground, // stronger cinematic overlay
   },
   content: {
     flex: 1,
@@ -64,36 +63,47 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 18,
     paddingVertical: 32,
-    marginTop: 164,
   },
   textContainer: {
     alignItems: 'center',
-    marginBottom: 36,
+    marginBottom: 50,
     paddingHorizontal: 20,
   },
   title: {
-    fontSize: 28,
-    fontWeight: '700',
+    fontSize: 42,
+    fontWeight: '900',
     color: COLORS.whitetext,
     textAlign: 'center',
-    marginBottom: 10,
+    textShadowColor: COLORS.shadeText,
+    textShadowOffset: { width: 2, height: 2 },
+    textShadowRadius: 8,
+    letterSpacing: 2,
+    marginBottom: 16,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 18,
+    fontWeight: '500',
     color: COLORS.white,
     textAlign: 'center',
-    lineHeight: 22,
+    lineHeight: 26,
+    opacity: 0.85,
   },
   ctaButton: {
-    backgroundColor: COLORS.bgMossGreen,
-    paddingVertical: 14,
-    paddingHorizontal: 40,
-    borderRadius: 25,
-    elevation: 3,
+    backgroundColor: COLORS.buttonOtp,
+    paddingVertical: 16,
+    paddingHorizontal: 60,
+    borderRadius: 30,
+    elevation: 6,
+    shadowColor: COLORS.buttonOtp,
+    shadowOpacity: 0.9,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 10,
   },
   ctaText: {
     color: COLORS.white,
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: 20,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
   },
 });
