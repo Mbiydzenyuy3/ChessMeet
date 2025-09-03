@@ -323,10 +323,7 @@ export default function GameScreen() {
                 return false;
               }
             }}
-            colors={{
-              black: '#779952',
-              white: '#edeed1',
-            }}
+            colors={boardColor}
           />
 
           <View style={styles.buttonRow}>
