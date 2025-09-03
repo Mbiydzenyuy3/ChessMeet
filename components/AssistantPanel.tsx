@@ -150,9 +150,10 @@ export default function AssistantPanel({
       </ScrollView>
 
       {/* Clear Button */}
-      <Pressable onPress={() => dispatch(setSuggestions([]))} style={styles.clearButton}>
-        <Text style={styles.clearButtonText}>Clear</Text>
-      </Pressable>
+      <Pressable
+        onPress={() => dispatch(setSuggestions([]))}
+        style={styles.clearButton}
+      ></Pressable>
     </View>
   );
 }

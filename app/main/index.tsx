@@ -4,8 +4,9 @@
 
 import { COLORS } from '@/constants/colors';
 import { useAuth } from '@/hooks/useAuth';
+import { useRouter } from 'expo-router';
 import { Settings } from 'lucide-react-native';
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Alert,
   Image,
@@ -15,8 +16,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import Animated, {
-  useAnimatedStyle,
+import {
   useSharedValue,
   withDelay,
   withRepeat,
@@ -24,63 +24,22 @@ import Animated, {
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
-// import { Button, Loading } from '../../components/UI';
-import { useRouter } from 'expo-router';
+import FloatingPiece from '../../components/FloatingPiece';
+import TransitionScreen from '../../components/TransitionScreen';
 import { api } from '../../lib/api';
 import { useAppDispatch } from '../../store';
 import { createVsAI, setMode } from '../../store/gameSlice';
 
 import Game from '../../assets/images/threeheadpiece.png';
 import lobby from '../../assets/images/woodenbg.jpg';
+
 export default function LobbyScreen() {
+  // ✅ All hooks are now at the top level
   const router = useRouter();
   const { user } = useAuth();
-
-  const AnimatedText = Animated.createAnimatedComponent(Text);
-
   const dispatch = useAppDispatch();
-  // const [games, setGames] = useState<any[]>([]);
-  // const [loading, setLoading] = useState(false);
-
-  // async function refresh() {
-  //   setLoading(true);
-  //   try {
-  //     const data = await dispatch(listGames()).unwrap();
-  //     setGames(data);
-  //   } catch (e: any) {
-  //     Alert.alert('Erreur', e?.response?.data?.message || 'Impossible de charger les parties');
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // }
-
-  // useEffect(() => {
-  //   refresh();
-  // }, []);
-
-  async function startAI() {
-    console.log(`debut du jeux contre l'ia`);
-    await dispatch(createVsAI('300+0')).unwrap();
-    dispatch(setMode('ai'));
-    router.push('/main/game');
-  }
-
-  async function joinQueue() {
-    try {
-      const { data } = await api.post('/matchmaking/join', { timeControl: '300+0' });
-      dispatch(setMode('online'));
-      if (data && data._id) {
-        Alert.alert('Match trouvé', 'Redirection vers la partie…');
-        router.push('/main/game');
-      } else {
-        Alert.alert('En file', "En attente d'un adversaire…");
-        // L'écran de jeu écoutera les events socket (matchFound/movePlayed)
-        router.push('/main/game');
-      }
-    } catch (e: any) {
-      Alert.alert('Erreur', e?.response?.data?.message || 'Matchmaking indisponible');
-    }
-  }
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [gameModeAction, setGameModeAction] = useState<(() => void) | null>(null);
 
   // Scale animations for cards
   const multiplayerScale = useSharedValue(0.8);
@@ -112,40 +71,60 @@ export default function LobbyScreen() {
     });
   }, []);
 
+  // Functions remain the same
+  const onTransitionEnd = () => {
+    if (gameModeAction) {
+      gameModeAction();
+    }
+    setIsTransitioning(false);
+    setGameModeAction(null);
+  };
+
+  const handleGameModeSelection = (action: () => void) => {
+    setGameModeAction(() => action);
+    setIsTransitioning(true);
+  };
+
+  async function startAI() {
+    await dispatch(createVsAI('300+0')).unwrap();
+    dispatch(setMode('ai'));
+    router.push('/main/game');
+  }
+
+  async function joinQueue() {
+    try {
+      const { data } = await api.post('/matchmaking/join', { timeControl: '300+0' });
+      dispatch(setMode('online'));
+      if (data && data._id) {
+        Alert.alert('Match trouvé', 'Redirection vers la partie…');
+        router.push('/main/game');
+      } else {
+        Alert.alert('En file', "En attente d'un adversaire…");
+        router.push('/main/game');
+      }
+    } catch (e: any) {
+      Alert.alert('Erreur', e?.response?.data?.message || 'Matchmaking indisponible');
+    }
+  }
+
   const chessSymbols = ['♔', '♕', '♖', '♗', '♘', '♙'];
+
+  // ✅ The conditional return is now placed after all hooks have been called
+  if (isTransitioning) {
+    return <TransitionScreen onAnimationFinish={onTransitionEnd} />;
+  }
 
   return (
     <View style={styles.container}>
       {/* Floating background pieces */}
-      <View style={StyleSheet.absoluteFill}>
-        {chessSymbols.map((piece, index) => {
-          const style = useAnimatedStyle(() => ({
-            transform: [{ translateY: floatingPieces[index].translateY.value }],
-            opacity: floatingPieces[index].opacity.value,
-          }));
-          return (
-            <AnimatedText
-              key={index}
-              style={[
-                styles.floatingPiece,
-                {
-                  left: `${10 + index * 15}%`,
-                  top: `${20 + (index % 2) * 40}%`,
-                },
-                style,
-              ]}
-            >
-              {piece}
-            </AnimatedText>
-          );
-        })}
+      {/* ✅ Use the new FloatingPiece component */}
+      <View style={StyleSheet.absoluteFill} pointerEvents="none">
+        {chessSymbols.map((symbol, index) => (
+          <FloatingPiece key={index} symbol={symbol} index={index} />
+        ))}
       </View>
 
-      <ImageBackground
-        source={lobby} // ✅ wooden background
-        style={styles.background}
-        resizeMode="cover"
-      >
+      <ImageBackground source={lobby} style={styles.background} resizeMode="cover">
         <View style={styles.overlay}>
           {/* Profile Card */}
           <View style={[styles.profileCard, styles.shadow]}>
@@ -162,10 +141,6 @@ export default function LobbyScreen() {
               </TouchableOpacity>
               <Text style={styles.welcome}> {user?.displayName || 'Guest'}</Text>
             </View>
-            {/* <Image
-          source={{ uri: 'https://i.pravatar.cc/150?img=12' }} // replace with real avatar
-          style={styles.avatar}
-        /> */}
 
             <TouchableOpacity
               style={styles.settingsBtn}
@@ -177,10 +152,7 @@ export default function LobbyScreen() {
 
           {/* Chess Icon Center */}
           <View style={styles.centerPiece}>
-            <Image
-              source={Game} // King + Knights logo
-              style={{ width: 180, height: 180, resizeMode: 'contain' }}
-            />
+            <Image source={Game} style={{ width: 180, height: 180, resizeMode: 'contain' }} />
           </View>
 
           {/* Choose Mode */}
@@ -189,15 +161,21 @@ export default function LobbyScreen() {
           {/* Buttons */}
           <TouchableOpacity
             style={[styles.modeBtn, styles.shadow]}
-            onPress={() => router.push('/main/PlayLocal')}
+            onPress={() => handleGameModeSelection(() => router.push('/main/PlayLocal'))}
           >
             <Text style={styles.modeText}>♟ PLAY OFFLINE</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={[styles.modeBtn, styles.shadow]} onPress={startAI}>
+          <TouchableOpacity
+            style={[styles.modeBtn, styles.shadow]}
+            onPress={() => handleGameModeSelection(startAI)}
+          >
             <Text style={styles.modeText}>♟ PLAY VS AI</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.modeBtn, styles.shadow]} onPress={joinQueue}>
+          <TouchableOpacity
+            style={[styles.modeBtn, styles.shadow]}
+            onPress={() => handleGameModeSelection(joinQueue)}
+          >
             <Text style={styles.modeText}>♟ JOIN ONLINE</Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -214,7 +192,6 @@ export default function LobbyScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  floatingPiece: { position: 'absolute', fontSize: 48, color: COLORS.white, opacity: 0.08 },
   background: { flex: 1, alignItems: 'center', justifyContent: 'flex-start' },
   profileCard: {
     flexDirection: 'row',
@@ -222,7 +199,6 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.profileCard,
     padding: 10,
     borderRadius: 12,
-    // marginBottom: 30,
     width: '90%',
     justifyContent: 'space-between',
   },
@@ -231,26 +207,21 @@ const styles = StyleSheet.create({
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 4,
+      height: 24,
     },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.5,
     shadowRadius: 4.65,
     elevation: 8,
   },
   overlay: {
     flex: 1,
-    backgroundColor: COLORS.overlay,
+    backgroundColor: 'rgba(0,0,0,0.6)',
     width: '100%',
-    height: 1000,
-    paddingBlock: 40,
-    // Dark overlay for better text readability
+    height: '100%',
+    paddingTop: 40,
     alignItems: 'center',
-    // justifyContent: 'center',
-    // paddingHorizontal: 20,
   },
   avatar: { width: 40, height: 40, borderRadius: 20, marginRight: 12 },
-  // playerName: { color: COLORS.white, fontWeight: '700', fontSize: 16, fontFamily: 'Supercaver' },
-  // playerStats: { color: COLORS.playState, fontSize: 12 },
   settingsBtn: {
     backgroundColor: COLORS.settingsBtn,
     padding: 6,
@@ -274,7 +245,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    // marginBottom: 20,
   },
   modeBtn: {
     backgroundColor: COLORS.modeBtn,
