@@ -32,7 +32,6 @@ export default function WaitingScreen() {
   const dispatch = useAppDispatch();
   const socket = useSocket();
 
-  // 👇 grab current gameId from redux
   const { currentId } = useAppSelector((s) => s.game);
 
   useEffect(() => {
