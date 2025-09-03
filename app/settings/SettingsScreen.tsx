@@ -51,8 +51,8 @@ export default function SettingsScreen() {
             </View>
             <View style={styles.separator} />
             <View style={styles.row}>
-              <Text style={styles.label}>Email</Text>
-              <Text style={styles.value}>{user?.userIdentifier ?? 'Not set'}</Text>
+              <Text style={styles.label}>Avatar</Text>
+              <Text style={styles.value}>{user?.avatarUrl}</Text>
             </View>
           </View>
 

@@ -76,8 +76,10 @@ export const COLORS = {
   overlayBackground: 'rgba(0,0,0,0.80)',
   overlayBox: 'rgba(0,0,0,0.20)',
   shadeText: 'rgba(0, 0, 0, 0.9)',
+  progressBg: 'rgba(255, 255, 255, 0.2)',
 
   otpInput: 'rgba(40, 25, 15, 0.8)',
+  layoutOverlay: 'rgba(0,0,0,0.65)',
   borderWidth: '#6b4f3a',
   logo: '#D4AF37',
   grayText: '#E0E0E0',
