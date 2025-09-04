@@ -15,58 +15,54 @@ import Animated, {
 import { Alert } from 'react-native';
 // import { Button, Loading } from '../../components/UI';
 import { useAppDispatch } from '../../store';
-import { createVsAI, setMode } from '../../store/gameSlice';
+import { setMode, updateFromGameObject } from '../../store/gameSlice';
 import { useRouter } from 'expo-router';
-import { api } from '../../lib/api';
+import { useSocket } from '@/hooks/useSocket';
 
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 const AnimatedText = Animated.createAnimatedComponent(Text);
 
 export default function LobbyScreen() {
   const router = useRouter();
+  const socket = useSocket();
 
   const dispatch = useAppDispatch();
-  // const [games, setGames] = useState<any[]>([]);
-  // const [loading, setLoading] = useState(false);
+  function joinQueue() {
+    console.log('🔹 Rejoindre la file online');
+    dispatch(setMode('online'));
 
-  // async function refresh() {
-  //   setLoading(true);
-  //   try {
-  //     const data = await dispatch(listGames()).unwrap();
-  //     setGames(data);
-  //   } catch (e: any) {
-  //     Alert.alert('Erreur', e?.response?.data?.message || 'Impossible de charger les parties');
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // }
+    socket.emit('joinQueue', { timeControl: '300+0' });
 
-  // useEffect(() => {
-  //   refresh();
-  // }, []);
-
-  async function startAI() {
-    console.log(`debut du jeux contre l'ia`);
-    await dispatch(createVsAI('300+0')).unwrap();
-    dispatch(setMode('ai'));
-    router.push('/main/game');
-  }
-
-  async function joinQueue() {
-    try {
-      const { data } = await api.post('/matchmaking/join', { timeControl: '300+0' });
-      dispatch(setMode('online'));
+    socket.once('matchFound', (data: any) => {
       if (data && data._id) {
         Alert.alert('Match trouvé', 'Redirection vers la partie…');
+        dispatch(updateFromGameObject(data));
         router.push('/main/game');
       } else {
-        Alert.alert('En file', "En attente d'un adversaire…");
+        Alert.alert('En attente', 'En attente d’un adversaire…');
         // L'écran de jeu écoutera les events socket (matchFound/movePlayed)
+
         router.push('/main/game');
       }
-    } catch (e: any) {
-      Alert.alert('Erreur', e?.response?.data?.message || 'Matchmaking indisponible');
-    }
+    });
+  }
+
+  function startAI() {
+    console.log('Début du jeu contre l’IA');
+    dispatch(setMode('ai'));
+    socket.emit('createVsAI', { timeControl: '300+0' });
+    socket.once('aiGameCreated', (data: any) => {
+      console.log('📥 createVsAI reçu:', JSON.stringify(data, null, 2));
+
+      if (data && data._id) {
+        console.log('navigue vers game ');
+        dispatch(updateFromGameObject(data));
+
+        router.push('/main/game');
+      } else {
+        Alert.alert('Erreur', 'Impossible de créer la partie IA');
+      }
+    });
   }
 
   // Scale animations for cards

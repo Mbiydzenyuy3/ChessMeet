@@ -12,13 +12,13 @@ import { Chess } from 'chess.js';
 
 import {
   appendMove,
+  markEvent,
+  resetGame,
+  resignGame,
   // setGameSnapshot,
   setLoading,
   setSuggestions,
-  playMoveVsAI,
   updateFromGameObject,
-  resignGame,
-  askSuggestions, // Import du thunk d'abandon
 } from '../../store/gameSlice';
 import { newChess } from '../../lib/chess';
 import { useSocket } from '../../hooks/useSocket';
@@ -77,6 +77,7 @@ export function usePlayerColor(): 'w' | 'b' | null {
 
   return null; // spectateur ou erreur
 }
+
 export default function GameScreen() {
   const router = useRouter();
 
@@ -84,13 +85,14 @@ export default function GameScreen() {
   const socket = useSocket();
   const boardRef = useRef<ChessboardRef>(null);
   const playerColor = usePlayerColor();
+  const prevFenRef = useRef<string | null>(null);
+  const [showConfirm, setShowConfirm] = useState(false);
+
   console.log(`couleur du joueru ${playerColor}`);
-  // const { width } = useWindowDimensions();
-  // const isNarrow = width < 768;
 
   const { currentId, fen, moves, assistantEnabled, mode } = useAppSelector((s) => s.game);
 
-  // Correction 1: Le tour (turn) est maintenant déduit directement de l'état "fen"
+  // Le tour (turn) est maintenant déduit directement de l'état "fen"
   const chess = useMemo(() => newChess(fen), [fen]);
   const turn = useMemo(() => chess.turn(), [chess]);
   const status = useMemo(() => {
@@ -107,32 +109,68 @@ export default function GameScreen() {
   useEffect(() => {
     if (!currentId) return;
 
+    let mounted = true;
+
     // Le `joinGame` est maintenant sécurisé par le `useEffect` du hook `useSocket`.
     // On l'appelle ici pour se lier à une partie une fois le screen monté.
     socket.emit('joinGame', { gameId: currentId });
 
-    // Ajout d'une variable de nettoyage pour éviter les mises à jour sur un composant non monté
-    let mounted = true;
-
-    // Correction 2: Utilisation de `updateFromGameObject` pour toute mise à jour venant de la socket
-    socket.on('movePlayed', (payload: any) => {
-      console.log('📥 movePlayed reçu:', JSON.stringify(payload, null, 2));
-
+    socket.on('joined', (p: any) => {
       if (!mounted) return;
-      // On met à jour l'état Redux directement avec l'objet complet du jeu
-      dispatch(updateFromGameObject(payload.game));
-      dispatch(appendMove(payload.move)); // On append le coup à l'historique
+      console.log('📥 joined reçu:', JSON.stringify(p, null, 2));
     });
 
-    socket.on('yourTurn', (p: any) => {
-      console.log('📥 yourTurn reçu:', JSON.stringify(p, null, 2));
+    // Ajout d'une variable de nettoyage pour éviter les mises à jour sur un composant non monté
+
+    // Correction 2: Utilisation de `updateFromGameObject` pour toute mise à jour venant de la socket
+    // Dans `game.tsx`
+    socket.on('movePlayed', (payload: any) => {
+      console.log('📥 movePlayed reçu:', JSON.stringify(payload, null, 2));
       if (!mounted) return;
-      if (p?.game) dispatch(updateFromGameObject(p.game));
+
+      // Récupérer le FEN de la confirmation et l'état actuel du store
+      const receivedFen = payload.game.fen;
+      const currentFenInStore = fen; // `fen` est déjà dans le scope de l'useEffect
+
+      // Si le FEN reçu correspond au FEN actuel ou s'il est un coup précédent, on l'ignore.
+      // La logique la plus simple est d'utiliser `chess.js` pour comparer les FEN complets.
+      // Ici, on peut se baser sur le tour de jeu pour s'assurer que le FEN n'est pas obsolète.
+      const chessReceived = new Chess(receivedFen);
+      const chessCurrent = new Chess(currentFenInStore);
+
+      // On compare le nombre total de coups joués.
+      if (chessReceived.history().length > chessCurrent.history().length) {
+        // Si le FEN de l'événement est plus avancé que le FEN actuel du store
+        dispatch(updateFromGameObject(payload.game));
+      } else {
+        console.log('⚠️ movePlayed ignoré car FEN obsolète ou identique.');
+      }
+    });
+
+    // Dans `game.tsx`
+    socket.on('yourTurn', (p: any) => {
+      console.log('📥📥📥 yourTurn reçu:', JSON.stringify(p, null, 2));
+      if (!mounted) return;
+
+      // On ne met à jour que si le FEN reçu est différent et que c'est un nouveau coup.
+      // La comparaison du FEN est suffisante et gère déjà les cas de désynchronisation.
+      if (p?.game?.fen !== fen) {
+        if (p?.game) {
+          dispatch(updateFromGameObject(p.game));
+          if (p.lastMove) {
+            dispatch(appendMove(p.lastMove));
+          }
+          console.log('✅ yourTurn: FEN mis à jour après coup de l’IA');
+        }
+      }
     });
 
     socket.on('playerResigned', (p: any) => {
-      if (!mounted) return;
-      Alert.alert('Abandon', p.message);
+      console.log('📥 abandon reçu:', JSON.stringify(p, null, 2));
+      dispatch(markEvent('resigned'));
+      dispatch(resetGame());
+      Alert.alert('Abandon', p.message || 'Un joueur a abandonné la partie.');
+      router.replace('/main');
     });
 
     socket.on('gameOver', (p: any) => {
@@ -143,7 +181,19 @@ export default function GameScreen() {
 
     socket.on('suggestionReceived', (p: any) => {
       if (!mounted) return;
-      dispatch(setSuggestions(p.suggestions || []));
+      console.log('📥 📥✅ suggestionReceived:', JSON.stringify(p, null, 2));
+
+      const raw = p.suggestions || {};
+      const moves = raw.suggestions || [];
+      const reasons = raw.explanations || [];
+
+      const suggestions = moves.map((m: string, i: number) => ({
+        move: m,
+        reason: reasons[i] ?? 'Suggestion IA',
+      }));
+
+      dispatch(setSuggestions(suggestions));
+      dispatch(setLoading(false)); // ✅ désactive le loading après réception
     });
 
     return () => {
@@ -158,17 +208,12 @@ export default function GameScreen() {
   console.log(`socket${socket} , currentId:${currentId},  `);
 
   async function onMove(from: string, to: string) {
-    console.log(`appele de onMove avec ${from} to ${to}, mode:${mode}`);
+    console.log(`called from onMove with ${from} to ${to}, mode:${mode}`);
     if (!currentId) return;
     try {
       dispatch(setLoading(true));
-      if (mode === 'online') {
-        // En ligne: tout passe par la socket
-        socket.emit('playMove', { gameId: currentId, move: `${from}${to}` });
-      } else {
-        // IA: POST (coup joueur) puis GET (coup IA)
-        await dispatch(playMoveVsAI({ gameId: currentId, from, to })).unwrap();
-      }
+      // En ligne: tout passe par la socket
+      socket.emit('makeMove', { gameId: currentId, move: `${from}${to}` });
     } catch (e: any) {
       Alert.alert('Coup invalide', e?.response?.data?.message || 'Cant play this move');
     } finally {
@@ -176,98 +221,105 @@ export default function GameScreen() {
     }
   }
 
+  //new
   async function handleResign() {
-    console.log('📤 handleResign appelé, gameId:', currentId);
-
     if (!currentId) return;
     try {
+      dispatch(setLoading(true));
+
+      //  Mise à jour côté backend via API
       await dispatch(resignGame(currentId)).unwrap();
-      Alert.alert('Game Abandoned', 'You have abandoned the game.');
+
+      //  Notification temps réel via socket
+      socket.emit('resign', { gameId: currentId });
+
+      //  Feedback utilisateur
+      Alert.alert('Abandon', 'You have abandoned the game.');
+
+      //  Retour à la liste des parties
+      router.replace('/main');
     } catch (e: any) {
-      Alert.alert('Erreur', e?.response?.data?.message || "Can't give up the game");
+      console.error('Abort error:', e);
+      Alert.alert('Error', e?.message || 'Impossible to give up the game.');
+    } finally {
+      dispatch(setLoading(false));
+      setShowConfirm(false);
     }
   }
 
   async function askSuggestion() {
     if (!assistantEnabled || !currentId) return;
-    if (mode === 'ai') {
-      // ✅ IA → on dispatch le thunk Redux
-      await dispatch(askSuggestions({ gameId: currentId })).unwrap();
-    } else {
-      // ✅ Online → socket classique
+
+    try {
+      dispatch(setLoading(true));
       socket.emit('getSuggestion', { gameId: currentId });
+    } catch (e) {
+      console.error('Error requesting suggestion:', e);
+      dispatch(setLoading(false)); // 🚫 désactive si erreur
     }
   }
 
   // Quand `fen` change dans Redux → synchro du board
+
   useEffect(() => {
-    if (fen && boardRef.current) {
-      boardRef.current?.resetBoard(fen);
+    if (!fen || !boardRef.current) return;
+
+    console.log('🔄 useEffect fen déclenché', { fen, prevFen: prevFenRef.current });
+
+    const prevFen = prevFenRef.current;
+
+    if (!prevFen) {
+      console.log('⚡ Premier affichage → reset complet');
+      boardRef.current.resetBoard(fen);
+      prevFenRef.current = fen;
+      return;
     }
+
+    if (prevFen === fen) {
+      console.log('ℹ️ FEN inchangé → rien à faire');
+      return;
+    }
+
+    const lastMove = extractLastMove(prevFen, fen);
+
+    if (lastMove) {
+      console.log('✅ Dernier coup extrait et appliqué:', lastMove);
+      boardRef.current.move({ from: lastMove.from, to: lastMove.to });
+    } else {
+      console.warn('⚠️ Impossible de trouver le dernier coup → reset complet');
+      boardRef.current.resetBoard(fen);
+    }
+
+    // Mettre à jour prevFenRef uniquement après avoir appliqué le coup
+    prevFenRef.current = fen;
+    console.log('🔄 prevFenRef mis à jour:', prevFenRef.current);
   }, [fen]);
+
   useEffect(() => {
     if (!currentId) {
       router.replace('/main');
     }
   }, [currentId]);
 
-  // if (lastEvent === 'resigned') {
-  //   return (
-  //     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-  //       <Text style={{ fontSize: 18, color: 'red' }}>The game is over (surrender)</Text>
-  //       <Button title="Retour au Lobby" onPress={() => router.replace('/main')} />
-  //     </View>
-  //   );
-  // }
+  if (!playerColor) {
+    return <Text>Loading game...</Text>;
+  }
 
   return (
     <View style={{ flex: 1, backgroundColor: '#f9fafb' }}>
       <GameHeader status={status} turn={turn} />
-      {/* <View style={{ flex: 1, flexDirection: 'row' }}>
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 12 }}>
-          <Chessboard
-            fen={fen || undefined}
-            boardSize={Math.min(screenW - 320, 420)}
-            onMove={(info: any) => {
-              const last = extractLastMove(fen, info.fen);
-              if (last) {
-                onMove(last.from, last.to); // ta logique Redux (coup vs IA ou socket)
-              }
-            }}
-            gestureEnabled
-            durations={{ move: 150 }}
-          />
-
-          <View style={{ flexDirection: 'row', gap: 12, marginTop: 12 }}>
-            <Pressable
-              onPress={handleResign} // Correction 4: Utilisation d'une fonction dédiée
-              style={{ padding: 10, borderRadius: 10, backgroundColor: '#fee2e2' }}
-            >
-              <Text style={{ color: '#991b1b' }}>Abandonner</Text>
-            </Pressable>
-            <Pressable
-              onPress={askSuggestion}
-              style={{ padding: 10, borderRadius: 10, backgroundColor: '#e0e7ff' }}
-            >
-              <Text style={{ color: '#1e3a8a' }}>Conseil IA</Text>
-            </Pressable>
-          </View>
-        </View>
-        <MoveList moves={moves} />
-        <AssistantPanel onAsk={askSuggestion} />
-      </View> */}
 
       <View style={{ flex: 1, alignItems: 'center', padding: 12 }}>
         <Chessboard
           ref={boardRef}
-          fen={fen || undefined}
+          // fen={fen || undefined}
           onMove={async (info: any) => {
             console.log(`info: ${JSON.stringify(info)}`);
             const pieceColor = info.move.color; // ✅ "w" ou "b"
 
             // 1️⃣ Vérifie que le joueur bouge bien une pièce de sa couleur
             if (pieceColor !== playerColor) {
-              console.log('⛔ Pas ta couleur !');
+              console.log('⛔ Not your color !');
               setTimeout(() => {
                 boardRef.current?.resetBoard(fen);
               }, 50);
@@ -276,7 +328,7 @@ export default function GameScreen() {
 
             // 2️⃣ Vérifie que c'est bien son tour
             if (turn !== playerColor) {
-              console.log('⛔ Pas ton tour !');
+              console.log('⛔ Not your turn!');
               setTimeout(() => {
                 boardRef.current?.resetBoard(fen);
               }, 50);
@@ -290,7 +342,7 @@ export default function GameScreen() {
               // ⚠️ L'UI ne bouge pas tout de suite → on attend le FEN du backend
               return false;
             } catch (e) {
-              console.error('Erreur backend:', e);
+              console.error('Error backend:', e);
               setTimeout(() => {
                 boardRef.current?.resetBoard(fen);
               }, 50);
@@ -301,10 +353,7 @@ export default function GameScreen() {
 
         <View style={{ flexDirection: 'row', gap: 12, marginTop: 12 }}>
           <Pressable
-            onPress={() => {
-              console.log('🔥 Pressable cliqué');
-              handleResign();
-            }}
+            onPress={() => setShowConfirm(true)}
             style={{ padding: 10, borderRadius: 10, backgroundColor: '#fee2e2' }}
           >
             <Text style={{ color: '#991b1b' }}>Give up</Text>
@@ -372,6 +421,28 @@ export default function GameScreen() {
             >
               <Text style={{ color: '#2563eb' }}>close</Text>
             </Pressable>
+          </View>
+        </Modal>
+        <Modal visible={showConfirm} transparent animationType="fade">
+          <View
+            style={{
+              flex: 1,
+              justifyContent: 'center',
+              alignItems: 'center',
+              backgroundColor: 'rgba(0,0,0,0.5)',
+            }}
+          >
+            <View style={{ backgroundColor: 'white', padding: 20, borderRadius: 12 }}>
+              <Text>Give up the game?</Text>
+              <View style={{ flexDirection: 'row', marginTop: 12 }}>
+                <Pressable onPress={() => setShowConfirm(false)}>
+                  <Text>cancel</Text>
+                </Pressable>
+                <Pressable onPress={handleResign}>
+                  <Text>Yes, give up</Text>
+                </Pressable>
+              </View>
+            </View>
           </View>
         </Modal>
       </View>

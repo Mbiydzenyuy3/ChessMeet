@@ -1,6 +1,6 @@
 // ============================ hooks/useSocket.ts ============================
 import { useEffect, useMemo } from 'react';
-import { io, Socket } from 'socket.io-client';
+import { io } from 'socket.io-client';
 import { useAppDispatch, useAppSelector } from '../store';
 import { ENV } from '../lib/env';
 import { getToken } from '../lib/storage';
@@ -11,11 +11,15 @@ export function useSocket() {
   const token = useAppSelector((s) => s.auth.token);
 
   const socket = useMemo(() => {
-    const s = io(ENV.BASE_URL, {
+    console.log(`url backend du socked ${ENV.WS_URL}`);
+    const s = io(ENV.WS_URL, {
       transports: ['websocket', 'polling'],
       autoConnect: false,
-      extraHeaders: token ? { Authorization: `Bearer ${token}` } : undefined,
-    }) as Socket;
+      auth: {
+        token: token, // <-- ajoute ici
+      },
+    });
+
     return s;
   }, [token]);
 
