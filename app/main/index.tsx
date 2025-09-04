@@ -302,6 +302,9 @@ export default function LobbyScreen() {
   const onTransitionEnd = () => {
     if (gameModeAction) {
       gameModeAction();
+      //Reset after executing to avoid being stuck on TransitionScreen
+      setIsTransitioning(false);
+      setGameModeAction(null);
     }
   };
 
