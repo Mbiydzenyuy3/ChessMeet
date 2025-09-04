@@ -6,7 +6,7 @@ import {
   updateProfile,
   verifyOtp,
 } from '../redux/slices/authSlice';
-import { useAppDispatch, useAppSelector } from './../redux/slices/hooks';
+import { useAppDispatch, useAppSelector } from '../redux/slices/hooks';
 
 export function useAuth() {
   const dispatch = useAppDispatch();

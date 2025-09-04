@@ -44,14 +44,15 @@ export default function StatsCard({ stats }: Props) {
 const styles = StyleSheet.create({
   cardItems: {
     backgroundColor: COLORS.transparentBorder,
-    // padding: 16,
     borderRadius: 12,
     shadowColor: COLORS.white,
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 3,
-    marginVertical: 10,
+    marginVertical: 20,
     width: '100%',
+    height: 500,
+    padding: 16,
   },
   title: {
     fontSize: 18,

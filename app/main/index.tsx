@@ -1,51 +1,56 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+// /* eslint-disable react-native/no-color-literals */
+// /* eslint-disable react-native/no-inline-styles */
+// /* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { COLORS } from '@/constants/colors';
-import { Book, Bot, Users } from 'lucide-react-native';
-import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withDelay,
-  withRepeat,
-  withSequence,
-  withSpring,
-  withTiming,
-} from 'react-native-reanimated';
-import { Alert } from 'react-native';
-// import { Button, Loading } from '../../components/UI';
+import { useAuth } from '@/hooks/useAuth';
+import { useRouter } from 'expo-router';
+import { Settings } from 'lucide-react-native';
+import React, { useState } from 'react';
+import {
+  Alert,
+  Image,
+  ImageBackground,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import FloatingPiece from '../../components/FloatingPiece';
+import TransitionScreen from '../../components/TransitionScreen';
+import { api } from '../../lib/api';
 import { useAppDispatch } from '../../store';
 import { setMode, updateFromGameObject } from '../../store/gameSlice';
 import { useRouter } from 'expo-router';
 import { useSocket } from '@/hooks/useSocket';
 
-const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
-const AnimatedText = Animated.createAnimatedComponent(Text);
+import Game from '../../assets/images/threeheadpiece.png';
+import lobby from '../../assets/images/woodenbg.jpg';
 
 export default function LobbyScreen() {
+    const socket = useSocket();
   const router = useRouter();
-  const socket = useSocket();
-
+  const { user } = useAuth();
   const dispatch = useAppDispatch();
-  function joinQueue() {
-    console.log('🔹 Rejoindre la file online');
-    dispatch(setMode('online'));
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [gameModeAction, setGameModeAction] = useState<(() => void) | null>(null);
 
-    socket.emit('joinQueue', { timeControl: '300+0' });
+  // ✅ CORRECTED FUNCTION
+  // The only job of this function is to execute the game start/navigation action.
+  // We do not need to reset the state here.
+  const onTransitionEnd = () => {
+    if (gameModeAction) {
+      gameModeAction();
+      //Reset after executing to avoid being stuck on TransitionScreen
+      setIsTransitioning(false);
+      setGameModeAction(null);
+    }
+  };
 
-    socket.once('matchFound', (data: any) => {
-      if (data && data._id) {
-        Alert.alert('Match trouvé', 'Redirection vers la partie…');
-        dispatch(updateFromGameObject(data));
-        router.push('/main/game');
-      } else {
-        Alert.alert('En attente', 'En attente d’un adversaire…');
-        // L'écran de jeu écoutera les events socket (matchFound/movePlayed)
-
-        router.push('/main/game');
-      }
-    });
-  }
+  const handleGameModeSelection = (action: () => void) => {
+    setGameModeAction(() => action);
+    setIsTransitioning(true);
+  };
 
   function startAI() {
     console.log('Début du jeu contre l’IA');
@@ -65,170 +70,175 @@ export default function LobbyScreen() {
     });
   }
 
-  // Scale animations for cards
-  const multiplayerScale = useSharedValue(0.8);
-  const aiScale = useSharedValue(0.8);
-  const lessonsScale = useSharedValue(0.8);
+    function joinQueue() {
+    console.log('🔹 Rejoindre la file online');
+    dispatch(setMode('online'));
 
-  const multiplayerStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: multiplayerScale.value }],
-  }));
-  const aiStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: aiScale.value }],
-  }));
-  const lessonsStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: lessonsScale.value }],
-  }));
+    socket.emit('joinQueue', { timeControl: '300+0' });
 
-  React.useEffect(() => {
-    multiplayerScale.value = withDelay(100, withSpring(1, { damping: 6 }));
-    aiScale.value = withDelay(250, withSpring(1, { damping: 6 }));
-    lessonsScale.value = withDelay(400, withSpring(1, { damping: 6 }));
-  }, []);
+    socket.once('matchFound', (data: any) => {
+      if (data && data._id) {
+        Alert.alert('Match trouvé', 'Redirection vers la partie…');
+        dispatch(updateFromGameObject(data));
+        router.push('/main/game');
+      } else {
+        Alert.alert('En attente', 'En attente d’un adversaire…');
+        // L'écran de jeu écoutera les events socket (matchFound/movePlayed)
 
-  // Floating pieces
-  const floatingPieces = Array.from({ length: 6 }).map((_, i) => ({
-    translateY: useSharedValue(0),
-    opacity: useSharedValue(0.1),
-    delay: i * 300,
-  }));
-
-  React.useEffect(() => {
-    floatingPieces.forEach((piece) => {
-      piece.translateY.value = withRepeat(
-        withSequence(
-          withDelay(piece.delay, withTiming(-20, { duration: 3000 })),
-          withTiming(20, { duration: 3000 })
-        ),
-        -1,
-        true
-      );
+        router.push('/main/game');
+      }
     });
-  }, []);
+  }
 
   const chessSymbols = ['♔', '♕', '♖', '♗', '♘', '♙'];
 
+  if (isTransitioning) {
+    return <TransitionScreen onAnimationFinish={onTransitionEnd} />;
+  }
+
   return (
     <View style={styles.container}>
-      {/* Floating background pieces */}
-      <View style={StyleSheet.absoluteFill}>
-        {chessSymbols.map((piece, index) => {
-          const style = useAnimatedStyle(() => ({
-            transform: [{ translateY: floatingPieces[index].translateY.value }],
-            opacity: floatingPieces[index].opacity.value,
-          }));
-          return (
-            <AnimatedText
-              key={index}
-              style={[
-                styles.floatingPiece,
-                {
-                  left: `${10 + index * 15}%`,
-                  top: `${20 + (index % 2) * 40}%`,
-                },
-                style,
-              ]}
+      <View style={StyleSheet.absoluteFill} pointerEvents="none">
+        {chessSymbols.map((symbol, index) => (
+          <FloatingPiece key={index} symbol={symbol} index={index} />
+        ))}
+      </View>
+
+      <ImageBackground source={lobby} style={styles.background} resizeMode="cover">
+        <View style={styles.overlay}>
+          {/* Profile Card */}
+          <View style={[styles.profileCard, styles.shadow]}>
+            <View style={styles.headerItems}>
+              <TouchableOpacity onPress={() => router.push('/main/profile')}>
+                <Image
+                  source={{
+                    uri:
+                      user?.avatarUrl ||
+                      'https://i.pinimg.com/474x/fa/d5/e7/fad5e79954583ad50ccb3f16ee64f66d.jpg',
+                  }}
+                  style={styles.avatar}
+                />
+              </TouchableOpacity>
+              <Text style={styles.welcome}> {user?.displayName || 'Guest'}</Text>
+            </View>
+
+            <TouchableOpacity
+              style={styles.settingsBtn}
+              onPress={() => router.push('/settings/SettingsScreen')}
             >
-              {piece}
-            </AnimatedText>
-          );
-        })}
-      </View>
+              <Settings color="#fff" size={20} />
+            </TouchableOpacity>
+          </View>
 
-      {/* Header */}
-      <Text style={styles.welcome}>ChessMeet</Text>
-      <Text style={styles.subtitle}>Choose your game mode</Text>
+          {/* Chess Icon Center */}
+          <View style={styles.centerPiece}>
+            <Image source={Game} style={{ width: 180, height: 180, resizeMode: 'contain' }} />
+          </View>
 
-      {/* Game Options */}
-      <View style={styles.cardsContainer}>
-        <AnimatedTouchable
-          style={[styles.card, { backgroundColor: COLORS.primary }, multiplayerStyle]}
-          onPress={() => router.push('/main/PlayLocal')}
-        >
-          <Users size={32} color="white" />
-          <Text style={styles.cardTitle}>Play Offline</Text>
-          <Text style={styles.cardDesc}>Play locally with other players</Text>
-        </AnimatedTouchable>
+          {/* Choose Mode */}
+          <Text style={styles.chooseText}>CHOOSE A GAME MODE</Text>
 
-        <AnimatedTouchable
-          style={[styles.card, { backgroundColor: COLORS.primary }, multiplayerStyle]}
-          onPress={joinQueue}
-        >
-          <Users size={32} color="white" />
-          <Text style={styles.cardTitle}>Play vs Multiplayer</Text>
-          <Text style={styles.cardDesc}>Compete online with players</Text>
-        </AnimatedTouchable>
+          {/* Buttons */}
+          <TouchableOpacity
+            style={[styles.modeBtn, styles.shadow]}
+            onPress={() => handleGameModeSelection(() => router.push('/main/PlayLocal'))}
+          >
+            <Text style={styles.modeText}>♟ PLAY OFFLINE</Text>
+          </TouchableOpacity>
 
-        <AnimatedTouchable
-          style={[styles.card, { backgroundColor: COLORS.backgroundOne }, aiStyle]}
-          onPress={startAI}
-        >
-          <Bot size={32} color="white" />
-          <Text style={styles.cardTitle}>Play vs AI</Text>
-          <Text style={styles.cardDesc}>Challenge the robot</Text>
-        </AnimatedTouchable>
-
-        <AnimatedTouchable
-          style={[styles.card, { backgroundColor: COLORS.backgroundTwo }, lessonsStyle]}
-          onPress={() => router.push('/main')}
-        >
-          <Book size={32} color="white" />
-          <Text style={styles.cardTitle}>Game Rules</Text>
-          <Text style={styles.cardDesc}>Learn how to win your first game and many more</Text>
-        </AnimatedTouchable>
-      </View>
+          <TouchableOpacity
+            style={[styles.modeBtn, styles.shadow]}
+            onPress={() => handleGameModeSelection(startAI)}
+          >
+            <Text style={styles.modeText}>♟ PLAY VS AI</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.modeBtn, styles.shadow]}
+            onPress={() => handleGameModeSelection(joinQueue)}
+          >
+            <Text style={styles.modeText}>♟ JOIN ONLINE</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.modeBtn, styles.shadow]}
+            onPress={() => router.push('/settings/LessonScreen')}
+          >
+            <Text style={styles.modeText}>♟ LEARN CHESS</Text>
+          </TouchableOpacity>
+        </View>
+      </ImageBackground>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.BackgroundColor,
-    padding: 20,
-  },
-  welcome: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: COLORS.whitetext,
-    marginBottom: 6,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: COLORS.muted,
-    marginBottom: 20,
-  },
-  cardsContainer: {
+  container: { flex: 1 },
+  background: { flex: 1, alignItems: 'center', justifyContent: 'flex-start' },
+  profileCard: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 16,
+    alignItems: 'center',
+    backgroundColor: COLORS.profileCard,
+    padding: 10,
+    borderRadius: 12,
+    width: '90%',
     justifyContent: 'space-between',
   },
-  card: {
-    width: '47%',
-    padding: 16,
-    borderRadius: 16,
+
+  shadow: {
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 24,
+    },
+    shadowOpacity: 0.5,
+    shadowRadius: 4.65,
+    elevation: 8,
+  },
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    width: '100%',
+    height: '100%',
+    paddingTop: 40,
+    alignItems: 'center',
+  },
+  avatar: { width: 40, height: 40, borderRadius: 20, marginRight: 12 },
+  settingsBtn: {
+    backgroundColor: COLORS.settingsBtn,
+    padding: 6,
+    marginBottom: 6,
+    borderRadius: 20,
+  },
+  welcome: { fontSize: 24, fontWeight: '700', color: COLORS.whitetext },
+  centerPiece: {
+    marginTop: 40,
+    marginBottom: 30,
+    alignItems: 'center',
+  },
+  chooseText: {
+    fontSize: 18,
+    color: COLORS.white,
+    fontWeight: '800',
+    marginBottom: 20,
+    fontFamily: 'MidnightMinutes',
+  },
+  headerItems: {
+    flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 4,
   },
-  cardTitle: {
+  modeBtn: {
+    backgroundColor: COLORS.modeBtn,
+    paddingVertical: 14,
+    paddingHorizontal: 60,
+    borderRadius: 10,
+    marginVertical: 10,
+    width: '80%',
+    alignItems: 'center',
+  },
+  modeText: {
     color: COLORS.white,
-    fontWeight: '700',
     fontSize: 16,
-    marginTop: 10,
-  },
-  cardDesc: {
-    color: COLORS.white,
-    opacity: 0.8,
-    fontSize: 12,
-    marginTop: 4,
-    textAlign: 'center',
-  },
-  floatingPiece: {
-    position: 'absolute',
-    fontSize: 48,
-    color: COLORS.white,
-    opacity: 0.08,
+    fontWeight: '900',
+    fontFamily: 'MidnightMinutes',
   },
 });

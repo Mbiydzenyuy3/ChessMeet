@@ -1,15 +1,17 @@
 /* eslint-disable react-native/no-color-literals */
 /* eslint-disable react-native/no-inline-styles */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// ============================ app/(main)/game.tsx (Corrigé) ============================
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { View, Text, Alert, Pressable, Modal } from 'react-native';
-import GameHeader from '../../components/GameHeader';
-import MoveList from '../../components/MoveList';
-import AssistantPanel from '../../components/AssistantPanel';
-import { useAppDispatch, useAppSelector } from '../../store';
 import { Chess } from 'chess.js';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Alert, ImageBackground, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import AssistantPanel from '../../components/AssistantPanel';
+import MoveList from '../../components/MoveList';
+import { useAppDispatch, useAppSelector } from '../../store';
 
+import { useRouter } from 'expo-router';
+import Chessboard, { ChessboardRef } from 'react-native-chessboard';
+import { useSocket } from '../../hooks/useSocket';
+import { newChess } from '../../lib/chess';
 import {
   appendMove,
   markEvent,
@@ -19,68 +21,41 @@ import {
   setLoading,
   setSuggestions,
   updateFromGameObject,
-} from '../../store/gameSlice';
-import { newChess } from '../../lib/chess';
-import { useSocket } from '../../hooks/useSocket';
-import Chessboard, { ChessboardRef } from 'react-native-chessboard';
-import { useRouter } from 'expo-router';
+} from '../../store/gameSlice';;
 
-/**
- * Compare deux FEN et retourne le dernier coup joué { from, to, san }.
- * @param prevFen - FEN avant le coup
- * @param newFen - FEN après le coup
- */
+import lobby from '../../assets/images/woodenbg.jpg'; // Import the background
+
+// Helper functions (extractLastMove, usePlayerColor) remain unchanged...
 export function extractLastMove(prevFen: string, newFen: string) {
   const chessPrev = new Chess(prevFen);
   const chessNew = new Chess(newFen);
-  console.log(`appele de la fonction extractLastMove`);
-
-  // Liste des coups légaux depuis l'état précédent
   const legalMoves = chessPrev.moves({ verbose: true });
-
-  // On rejoue chaque coup pour voir lequel mène au newFen
   for (const move of legalMoves) {
     const clone = new Chess(prevFen);
     clone.move({ from: move.from, to: move.to, promotion: move.promotion });
-
     if (clone.fen() === newFen) {
-      return {
-        from: move.from,
-        to: move.to,
-        san: move.san, // notation algébrique standard (ex: "Nf3")
-      };
+      return { from: move.from, to: move.to, san: move.san };
     }
   }
-
-  // fallback : si aucun match (rare, problème de synchro)
   const history = chessNew.history({ verbose: true });
   const last = history[history.length - 1];
   if (last) {
-    return {
-      from: last.from,
-      to: last.to,
-      san: last.san,
-    };
+    return { from: last.from, to: last.to, san: last.san };
   }
-
   return null;
 }
 
 export function usePlayerColor(): 'w' | 'b' | null {
   const user = useAppSelector((state) => state.auth.user);
   const { whitePlayer, blackPlayer } = useAppSelector((s) => s.game);
-
   if (!user?._id) return null;
-
   if (whitePlayer && String(whitePlayer) === String(user._id)) return 'w';
   if (blackPlayer && String(blackPlayer) === String(user._id)) return 'b';
-
-  return null; // spectateur ou erreur
+  return null;
 }
 
 export default function GameScreen() {
   const router = useRouter();
-
   const dispatch = useAppDispatch();
   const socket = useSocket();
   const boardRef = useRef<ChessboardRef>(null);
@@ -93,16 +68,15 @@ export default function GameScreen() {
   const { currentId, fen, moves, assistantEnabled, mode } = useAppSelector((s) => s.game);
 
   // Le tour (turn) est maintenant déduit directement de l'état "fen"
+
   const chess = useMemo(() => newChess(fen), [fen]);
   const turn = useMemo(() => chess.turn(), [chess]);
-  const status = useMemo(() => {
-    // Une logique plus complète ici serait nécessaire
-    if (chess.isGameOver()) return 'Partie terminée';
-    if (chess.isCheckmate()) return 'Échec et mat';
-    return 'active';
-  }, [chess]);
+  // const status = useMemo(() => {
+  //   if (chess.isGameOver()) return 'Partie terminée';
+  //   if (chess.isCheckmate()) return 'Échec et mat';
+  //   return 'active';
+  // }, [chess]);
 
-  // Modals (mobile)
   const [showMoves, setShowMoves] = useState(false);
   const [showCoach, setShowCoach] = useState(false);
 
@@ -222,7 +196,7 @@ export default function GameScreen() {
   }
 
   //new
-  async function handleResign() {
+   async function handleResign() {
     if (!currentId) return;
     try {
       dispatch(setLoading(true));
@@ -260,6 +234,7 @@ export default function GameScreen() {
   }
 
   // Quand `fen` change dans Redux → synchro du board
+
 
   useEffect(() => {
     if (!fen || !boardRef.current) return;
@@ -305,13 +280,14 @@ export default function GameScreen() {
     return <Text>Loading game...</Text>;
   }
 
-  return (
-    <View style={{ flex: 1, backgroundColor: '#f9fafb' }}>
-      <GameHeader status={status} turn={turn} />
 
-      <View style={{ flex: 1, alignItems: 'center', padding: 12 }}>
-        <Chessboard
-          ref={boardRef}
+  return (
+    <ImageBackground source={lobby} style={styles.background} resizeMode="cover">
+      <View style={styles.overlay}>
+        {/* <GameHeader status={status} turn={turn} /> */}
+        <View style={styles.boardContainer}>
+          <Chessboard
+            ref={boardRef}
           // fen={fen || undefined}
           onMove={async (info: any) => {
             console.log(`info: ${JSON.stringify(info)}`);
@@ -349,70 +325,51 @@ export default function GameScreen() {
               return false;
             }
           }}
-        />
-
-        <View style={{ flexDirection: 'row', gap: 12, marginTop: 12 }}>
-          <Pressable
-            onPress={() => setShowConfirm(true)}
-            style={{ padding: 10, borderRadius: 10, backgroundColor: '#fee2e2' }}
-          >
-            <Text style={{ color: '#991b1b' }}>Give up</Text>
-          </Pressable>
-          <Pressable
-            onPress={() => setShowMoves(true)}
-            style={{
-              padding: 10,
-              borderRadius: 10,
-              backgroundColor: 'white',
-              borderWidth: 1,
-              borderColor: '#e5e7eb',
+            colors={{
+              black: '#779952',
+              white: '#edeed1',
             }}
-          >
-            <Text>Historique</Text>
-          </Pressable>
-          <Pressable
-            onPress={() => setShowCoach(true)}
-            style={{ padding: 10, borderRadius: 10, backgroundColor: '#e0e7ff' }}
-          >
-            <Text style={{ color: '#1e3a8a' }}>Coach IA</Text>
-          </Pressable>
-        </View>
+          />
 
-        {/* Modal Historique */}
-        <Modal visible={showMoves} animationType="slide" onRequestClose={() => setShowMoves(false)}>
-          <View style={{ flex: 1, paddingTop: 48, backgroundColor: 'white' }}>
-            <View
-              style={{
-                paddingHorizontal: 16,
-                paddingBottom: 8,
-                borderBottomWidth: 1,
-                borderColor: '#e5e7eb',
-              }}
-            >
-              <Text style={{ fontSize: 18, fontWeight: '700' }}>story</Text>
-            </View>
-            <MoveList moves={moves} fullWidth />
-            <Pressable
-              onPress={() => setShowMoves(false)}
-              style={{ padding: 16, alignSelf: 'center' }}
-            >
-              <Text style={{ color: '#2563eb' }}>close</Text>
+          <View style={styles.buttonRow}>
+            <Pressable onPress={handleResign} style={styles.actionButton}>
+              <Text style={styles.buttonText}>Give up</Text>
+            </Pressable>
+            <Pressable onPress={() => setShowMoves(true)} style={styles.actionButton}>
+              <Text style={styles.buttonText}>History</Text>
+            </Pressable>
+            <Pressable onPress={() => setShowCoach(true)} style={styles.actionButton}>
+              <Text style={styles.buttonText}>AI Coach</Text>
             </Pressable>
           </View>
-        </Modal>
 
-        {/* Modal Coach IA */}
-        <Modal visible={showCoach} animationType="slide" onRequestClose={() => setShowCoach(false)}>
-          <View style={{ flex: 1, paddingTop: 48, backgroundColor: 'white' }}>
-            <View
-              style={{
-                paddingHorizontal: 16,
-                paddingBottom: 8,
-                borderBottomWidth: 1,
-                borderColor: '#e5e7eb',
-              }}
-            >
-              <Text style={{ fontSize: 18, fontWeight: '700' }}>Coach IA</Text>
+          {/* Modal Historique */}
+          <Modal
+            visible={showMoves}
+            animationType="slide"
+            onRequestClose={() => setShowMoves(false)}
+          >
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Move History</Text>
+              <MoveList moves={moves} fullWidth />
+              <Pressable onPress={() => setShowMoves(false)} style={styles.modalCloseButton}>
+                <Text style={styles.modalCloseText}>Close</Text>
+              </Pressable>
+            </View>
+          </Modal>
+
+          {/* Modal Coach IA */}
+          <Modal
+            visible={showCoach}
+            animationType="slide"
+            onRequestClose={() => setShowCoach(false)}
+          >
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>AI Coach</Text>
+              <AssistantPanel onAsk={askSuggestion} fullWidth />
+              <Pressable onPress={() => setShowCoach(false)} style={styles.modalCloseButton}>
+                <Text style={styles.modalCloseText}>Close</Text>
+              </Pressable>
             </View>
             <AssistantPanel onAsk={askSuggestion} fullWidth />
             <Pressable
@@ -446,6 +403,65 @@ export default function GameScreen() {
           </View>
         </Modal>
       </View>
-    </View>
+    </ImageBackground>
   );
 }
+
+const styles = StyleSheet.create({
+  background: {
+    flex: 1,
+    width: '100%',
+  },
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+  },
+  boardContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 12,
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 100,
+  },
+  actionButton: {
+    backgroundColor: '#8B4513',
+    borderWidth: 2,
+    borderColor: '#D4AF37',
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: '#FFF8E1',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  modalContent: {
+    flex: 1,
+    paddingTop: 60,
+    backgroundColor: '#1E1E2D', // Dark background for modals
+  },
+  modalTitle: {
+    fontFamily: 'CinzelDecorative-Bold',
+    fontSize: 24,
+    color: '#FFF8E1',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  modalCloseButton: {
+    padding: 16,
+    alignSelf: 'center',
+    position: 'absolute',
+    bottom: 20,
+  },
+  modalCloseText: {
+    color: '#D4AF37',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+});
