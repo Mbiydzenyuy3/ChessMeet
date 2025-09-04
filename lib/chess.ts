@@ -6,7 +6,7 @@ export function newChess(fen?: string) {
   if (fen)
     try {
       c.load(fen);
-    // eslint-disable-next-line no-empty
+      // eslint-disable-next-line no-empty
     } catch {}
   return c;
 }
