@@ -1,5 +1,5 @@
 import { COLORS } from '@/constants/colors';
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Image, ImageBackground, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   runOnJS,
@@ -20,6 +20,7 @@ interface TransitionScreenProps {
 export default function TransitionScreen({ onAnimationFinish }: TransitionScreenProps) {
   const progress = useSharedValue(0);
   const opacity = useSharedValue(0);
+  const firedRef = useRef(false);
 
   // Animated style for the progress bar width
   const progressBarAnimatedStyle = useAnimatedStyle(() => {
@@ -36,6 +37,8 @@ export default function TransitionScreen({ onAnimationFinish }: TransitionScreen
   });
 
   useEffect(() => {
+    if (firedRef.current) return;
+    firedRef.current = true;
     // 1. Fade in the screen
     opacity.value = withTiming(1, { duration: 400 }, () => {
       // 2. Animate the progress bar
@@ -56,10 +59,20 @@ export default function TransitionScreen({ onAnimationFinish }: TransitionScreen
           <Animated.View style={[styles.contentContainer, containerAnimatedStyle]}>
             <Image source={logoImage} style={styles.image} />
 
-            <Text style={styles.loadingText}>LOADING...</Text>
+            <Text
+              accessibilityRole="text"
+              accessibilityLiveRegion="polite"
+              style={styles.loadingText}
+            >
+              LOADING...{' '}
+            </Text>
 
             {/* Progress Bar */}
-            <View style={styles.progressBarBackground}>
+            <View
+              style={styles.progressBarBackground}
+              accessibilityRole="progressbar"
+              accessibilityLabel="Loading progress"
+            >
               <Animated.View style={[styles.progressBarForeground, progressBarAnimatedStyle]} />
             </View>
           </Animated.View>

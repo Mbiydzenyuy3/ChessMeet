@@ -319,11 +319,14 @@ export default function LobbyScreen() {
   async function joinQueue() {
     try {
       const { data } = await api.post('/matchmaking/join', { timeControl: '300+0' });
-      dispatch(setMode('online'));
+
       if (data && data._id) {
+        dispatch(setMode('online'));
+
         Alert.alert('Match trouvé', 'Redirection vers la partie…');
         router.push('/main/game');
       } else {
+        dispatch(setMode('online'));
         Alert.alert('En file', "En attente d'un adversaire…");
         router.push('/main/game');
       }
