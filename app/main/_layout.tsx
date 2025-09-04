@@ -1,7 +1,11 @@
+/* eslint-disable react-native/no-color-literals */
+/* eslint-disable react-native/no-inline-styles */
+// app/main/_layout.tsx
 import { Tabs, usePathname } from 'expo-router';
 import { BarChart2, Home, User } from 'lucide-react-native';
 import React from 'react';
 import { Dimensions, ImageBackground, Platform, StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import lobby from '../../assets/images/woodenbg.jpg';
 
 const { width, height } = Dimensions.get('window');
@@ -9,10 +13,11 @@ const { width, height } = Dimensions.get('window');
 export default function MainTabLayout() {
   // Get the current route path
   const pathname = usePathname();
+  const insets = useSafeAreaInsets();
 
   // Define which screens should have the tab bar hidden
-  const isGameScreen = pathname === '/main/game' || pathname === '/main/PlayLocal';
-
+  const HIDDEN_PREFIXES = ['/main/game', '/main/PlayLocal', '/main/WaitingScreen'];
+  const isTabHidden = HIDDEN_PREFIXES.some((p) => pathname.startsWith(p));
   // Define colors and sizes for icons
   const iconColor = '#9E9E9E';
   const focusedIconColor = '#FFF8E1'; // Use our theme's gold/cream color
@@ -27,12 +32,12 @@ export default function MainTabLayout() {
           tabBarInactiveTintColor: iconColor,
           tabBarStyle: {
             // Conditionally hide the tab bar based on the current screen
-            display: isGameScreen ? 'none' : 'flex',
+            display: isTabHidden ? 'none' : 'flex',
             backgroundColor: 'transparent', // Dark wood/card color from our theme
             borderTopWidth: 0,
-            height: Platform.OS === 'ios' ? 90 : 60,
+            height: 60 + insets.bottom,
             elevation: 0,
-            paddingBottom: Platform.OS === 'ios' ? 20 : 5,
+            paddingBottom: insets.bottom,
           },
           tabBarLabelStyle: {
             fontSize: 12,

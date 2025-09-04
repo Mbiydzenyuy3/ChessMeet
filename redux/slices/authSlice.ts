@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
-import authApi, { UpdateProfilePayload, VerifyOtpRes } from '../../../api/authApi';
+import authApi, { UpdateProfilePayload, VerifyOtpRes } from '../../api/authApi';
 
 type AuthState = {
   token: string | null;
