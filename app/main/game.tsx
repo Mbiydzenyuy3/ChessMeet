@@ -330,7 +330,7 @@ export default function GameScreen() {
           />
 
           <View style={styles.buttonRow}>
-            <Pressable onPress={handleResign} style={styles.actionButton}>
+            <Pressable onPress={() => setShowConfirm(true)} style={styles.actionButton}>
               <Text style={styles.buttonText}>Give up</Text>
             </Pressable>
             <Pressable onPress={() => setShowMoves(true)} style={styles.actionButton}>
