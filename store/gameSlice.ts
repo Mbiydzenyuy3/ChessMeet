@@ -3,8 +3,14 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { api } from '../lib/api';
 
-export type Suggestion = { move: string; score?: number; reason?: string };
-export type MoveObj = { from: string; to: string; promotion?: string; san?: string; fen?: string };
+export type Suggestion = { move: string; reason?: string };
+export type MoveObj = {
+  from?: string;
+  to?: string;
+  promotion?: string;
+  san?: string;
+  fen?: string;
+};
 
 export type GameState = {
   currentId?: string;
@@ -161,6 +167,9 @@ const slice = createSlice({
       s.blackPlayer = undefined;
       s.lastEvent = undefined;
     },
+    markEvent: (state, action: PayloadAction<string>) => {
+      state.lastEvent = action.payload;
+    },
   },
   extraReducers: (b) => {
     b.addCase(createVsAI.pending, (s) => {
@@ -227,11 +236,13 @@ const slice = createSlice({
 
 export const {
   setGameSnapshot,
+  markEvent,
   appendMove,
   setSuggestions,
   setAssistantEnabled,
   setLoading,
   setMode,
   updateFromGameObject,
+  resetGame,
 } = slice.actions;
 export default slice.reducer;
