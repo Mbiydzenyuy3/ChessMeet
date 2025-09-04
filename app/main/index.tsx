@@ -1,10 +1,12 @@
+/* eslint-disable react-native/no-color-literals */
+/* eslint-disable react-native/no-inline-styles */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // /* eslint-disable react-native/no-color-literals */
 // /* eslint-disable react-native/no-inline-styles */
 // /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { COLORS } from '@/constants/colors';
 import { useAuth } from '@/hooks/useAuth';
-import { useRouter } from 'expo-router';
 import { Settings } from 'lucide-react-native';
 import React, { useState } from 'react';
 import {
@@ -18,7 +20,6 @@ import {
 } from 'react-native';
 import FloatingPiece from '../../components/FloatingPiece';
 import TransitionScreen from '../../components/TransitionScreen';
-import { api } from '../../lib/api';
 import { useAppDispatch } from '../../store';
 import { setMode, updateFromGameObject } from '../../store/gameSlice';
 import { useRouter } from 'expo-router';
@@ -28,7 +29,7 @@ import Game from '../../assets/images/threeheadpiece.png';
 import lobby from '../../assets/images/woodenbg.jpg';
 
 export default function LobbyScreen() {
-    const socket = useSocket();
+  const socket = useSocket();
   const router = useRouter();
   const { user } = useAuth();
   const dispatch = useAppDispatch();
@@ -70,7 +71,7 @@ export default function LobbyScreen() {
     });
   }
 
-    function joinQueue() {
+  function joinQueue() {
     console.log('🔹 Rejoindre la file online');
     dispatch(setMode('online'));
 
@@ -183,6 +184,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
 
+  // eslint-disable-next-line react-native/no-color-literals
   shadow: {
     shadowColor: '#000',
     shadowOffset: {

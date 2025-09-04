@@ -21,7 +21,7 @@ import {
   setLoading,
   setSuggestions,
   updateFromGameObject,
-} from '../../store/gameSlice';;
+} from '../../store/gameSlice';
 
 import lobby from '../../assets/images/woodenbg.jpg'; // Import the background
 
@@ -196,7 +196,7 @@ export default function GameScreen() {
   }
 
   //new
-   async function handleResign() {
+  async function handleResign() {
     if (!currentId) return;
     try {
       dispatch(setLoading(true));
@@ -234,7 +234,6 @@ export default function GameScreen() {
   }
 
   // Quand `fen` change dans Redux → synchro du board
-
 
   useEffect(() => {
     if (!fen || !boardRef.current) return;
@@ -280,7 +279,6 @@ export default function GameScreen() {
     return <Text>Loading game...</Text>;
   }
 
-
   return (
     <ImageBackground source={lobby} style={styles.background} resizeMode="cover">
       <View style={styles.overlay}>
@@ -288,43 +286,43 @@ export default function GameScreen() {
         <View style={styles.boardContainer}>
           <Chessboard
             ref={boardRef}
-          // fen={fen || undefined}
-          onMove={async (info: any) => {
-            console.log(`info: ${JSON.stringify(info)}`);
-            const pieceColor = info.move.color; // ✅ "w" ou "b"
+            // fen={fen || undefined}
+            onMove={async (info: any) => {
+              console.log(`info: ${JSON.stringify(info)}`);
+              const pieceColor = info.move.color; // ✅ "w" ou "b"
 
-            // 1️⃣ Vérifie que le joueur bouge bien une pièce de sa couleur
-            if (pieceColor !== playerColor) {
-              console.log('⛔ Not your color !');
-              setTimeout(() => {
-                boardRef.current?.resetBoard(fen);
-              }, 50);
-              return false;
-            }
+              // 1️⃣ Vérifie que le joueur bouge bien une pièce de sa couleur
+              if (pieceColor !== playerColor) {
+                console.log('⛔ Not your color !');
+                setTimeout(() => {
+                  boardRef.current?.resetBoard(fen);
+                }, 50);
+                return false;
+              }
 
-            // 2️⃣ Vérifie que c'est bien son tour
-            if (turn !== playerColor) {
-              console.log('⛔ Not your turn!');
-              setTimeout(() => {
-                boardRef.current?.resetBoard(fen);
-              }, 50);
-              return false;
-            }
+              // 2️⃣ Vérifie que c'est bien son tour
+              if (turn !== playerColor) {
+                console.log('⛔ Not your turn!');
+                setTimeout(() => {
+                  boardRef.current?.resetBoard(fen);
+                }, 50);
+                return false;
+              }
 
-            try {
-              // 3️⃣ Envoi du coup au backend
-              await onMove(info.move.from, info.move.to);
+              try {
+                // 3️⃣ Envoi du coup au backend
+                await onMove(info.move.from, info.move.to);
 
-              // ⚠️ L'UI ne bouge pas tout de suite → on attend le FEN du backend
-              return false;
-            } catch (e) {
-              console.error('Error backend:', e);
-              setTimeout(() => {
-                boardRef.current?.resetBoard(fen);
-              }, 50);
-              return false;
-            }
-          }}
+                // ⚠️ L'UI ne bouge pas tout de suite → on attend le FEN du backend
+                return false;
+              } catch (e) {
+                console.error('Error backend:', e);
+                setTimeout(() => {
+                  boardRef.current?.resetBoard(fen);
+                }, 50);
+                return false;
+              }
+            }}
             colors={{
               black: '#779952',
               white: '#edeed1',
@@ -371,37 +369,32 @@ export default function GameScreen() {
                 <Text style={styles.modalCloseText}>Close</Text>
               </Pressable>
             </View>
-            <AssistantPanel onAsk={askSuggestion} fullWidth />
-            <Pressable
-              onPress={() => setShowCoach(false)}
-              style={{ padding: 16, alignSelf: 'center' }}
+          </Modal>
+
+          {/* Modal Confirmation Abandon */}
+          <Modal visible={showConfirm} transparent animationType="fade">
+            <View
+              style={{
+                flex: 1,
+                justifyContent: 'center',
+                alignItems: 'center',
+                backgroundColor: 'rgba(0,0,0,0.5)',
+              }}
             >
-              <Text style={{ color: '#2563eb' }}>close</Text>
-            </Pressable>
-          </View>
-        </Modal>
-        <Modal visible={showConfirm} transparent animationType="fade">
-          <View
-            style={{
-              flex: 1,
-              justifyContent: 'center',
-              alignItems: 'center',
-              backgroundColor: 'rgba(0,0,0,0.5)',
-            }}
-          >
-            <View style={{ backgroundColor: 'white', padding: 20, borderRadius: 12 }}>
-              <Text>Give up the game?</Text>
-              <View style={{ flexDirection: 'row', marginTop: 12 }}>
-                <Pressable onPress={() => setShowConfirm(false)}>
-                  <Text>cancel</Text>
-                </Pressable>
-                <Pressable onPress={handleResign}>
-                  <Text>Yes, give up</Text>
-                </Pressable>
+              <View style={{ backgroundColor: 'white', padding: 20, borderRadius: 12 }}>
+                <Text>Give up the game?</Text>
+                <View style={{ flexDirection: 'row', marginTop: 12 }}>
+                  <Pressable onPress={() => setShowConfirm(false)}>
+                    <Text>Cancel</Text>
+                  </Pressable>
+                  <Pressable onPress={handleResign}>
+                    <Text>Yes, give up</Text>
+                  </Pressable>
+                </View>
               </View>
             </View>
-          </View>
-        </Modal>
+          </Modal>
+        </View>
       </View>
     </ImageBackground>
   );
