@@ -1,31 +1,34 @@
-// hooks/useAuth.ts
+import { UpdateProfilePayload } from '../api/authApi';
 import {
-  bootstrapAuth,
+  doUpdateProfile,
+  doUploadAvatar,
+  doVerifyOtp,
+  hydrateAuth,
   logout,
   requestOtp,
-  updateProfile,
-  verifyOtp,
-} from '../redux/slices/authSlice';
-import { useAppDispatch, useAppSelector } from '../redux/slices/hooks';
+} from '../store/authSlice';
+import { useAppDispatch, useAppSelector } from '../store/index';
 
 export function useAuth() {
   const dispatch = useAppDispatch();
-  const { token, user, loading, error, bootstrapped } = useAppSelector((s) => s.auth);
+  const { token, user, profileLoading, avatarLoading, error } = useAppSelector((s) => s.auth);
 
   return {
     token,
     user,
-    loading,
+    profileLoading,
+    avatarLoading,
     error,
-    bootstrapped,
+    isAuthenticated: Boolean(token),
 
     requestOtp: (email: string) => dispatch(requestOtp(email)),
     verifyOtp: (userIdentifier: string, code: string) =>
-      dispatch(verifyOtp({ userIdentifier, code })),
+      dispatch(doVerifyOtp({ userIdentifier, code })),
+
     logout: () => dispatch(logout()),
-    bootstrapAuth: () => dispatch(bootstrapAuth()),
-    updateProfile: (updates: { displayName?: string; avatarUrl?: string }) =>
-      dispatch(updateProfile(updates)),
-    isAuthenticated: Boolean(token),
+    bootstrapAuth: () => dispatch(hydrateAuth()),
+
+    updateProfile: (updates: UpdateProfilePayload) => dispatch(doUpdateProfile(updates)),
+    uploadAvatar: (formData: FormData) => dispatch(doUploadAvatar(formData)),
   };
 }
