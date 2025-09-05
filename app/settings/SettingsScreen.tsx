@@ -1,10 +1,9 @@
 import { COLORS } from '@/constants/colors';
 import { useAuth } from '@/hooks/useAuth';
-import { clearToken } from '@/lib/storage';
+// import { clearToken } from '@/lib/storage';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
-  Alert,
   ImageBackground,
   ScrollView,
   StyleSheet,
@@ -21,20 +20,6 @@ export default function SettingsScreen() {
   const [isSoundEnabled, setIsSoundEnabled] = useState(true); // State for sound toggle
   const [isDarkMode, setIsDarkMode] = useState(true); // State for dark mode toggle
   const router = useRouter();
-
-  const handleLogout = () => {
-    Alert.alert('Logout', 'Are you sure you want to log out?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Logout',
-        style: 'destructive',
-        onPress: async () => {
-          await clearToken();
-          router.replace('/auth/SignIn');
-        },
-      },
-    ]);
-  };
 
   return (
     <ImageBackground source={lobby} style={styles.background} resizeMode="cover">
@@ -84,9 +69,9 @@ export default function SettingsScreen() {
 
           {/* Account Section */}
           <View style={styles.buttonContainer}>
-            <TouchableOpacity style={styles.actionButton} onPress={handleLogout}>
+            {/* <TouchableOpacity style={styles.actionButton} onPress={handleLogout}>
               <Text style={styles.actionButtonText}>Logout</Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
 
             <TouchableOpacity
               style={[styles.actionButton, styles.backButton]}

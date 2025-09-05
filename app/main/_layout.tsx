@@ -2,11 +2,21 @@
 /* eslint-disable react-native/no-inline-styles */
 // app/main/_layout.tsx
 import { Tabs, usePathname } from 'expo-router';
-import { BarChart2, Home, User } from 'lucide-react-native';
+import { BarChart2, Home } from 'lucide-react-native';
 import React from 'react';
-import { Dimensions, ImageBackground, Platform, StyleSheet } from 'react-native';
+import { Dimensions, ImageBackground, Platform, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import lobby from '../../assets/images/woodenbg.jpg';
+
+const BRAND_COLOR = '#D4AF37';
+
+// Define a type for the icon component to satisfy TypeScript
+type TabBarIconProps = {
+  focused: boolean;
+  color: string;
+  size: number;
+};
+type IconComponentType = React.FC<{ color: string; size: number }>;
 
 const { width, height } = Dimensions.get('window');
 
@@ -20,8 +30,21 @@ export default function MainTabLayout() {
   const isTabHidden = HIDDEN_PREFIXES.some((p) => pathname.startsWith(p));
   // Define colors and sizes for icons
   const iconColor = '#9E9E9E';
-  const focusedIconColor = '#FFF8E1'; // Use our theme's gold/cream color
+  const focusedIconColor = BRAND_COLOR; // Use our theme's gold/cream color
   const iconSize = Platform.OS === 'ios' ? 28 : 24;
+
+  // Add explicit types for the parameters
+  const renderTabBarIcon = (
+    IconComponent: IconComponentType,
+    { focused, color, size }: TabBarIconProps
+  ) => {
+    return (
+      <View style={styles.iconContainer}>
+        {focused && <View style={styles.focusedIndicator} />}
+        <IconComponent color={color} size={size} />
+      </View>
+    );
+  };
 
   return (
     <ImageBackground source={lobby} style={styles.background} resizeMode="cover">
@@ -49,14 +72,14 @@ export default function MainTabLayout() {
           name="index"
           options={{
             title: 'Lobby',
-            tabBarIcon: ({ color }) => <Home color={color} size={iconSize} />,
+            tabBarIcon: (props) => renderTabBarIcon(Home, { ...props, size: iconSize }),
           }}
         />
         <Tabs.Screen
           name="profile"
           options={{
             title: 'Profile',
-            tabBarIcon: ({ color }) => <User color={color} size={iconSize} />,
+            tabBarIcon: (props) => renderTabBarIcon(BarChart2, { ...props, size: iconSize }),
           }}
         />
         <Tabs.Screen
@@ -91,7 +114,19 @@ const styles = StyleSheet.create({
     flex: 1,
     width,
     height,
-    // justifyContent: 'center',
-    // alignItems: 'center',
+  },
+  focusedIndicator: {
+    position: 'absolute',
+    top: 0,
+    width: '50%',
+    height: 3,
+    backgroundColor: BRAND_COLOR,
+    borderRadius: 2,
+  },
+  iconContainer: {
+    width: 60,
+    height: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

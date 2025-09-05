@@ -3,7 +3,16 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Chess } from 'chess.js';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, ImageBackground, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Alert,
+  ImageBackground,
+  Modal,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import AssistantPanel from '../../components/AssistantPanel';
 import MoveList from '../../components/MoveList';
 import { useAppDispatch, useAppSelector } from '../../store';
@@ -53,6 +62,23 @@ export function usePlayerColor(): 'w' | 'b' | null {
   if (blackPlayer && String(blackPlayer) === String(user._id)) return 'b';
   return null;
 }
+
+// ... Helper functions (extractLastMove, usePlayerColor) remain unchanged
+
+// ✅ New component for the loading/waiting screen
+const WaitingForOpponent = () => (
+  <ImageBackground source={lobby} style={styles.background} resizeMode="cover">
+    <View style={styles.overlay}>
+      <View style={styles.waitingContainer}>
+        <Text style={styles.waitingTitle}>Finding Opponent</Text>
+        <ActivityIndicator size="large" color="#D4AF37" />
+        <Text style={styles.waitingText}>
+          Please wait while we match you with another player...
+        </Text>
+      </View>
+    </View>
+  </ImageBackground>
+);
 
 export default function GameScreen() {
   const router = useRouter();
@@ -276,7 +302,7 @@ export default function GameScreen() {
   }, [currentId]);
 
   if (!playerColor) {
-    return <Text>Loading game...</Text>;
+    return <WaitingForOpponent />;
   }
 
   return (
@@ -372,23 +398,26 @@ export default function GameScreen() {
           </Modal>
 
           {/* Modal Confirmation Abandon */}
-          <Modal visible={showConfirm} transparent animationType="fade">
-            <View
-              style={{
-                flex: 1,
-                justifyContent: 'center',
-                alignItems: 'center',
-                backgroundColor: 'rgba(0,0,0,0.5)',
-              }}
-            >
-              <View style={{ backgroundColor: 'white', padding: 20, borderRadius: 12 }}>
-                <Text>Give up the game?</Text>
-                <View style={{ flexDirection: 'row', marginTop: 12 }}>
-                  <Pressable onPress={() => setShowConfirm(false)}>
-                    <Text>Cancel</Text>
+          <Modal
+            visible={showConfirm}
+            transparent
+            animationType="fade"
+            onRequestClose={() => setShowConfirm(false)}
+          >
+            {/* Use the new styles for the modal */}
+            <View style={styles.modalOverlay}>
+              <View style={styles.confirmModal}>
+                <Text style={styles.confirmTitle}>Resign Game?</Text>
+                <Text style={styles.confirmText}>Are you sure you want to resign the game?</Text>
+                <View style={styles.confirmButtonRow}>
+                  <Pressable
+                    style={[styles.confirmButton, styles.cancelButton]}
+                    onPress={() => setShowConfirm(false)}
+                  >
+                    <Text style={styles.cancelButtonText}>Cancel</Text>
                   </Pressable>
-                  <Pressable onPress={handleResign}>
-                    <Text>Yes, give up</Text>
+                  <Pressable style={styles.confirmButton} onPress={handleResign}>
+                    <Text style={styles.confirmButtonText}>Quit</Text>
                   </Pressable>
                 </View>
               </View>
@@ -456,5 +485,89 @@ const styles = StyleSheet.create({
     color: '#D4AF37',
     fontSize: 18,
     fontWeight: 'bold',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  confirmModal: {
+    width: '80%',
+    backgroundColor: '#1E1E2D', // Dark card background
+    borderRadius: 10,
+    padding: 25,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#D4AF37', // Gold border
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 10,
+  },
+  confirmTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#FFF8E1',
+    marginBottom: 10,
+    fontFamily: 'CinzelDecorative-Bold', // Your gamer font
+  },
+  confirmText: {
+    fontSize: 16,
+    color: '#E0E0E0',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  confirmButtonRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  confirmButton: {
+    backgroundColor: '#c43333', // A thematic red for destructive actions
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    flex: 1,
+    marginHorizontal: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cancelButton: {
+    backgroundColor: '#8B4513', // Themed brown for cancel
+  },
+  confirmButtonText: {
+    color: '#FFF8E1',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  cancelButtonText: {
+    color: '#FFF8E1',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  // ✅ New styles for the waiting screen
+  waitingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  waitingTitle: {
+    fontFamily: 'CinzelDecorative-Bold',
+    fontSize: 32,
+    color: '#FFF8E1',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  waitingText: {
+    color: '#E0E0E0',
+    fontSize: 16,
+    textAlign: 'center',
+    marginTop: 15,
   },
 });
