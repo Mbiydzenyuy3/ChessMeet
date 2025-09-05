@@ -104,11 +104,6 @@ export default function GameScreen() {
 
   const chess = useMemo(() => newChess(fen), [fen]);
   const turn = useMemo(() => chess.turn(), [chess]);
-  // const status = useMemo(() => {
-  //   if (chess.isGameOver()) return 'Partie terminée';
-  //   if (chess.isCheckmate()) return 'Échec et mat';
-  //   return 'active';
-  // }, [chess]);
 
   const [showMoves, setShowMoves] = useState(false);
   const [showCoach, setShowCoach] = useState(false);
@@ -127,9 +122,7 @@ export default function GameScreen() {
       console.log('📥 joined reçu:', JSON.stringify(p, null, 2));
     });
 
-    // Ajout d'une variable de nettoyage pour éviter les mises à jour sur un composant non monté
-
-    // Correction 2: Utilisation de `updateFromGameObject` pour toute mise à jour venant de la socket
+    //  Utilisation de `updateFromGameObject` pour toute mise à jour venant de la socket
     // Dans `game.tsx`
     socket.on('movePlayed', (payload: any) => {
       console.log('📥 movePlayed reçu:', JSON.stringify(payload, null, 2));
@@ -149,6 +142,9 @@ export default function GameScreen() {
       if (chessReceived.history().length > chessCurrent.history().length) {
         // Si le FEN de l'événement est plus avancé que le FEN actuel du store
         dispatch(updateFromGameObject(payload.game));
+        if (payload.move) {
+          dispatch(appendMove(payload.move));
+        }
       } else {
         console.log('⚠️ movePlayed ignoré car FEN obsolète ou identique.');
       }
@@ -173,6 +169,7 @@ export default function GameScreen() {
     });
 
     socket.on('playerResigned', (p: any) => {
+      if (!mounted) return;
       console.log('📥 abandon reçu:', JSON.stringify(p, null, 2));
       dispatch(markEvent('resigned'));
       dispatch(resetGame());
@@ -183,7 +180,31 @@ export default function GameScreen() {
     socket.on('gameOver', (p: any) => {
       if (!mounted) return;
       if (p?.game) dispatch(updateFromGameObject(p.game));
-      Alert.alert('Partie terminée', p.result || 'Fin');
+
+      let message = 'La partie est terminée.';
+      // Assurez-vous d'avoir l'ID de l'utilisateur actuel dans le store
+      const user = useAppSelector((state) => state.auth.user);
+
+      if (p.result === 'checkmate') {
+        if (p.winnerId === user._id) {
+          message = 'Félicitations, vous avez gagné par échec et mat !';
+        } else {
+          message = 'Échec et mat ! Vous avez perdu.';
+        }
+      } else if (p.result === 'stalemate') {
+        message = 'Pat ! La partie est nulle.';
+      } else if (p.result === 'draw') {
+        message = 'Match nul.';
+      } else if (p.result === 'resigned') {
+        message = 'Votre adversaire a abandonné la partie.';
+      }
+
+      Alert.alert('Partie terminée', message);
+      // Rediriger après un petit délai pour que le joueur voie le message
+      setTimeout(() => {
+        router.replace('/main');
+        dispatch(resetGame());
+      }, 3000);
     });
 
     socket.on('suggestionReceived', (p: any) => {
@@ -211,7 +232,7 @@ export default function GameScreen() {
       socket.off('gameOver');
       socket.off('suggestionReceived');
     };
-  }, [socket, currentId, dispatch, updateFromGameObject, appendMove, setSuggestions]); // Correction 3: Ajout des dépendances manquantes
+  }, [socket, currentId, dispatch, updateFromGameObject, appendMove, setSuggestions, mode, fen]); // Correction 3: Ajout des dépendances manquantes
   console.log(`socket${socket} , currentId:${currentId},  `);
 
   async function onMove(from: string, to: string) {
