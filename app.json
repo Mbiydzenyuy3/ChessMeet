@@ -37,7 +37,12 @@
           "backgroundColor": "#ffffff"
         }
       ],
-      "expo-font"
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Allow $(ChessMeet) to access your microphone."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

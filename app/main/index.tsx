@@ -7,6 +7,8 @@
 
 import { COLORS } from '@/constants/colors';
 import { useAuth } from '@/hooks/useAuth';
+import { useSocket } from '@/hooks/useSocket';
+import { useRouter } from 'expo-router';
 import { Settings } from 'lucide-react-native';
 import React, { useState } from 'react';
 import {
@@ -22,8 +24,6 @@ import FloatingPiece from '../../components/FloatingPiece';
 import TransitionScreen from '../../components/TransitionScreen';
 import { useAppDispatch } from '../../store';
 import { setMode, updateFromGameObject } from '../../store/gameSlice';
-import { useRouter } from 'expo-router';
-import { useSocket } from '@/hooks/useSocket';
 
 import Game from '../../assets/images/threeheadpiece.png';
 import lobby from '../../assets/images/woodenbg.jpg';
