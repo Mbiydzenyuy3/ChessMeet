@@ -1,13 +1,17 @@
+/* eslint-disable react-native/no-color-literals */
+/* eslint-disable react-native/no-inline-styles */
+// app/main/_layout.tsx
 import { COLORS } from '@/constants/colors';
 import { Chess, Square } from 'chess.js';
 import { useAudioPlayer } from 'expo-audio';
 import { useRouter } from 'expo-router';
-import { DoorOpenIcon, Lightbulb, RotateCcwIcon, Undo2 } from 'lucide-react-native';
+import { DoorOpenIcon, RotateCcwIcon } from 'lucide-react-native';
 import { useCallback, useRef, useState } from 'react';
-import { Button, ImageBackground, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ImageBackground, Pressable, StyleSheet, Text, View } from 'react-native';
 import Chessboard, { ChessboardRef } from 'react-native-chessboard';
-import captureSound from '../assets/sound/Capture.mp3';
-import moveSound from '../assets/sound/Move.mp3';
+import image from '../assets/images/woodenbg.jpg';
+import captureSound from '../assets/sound/capture.mp3';
+import moveSound from '../assets/sound/move-self.mp3';
 
 const router = useRouter();
 
@@ -78,36 +82,48 @@ export default function Board() {
     return squareList;
   };
 
-  const handleUndo = () => {
-    try {
-      const undone = chess.undo();
-      if (undone) {
-        setFen(chess.fen());
-      }
-    } catch (error) {
-      console.error(error);
-    }
+  // const handleUndo = () => {
+  //   try {
+  //     const undone = chess.undo();
+  //     if (undone) {
+  //       setFen(chess.fen());
+  //     }
+  //   } catch (error) {
+  //     console.error(error);
+  //   }
+  // };
+
+  const boardColor = {
+    black: '#481f01',
+    white: '#eeeed2',
+    lastMoveHighlight: 'rgba(255, 255, 0, 0.5)',
+    checkmateHighlight: '#E84855',
+    promotionPieceButton: '#FF9B71',
   };
-  const image = {
-    uri: 'https://img.freepik.com/premium-photo/watercolor-teal-blue-green-background-painting-watercolor-dark-blue_145343-69.jpg?w=360',
-  };
+
   return (
     <ImageBackground source={image} resizeMode="cover" style={styles.backgroundImage}>
-      <View style={styles.screen}>
-        {/* Board Area */}
-        <View style={styles.container}>
-          <Chessboard ref={chessboardRef} durations={{ move: 200 }} fen={fen} />
-          <View>{listenTap()}</View>
-        </View>
+      <View style={styles.overlay}>
+        <View style={styles.screen}>
+          {/* Board Area */}
+          <View style={styles.container}>
+            <Chessboard
+              ref={chessboardRef}
+              durations={{ move: 200 }}
+              fen={fen}
+              colors={boardColor}
+            />
+            <View>{listenTap()}</View>
+          </View>
 
-        {/* Controls */}
-        <View style={styles.controls}>
-          <Pressable style={styles.button} onPress={() => chessboardRef.current?.resetBoard()}>
-            <RotateCcwIcon size={32} color="white" />
-            <Text style={styles.text}>Reset</Text>
-          </Pressable>
+          {/* Controls */}
+          <View style={styles.controls}>
+            <Pressable style={styles.button} onPress={() => chessboardRef.current?.resetBoard()}>
+              <RotateCcwIcon size={32} color="white" />
+              <Text style={styles.text}>Reset</Text>
+            </Pressable>
 
-          <Pressable>
+            {/* <Pressable>
             <Lightbulb size={35} color="white" />
             <Text style={styles.text}>Hint</Text>
           </Pressable>
@@ -115,15 +131,14 @@ export default function Board() {
           <Pressable style={styles.button} onPress={handleUndo}>
             <Undo2 size={32} color="white" />
             <Text style={styles.text}>Undo</Text>
-          </Pressable>
+          </Pressable> */}
 
-          <Pressable style={styles.button} onPress={() => router.back()}>
-            <DoorOpenIcon size={32} color="white" />
-            <Text style={styles.text}>Exit</Text>
-          </Pressable>
+            <Pressable style={styles.button} onPress={() => router.back()}>
+              <DoorOpenIcon size={32} color="white" />
+              <Text style={styles.text}>Exit</Text>
+            </Pressable>
+          </View>
         </View>
-        <Button title="move" onPress={() => movePlayer.play()} />
-        <Button title="capture" onPress={() => capPlayer.play()} />
       </View>
     </ImageBackground>
   );
@@ -150,10 +165,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     alignItems: 'center',
     paddingVertical: 12,
-    backgroundColor: COLORS.BackgroundColor,
-    opacity: 0.5,
-    borderTopWidth: 2,
-    borderTopColor: COLORS.white + '40',
     marginBottom: 5,
   },
   button: {
@@ -166,5 +177,16 @@ const styles = StyleSheet.create({
     marginTop: 4,
     textAlign: 'center',
     fontWeight: '600',
+  },
+  overlay: {
+    flex: 1,
+    backgroundColor: COLORS.overlay,
+    width: '100%',
+    height: 1000,
+    paddingBlock: 40,
+    // Dark overlay for better text readability
+    alignItems: 'center',
+    // justifyContent: 'center',
+    // paddingHorizontal: 20,
   },
 });
