@@ -1,6 +1,7 @@
 import { COLORS } from '@/constants/colors';
 import { useAuth } from '@/hooks/useAuth';
 import { clearToken } from '@/lib/storage';
+import { useAudioPlayer } from 'expo-audio';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -18,11 +19,14 @@ import {
   View,
 } from 'react-native';
 import lobby from '../../assets/images/woodenbg.jpg';
+import clickSound from '../../assets/sound/click.mp3';
 
 const { width, height } = Dimensions.get('window');
 
 export default function Profile() {
-  const { user, updateProfile, uploadAvatar, profileLoading, avatarLoading } = useAuth();
+  const { user, updateProfile, uploadAvatar, avatarLoading } = useAuth();
+  const click = useAudioPlayer(clickSound);
+
   const [displayName, setDisplayName] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [selectedImage, setSelectedImage] = useState<ImagePicker.ImagePickerAsset | null>(null);
@@ -121,25 +125,37 @@ export default function Profile() {
           <View style={styles.buttonContainer}>
             {isEditing ? (
               <TouchableOpacity
-                onPress={handleSave}
-                disabled={profileLoading || avatarLoading}
+                onPress={() => {
+                  click.play();
+                  handleSave();
+                }}
+                disabled={avatarLoading}
                 style={styles.actionButton}
               >
-                {profileLoading || avatarLoading ? (
+                {avatarLoading ? (
                   <ActivityIndicator color="#FFF8E1" />
                 ) : (
                   <Text style={styles.actionButtonText}>Save Changes</Text>
                 )}
               </TouchableOpacity>
             ) : (
-              <TouchableOpacity onPress={() => setIsEditing(true)} style={styles.actionButton}>
+              <TouchableOpacity
+                onPress={() => {
+                  click.play();
+                  setIsEditing(true);
+                }}
+                style={styles.actionButton}
+              >
                 <Text style={styles.actionButtonText}>Edit Profile</Text>
               </TouchableOpacity>
             )}
           </View>
 
           <TouchableOpacity
-            onPress={handleLogout}
+            onPress={() => {
+              click.play();
+              handleLogout();
+            }}
             style={[styles.actionButton, styles.logoutButton]}
           >
             <Text style={styles.actionButtonText}>Logout</Text>
