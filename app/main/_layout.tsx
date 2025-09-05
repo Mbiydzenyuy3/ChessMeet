@@ -1,149 +1,22 @@
-// /* eslint-disable react-native/no-color-literals */
-// /* eslint-disable react-native/no-inline-styles */
-// // app/main/_layout.tsx
-// import { COLORS } from '@/constants/colors';
-// import { getToken } from '@/lib/storage';
-// import { Ionicons } from '@expo/vector-icons';
-// import { Tabs, useRouter } from 'expo-router';
-// import React, { useEffect, useState } from 'react';
-// import {
-//   ActivityIndicator,
-//   Dimensions,
-//   ImageBackground,
-//   StyleSheet,
-//   Text,
-//   View,
-// } from 'react-native';
-// import lobby from '../../assets/images/woodenbg.jpg';
-
-// const { width, height } = Dimensions.get('window');
-
-// function TabHeader({ title }: { title: string }) {
-//   return (
-//     <View style={styles.view}>
-//       <Text style={{ fontSize: 18, fontWeight: '700' }}>{title}</Text>
-//     </View>
-//   );
-// }
-
-// export default function Layout() {
-//   const router = useRouter();
-//   const [checking, setChecking] = useState(true);
-//   // Vérification du token dès le montage
-//   useEffect(() => {
-//     const checkAuth = async () => {
-//       const token = await getToken();
-//       if (!token) {
-//         router.replace('/auth');
-//       } else {
-//         setChecking(false);
-//       }
-//     };
-//     checkAuth();
-//   }, []);
-
-//   // ⏳ Pendant la vérification → afficher loader
-//   if (checking) {
-//     return (
-//       // eslint-disable-next-line react-native/no-inline-styles
-//       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-//         <ActivityIndicator size="large" color="#10b981" />
-//         <Text style={{ marginTop: 10 }}>Checking session...</Text>
-//       </View>
-//     );
-//   }
-
-//   return (
-//     <ImageBackground
-//       source={lobby} // ✅ wooden background
-//       style={styles.background}
-//       resizeMode="cover"
-//     >
-//       <Tabs
-//         screenOptions={{
-//           header: ({ options }) => <TabHeader title={String(options.title)} />,
-//           tabBarStyle: {
-//             backgroundColor: 'Color',
-//             borderTopWidth: 0,
-//             height: 60,
-//           },
-//           tabBarActiveTintColor: '#10b981',
-//           tabBarInactiveTintColor: '#9ca3af',
-//           tabBarLabelStyle: { fontSize: 12, fontWeight: '600' },
-//         }}
-//       >
-//         <Tabs.Screen
-//           name="index"
-//           options={{
-//             title: '',
-//             tabBarLabel: 'Lobby',
-//             tabBarIcon: ({ color, size }) => <Ionicons name="home" color={color} size={size} />,
-//           }}
-//         />
-//         <Tabs.Screen
-//           name="profile"
-//           options={{
-//             title: '',
-//             tabBarLabel: 'Profil',
-//             tabBarIcon: ({ color, size }) => <Ionicons name="person" color={color} size={size} />,
-//           }}
-//         />
-//         <Tabs.Screen
-//           name="stats"
-//           options={{
-//             title: '',
-//             tabBarLabel: 'Stats',
-//             tabBarIcon: ({ color, size }) => (
-//               <Ionicons name="bar-chart" color={color} size={size} />
-//             ),
-//           }}
-//         />
-//         <Tabs.Screen
-//           name="game"
-//           options={{
-//             href: null, // 👈 ne s'affiche pas dans la tabbar
-//             title: '',
-//           }}
-//         />
-//         <Tabs.Screen
-//           name="PlayLocal"
-//           options={{
-//             href: null, // 👈 empêche expo-router de générer un onglet
-//             title: '',
-//           }}
-//         />
-//       </Tabs>
-//     </ImageBackground>
-//   );
-// }
-
-// const styles = StyleSheet.create({
-//   background: {
-//     flex: 1,
-//     width,
-//     height,
-//     // justifyContent: 'center',
-//     // alignItems: 'center',
-//   },
-//   //
-
-//   view: {
-//     // padding: 12,
-//     borderBottomWidth: 1,
-//     // borderColor: COLORS.border,
-//     backgroundColor: COLORS.BackgroundColor,
-//   },
-// });
-
 /* eslint-disable react-native/no-color-literals */
 /* eslint-disable react-native/no-inline-styles */
 // app/main/_layout.tsx
 import { Tabs, usePathname } from 'expo-router';
-import { BarChart2, Home, User } from 'lucide-react-native';
+import { BarChart2, Home } from 'lucide-react-native';
 import React from 'react';
-import { Dimensions, ImageBackground, Platform, StyleSheet } from 'react-native';
+import { Dimensions, ImageBackground, Platform, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import lobby from '../../assets/images/woodenbg.jpg';
+
+const BRAND_COLOR = '#D4AF37';
+
+// Define a type for the icon component to satisfy TypeScript
+type TabBarIconProps = {
+  focused: boolean;
+  color: string;
+  size: number;
+};
+type IconComponentType = React.FC<{ color: string; size: number }>;
 
 const { width, height } = Dimensions.get('window');
 
@@ -157,8 +30,21 @@ export default function MainTabLayout() {
   const isTabHidden = HIDDEN_PREFIXES.some((p) => pathname.startsWith(p));
   // Define colors and sizes for icons
   const iconColor = '#9E9E9E';
-  const focusedIconColor = '#FFF8E1'; // Use our theme's gold/cream color
+  const focusedIconColor = BRAND_COLOR; // Use our theme's gold/cream color
   const iconSize = Platform.OS === 'ios' ? 28 : 24;
+
+  // Add explicit types for the parameters
+  const renderTabBarIcon = (
+    IconComponent: IconComponentType,
+    { focused, color, size }: TabBarIconProps
+  ) => {
+    return (
+      <View style={styles.iconContainer}>
+        {focused && <View style={styles.focusedIndicator} />}
+        <IconComponent color={color} size={size} />
+      </View>
+    );
+  };
 
   return (
     <ImageBackground source={lobby} style={styles.background} resizeMode="cover">
@@ -186,14 +72,14 @@ export default function MainTabLayout() {
           name="index"
           options={{
             title: 'Lobby',
-            tabBarIcon: ({ color }) => <Home color={color} size={iconSize} />,
+            tabBarIcon: (props) => renderTabBarIcon(Home, { ...props, size: iconSize }),
           }}
         />
         <Tabs.Screen
           name="profile"
           options={{
             title: 'Profile',
-            tabBarIcon: ({ color }) => <User color={color} size={iconSize} />,
+            tabBarIcon: (props) => renderTabBarIcon(BarChart2, { ...props, size: iconSize }),
           }}
         />
         <Tabs.Screen
@@ -218,6 +104,12 @@ export default function MainTabLayout() {
             href: null, // Hides this screen from the tab bar
           }}
         />
+        <Tabs.Screen
+          name="WaitingScreen"
+          options={{
+            href: null, // Hides this screen from the tab bar
+          }}
+        />
       </Tabs>
     </ImageBackground>
   );
@@ -228,7 +120,19 @@ const styles = StyleSheet.create({
     flex: 1,
     width,
     height,
-    // justifyContent: 'center',
-    // alignItems: 'center',
+  },
+  focusedIndicator: {
+    position: 'absolute',
+    top: 0,
+    width: '50%',
+    height: 3,
+    backgroundColor: BRAND_COLOR,
+    borderRadius: 2,
+  },
+  iconContainer: {
+    width: 60,
+    height: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
