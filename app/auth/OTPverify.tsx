@@ -7,6 +7,8 @@ import React, { useRef, useState } from 'react';
 import {
   Image,
   ImageBackground,
+  KeyboardAvoidingView,
+  Platform,
   StyleSheet,
   Text,
   TextInput,
@@ -60,37 +62,42 @@ export default function OTPVerify() {
       style={styles.container}
       resizeMode="cover"
     >
-      <View style={styles.overlay}>
-        <Image source={Game} style={styles.logo} />
-        <Text style={styles.title}>Enter Code</Text>
-        <Text style={styles.subtitle}>
-          A 6-digit code was sent to {'\n'}
-          <Text style={styles.email}>{userIdentifier}</Text>
-        </Text>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.keyboardAvoidingContainer}
+      >
+        <View style={styles.overlay}>
+          <Image source={Game} style={styles.logo} />
+          <Text style={styles.title}>Enter Code</Text>
+          <Text style={styles.subtitle}>
+            A 6-digit code was sent to {'\n'}
+            <Text style={styles.email}>{userIdentifier}</Text>
+          </Text>
 
-        <View style={styles.otpContainer}>
-          {otp.map((digit, idx) => (
-            <TextInput
-              key={idx}
-              ref={(ref) => {
-                if (ref) inputRefs.current[idx] = ref;
-              }}
-              style={styles.otpInput}
-              value={digit}
-              onChangeText={(text) => handleChange(text, idx)}
-              keyboardType="number-pad"
-              maxLength={1}
-              selectionColor="#D4AF37"
-            />
-          ))}
+          <View style={styles.otpContainer}>
+            {otp.map((digit, idx) => (
+              <TextInput
+                key={idx}
+                ref={(ref) => {
+                  if (ref) inputRefs.current[idx] = ref;
+                }}
+                style={styles.otpInput}
+                value={digit}
+                onChangeText={(text) => handleChange(text, idx)}
+                keyboardType="number-pad"
+                maxLength={1}
+                selectionColor="#D4AF37"
+              />
+            ))}
+          </View>
+
+          <TouchableOpacity style={styles.button} onPress={handleVerify} disabled={loading}>
+            <Text style={styles.buttonText}>{loading ? 'Verifying...' : 'Verify & Continue'}</Text>
+          </TouchableOpacity>
+
+          {error && <Text style={styles.errorField}>{error}</Text>}
         </View>
-
-        <TouchableOpacity style={styles.button} onPress={handleVerify} disabled={loading}>
-          <Text style={styles.buttonText}>{loading ? 'Verifying...' : 'Verify & Continue'}</Text>
-        </TouchableOpacity>
-
-        {error && <Text style={styles.errorField}>{error}</Text>}
-      </View>
+      </KeyboardAvoidingView>
     </ImageBackground>
   );
 }
@@ -117,6 +124,10 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     borderWidth: 2,
     borderColor: COLORS.logo,
+  },
+  keyboardAvoidingContainer: {
+    flex: 1,
+    marginBottom: 50,
   },
   title: {
     fontFamily: 'CinzelDecorative-Bold',

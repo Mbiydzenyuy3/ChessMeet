@@ -7,6 +7,8 @@
 
 import { COLORS } from '@/constants/colors';
 import { useAuth } from '@/hooks/useAuth';
+import { useSocket } from '@/hooks/useSocket';
+import { useRouter } from 'expo-router';
 import { Settings } from 'lucide-react-native';
 import React, { useState } from 'react';
 import {
@@ -22,13 +24,14 @@ import FloatingPiece from '../../components/FloatingPiece';
 import TransitionScreen from '../../components/TransitionScreen';
 import { useAppDispatch } from '../../store';
 import { setMode, updateFromGameObject } from '../../store/gameSlice';
-import { useRouter } from 'expo-router';
-import { useSocket } from '@/hooks/useSocket';
 
+import { useAudioPlayer } from 'expo-audio';
 import Game from '../../assets/images/threeheadpiece.png';
 import lobby from '../../assets/images/woodenbg.jpg';
+import clickSound from '../../assets/sound/click.mp3';
 
 export default function LobbyScreen() {
+  const click = useAudioPlayer(clickSound);
   const socket = useSocket();
   const router = useRouter();
   const { user } = useAuth();
@@ -71,26 +74,6 @@ export default function LobbyScreen() {
     });
   }
 
-  // function joinQueue() {
-  //   console.log('🔹 Rejoindre la file online');
-  //   dispatch(setMode('online'));
-
-  //   socket.emit('joinQueue', { timeControl: '300+0' });
-
-  //   socket.once('matchFound', (data: any) => {
-  //     if (data && data._id) {
-  //       Alert.alert('Match trouvé', 'Redirection vers la partie…');
-  //       dispatch(updateFromGameObject(data));
-  //       router.push('/main/game');
-  //     } else {
-  //       Alert.alert('En attente', 'En attente d’un adversaire…');
-  //       // L'écran de jeu écoutera les events socket (matchFound/movePlayed)
-
-  //       router.push('/main/game');
-  //     }
-  //   });
-  // }
-
   function joinQueue() {
     console.log('🔹 Rejoindre la file online');
     dispatch(setMode('online'));
@@ -121,7 +104,12 @@ export default function LobbyScreen() {
           {/* Profile Card */}
           <View style={[styles.profileCard, styles.shadow]}>
             <View style={styles.headerItems}>
-              <TouchableOpacity onPress={() => router.push('/main/profile')}>
+              <TouchableOpacity
+                onPress={() => {
+                  click.play();
+                  router.push('/main/profile');
+                }}
+              >
                 <Image
                   source={{
                     uri:
@@ -136,9 +124,11 @@ export default function LobbyScreen() {
 
             <TouchableOpacity
               style={styles.settingsBtn}
-              onPress={() => router.push('/settings/SettingsScreen')}
+              onPress={() => {
+                router.push('/settings/SettingsScreen');
+              }}
             >
-              <Settings color="#fff" size={20} />
+              <Settings color="#fff" size={20} onPress={() => click.play()} />
             </TouchableOpacity>
           </View>
 
@@ -153,26 +143,38 @@ export default function LobbyScreen() {
           {/* Buttons */}
           <TouchableOpacity
             style={[styles.modeBtn, styles.shadow]}
-            onPress={() => handleGameModeSelection(() => router.push('/main/PlayLocal'))}
+            onPress={() => {
+              click.play();
+              handleGameModeSelection(() => router.push('/main/PlayLocal'));
+            }}
           >
             <Text style={styles.modeText}>♟ PLAY OFFLINE</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={[styles.modeBtn, styles.shadow]}
-            onPress={() => handleGameModeSelection(startAI)}
+            onPress={() => {
+              click.play();
+              handleGameModeSelection(startAI);
+            }}
           >
             <Text style={styles.modeText}>♟ PLAY VS AI</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.modeBtn, styles.shadow]}
-            onPress={() => handleGameModeSelection(joinQueue)}
+            onPress={() => {
+              click.play();
+              handleGameModeSelection(joinQueue);
+            }}
           >
             <Text style={styles.modeText}>♟ JOIN ONLINE</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.modeBtn, styles.shadow]}
-            onPress={() => router.push('/settings/LessonScreen')}
+            onPress={() => {
+              click.play();
+              handleGameModeSelection(() => router.push('/settings/LessonScreen'));
+            }}
           >
             <Text style={styles.modeText}>♟ LEARN CHESS</Text>
           </TouchableOpacity>
