@@ -13,9 +13,12 @@ import {
   View,
 } from 'react-native';
 // Use the same wooden background for consistency
+import { useAudioPlayer } from 'expo-audio';
 import lobby from '../../assets/images/woodenbg.jpg';
+import clickSound from '../../assets/sound/click.mp3';
 
 export default function SettingsScreen() {
+  const click = useAudioPlayer(clickSound);
   const { user } = useAuth();
   const [isSoundEnabled, setIsSoundEnabled] = useState(true); // State for sound toggle
   const [isDarkMode, setIsDarkMode] = useState(true); // State for dark mode toggle
@@ -69,13 +72,16 @@ export default function SettingsScreen() {
 
           {/* Account Section */}
           <View style={styles.buttonContainer}>
-            {/* <TouchableOpacity style={styles.actionButton} onPress={handleLogout}>
+
               <Text style={styles.actionButtonText}>Logout</Text>
             </TouchableOpacity> */}
 
             <TouchableOpacity
               style={[styles.actionButton, styles.backButton]}
-              onPress={() => router.push('/main')}
+              onPress={() => {
+                click.play();
+                router.push('/main');
+              }}
             >
               <Text style={styles.actionButtonText}>Back to Lobby</Text>
             </TouchableOpacity>
