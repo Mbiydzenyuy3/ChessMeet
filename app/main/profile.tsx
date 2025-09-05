@@ -1,6 +1,7 @@
 import { COLORS } from '@/constants/colors';
 import { useAuth } from '@/hooks/useAuth';
 import { clearToken } from '@/lib/storage';
+import { useAudioPlayer } from 'expo-audio';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
@@ -17,10 +18,12 @@ import {
   View,
 } from 'react-native';
 import lobby from '../../assets/images/woodenbg.jpg';
+import clickSound from '../../assets/sound/click.mp3';
 
 const { width, height } = Dimensions.get('window');
 
 export default function Profile() {
+  const click = useAudioPlayer(clickSound);
   const { user, updateProfile, loading } = useAuth();
   const [displayName, setDisplayName] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
@@ -96,7 +99,14 @@ export default function Profile() {
           {/* Buttons */}
           <View style={styles.buttonContainer}>
             {isEditing ? (
-              <TouchableOpacity onPress={handleSave} disabled={loading} style={styles.actionButton}>
+              <TouchableOpacity
+                onPress={() => {
+                  click.play();
+                  handleSave();
+                }}
+                disabled={loading}
+                style={styles.actionButton}
+              >
                 {loading ? (
                   <ActivityIndicator color="#FFF8E1" />
                 ) : (
@@ -104,14 +114,23 @@ export default function Profile() {
                 )}
               </TouchableOpacity>
             ) : (
-              <TouchableOpacity onPress={() => setIsEditing(true)} style={styles.actionButton}>
+              <TouchableOpacity
+                onPress={() => {
+                  click.play();
+                  setIsEditing(true);
+                }}
+                style={styles.actionButton}
+              >
                 <Text style={styles.actionButtonText}>Edit Profile</Text>
               </TouchableOpacity>
             )}
           </View>
 
           <TouchableOpacity
-            onPress={handleLogout}
+            onPress={() => {
+              click.play();
+              handleLogout();
+            }}
             style={[styles.actionButton, styles.logoutButton]}
           >
             <Text style={styles.actionButtonText}>Logout</Text>
