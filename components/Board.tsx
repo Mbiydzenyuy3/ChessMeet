@@ -1,10 +1,10 @@
 import { COLORS } from '@/constants/colors';
 import { Chess, Square } from 'chess.js';
-import { Audio } from 'expo-av';
+import { useAudioPlayer } from 'expo-audio';
 import { useRouter } from 'expo-router';
 import { DoorOpenIcon, Lightbulb, RotateCcwIcon, Undo2 } from 'lucide-react-native';
 import { useCallback, useRef, useState } from 'react';
-import { ImageBackground, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Button, ImageBackground, Pressable, StyleSheet, Text, View } from 'react-native';
 import Chessboard, { ChessboardRef } from 'react-native-chessboard';
 import captureSound from '../assets/sound/Capture.mp3';
 import moveSound from '../assets/sound/Move.mp3';
@@ -17,17 +17,20 @@ export default function Board() {
   const chess = useRef(new Chess()).current;
   const [fen, setFen] = useState(chess.fen());
 
-  const playSound = async (type: 'move' | 'capture') => {
-    const sound = new Audio.Sound();
-    try {
-      const file = type === 'move' ? moveSound : captureSound;
-      await sound.loadAsync(file);
-      await sound.playAsync();
-      sound.unloadAsync();
-    } catch (error) {
-      console.error('error playing sound:', error);
-    }
-  };
+  // const playSound = async (type: 'move' | 'capture') => {
+  //   const sound = new Audio.Sound();
+  //   try {
+  //     const file = type === 'move' ? moveSound : captureSound;
+  //     await sound.loadAsync(file);
+  //     await sound.playAsync();
+  //     sound.unloadAsync();
+  //   } catch (error) {
+  //     console.error('error playing sound:', error);
+  //   }
+  // };
+
+  const movePlayer = useAudioPlayer(moveSound);
+  const capPlayer = useAudioPlayer(captureSound);
 
   const handlePress = useCallback(
     async (box: Square) => {
@@ -48,9 +51,11 @@ export default function Board() {
 
         // play sounds
         if (moveRes.captured) {
-          playSound('capture');
+          // playSound('capture');
+          capPlayer.play();
         } else {
-          playSound('move');
+          // playSound('move');
+          movePlayer.play();
         }
 
         setSelectedSquare(null);
@@ -117,6 +122,8 @@ export default function Board() {
             <Text style={styles.text}>Exit</Text>
           </Pressable>
         </View>
+        <Button title="move" onPress={() => movePlayer.play()} />
+        <Button title="capture" onPress={() => capPlayer.play()} />
       </View>
     </ImageBackground>
   );
