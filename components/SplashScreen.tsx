@@ -1,26 +1,22 @@
 // ============================ screens/SplashScreen.tsx ============================
 import { COLORS } from '@/constants/colors';
-import { RootState } from '@/store';
 import { LinearGradient } from 'expo-linear-gradient';
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 import { Animated, Dimensions, StyleSheet, Text, View } from 'react-native';
-import { useSelector } from 'react-redux';
 import ChessPiece from '../components/ChessPiece';
+import { useEffect, useRef } from 'react';
 
 const { height } = Dimensions.get('window');
 
 export default function SplashScreen() {
+  // Définir les valeurs animées pour le logo et les pièces
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
   const piecesFadeAnim = useRef(new Animated.Value(0)).current;
   const piecesTranslateY = useRef(new Animated.Value(50)).current;
 
-  // ✅ Redux auth state : on check si un token existe
-  const { token, loading } = useSelector((state: RootState) => state.auth);
-  const isAuthenticated = !!token;
-
   useEffect(() => {
-    // Animation logo
+    // Animation du logo
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
@@ -35,7 +31,7 @@ export default function SplashScreen() {
       }),
     ]).start();
 
-    // Animation des pièces
+    // Animation des pièces après un court délai
     setTimeout(() => {
       Animated.parallel([
         Animated.timing(piecesFadeAnim, {
@@ -46,24 +42,11 @@ export default function SplashScreen() {
         Animated.timing(piecesTranslateY, {
           toValue: 0,
           duration: 600,
-          useNativeDriver: false,
+          useNativeDriver: true,
         }),
       ]).start();
     }, 400);
-
-    // ✅ Navigation après 3s (ajustable)
-    // const timer = setTimeout(() => {
-    //   if (loading) return; // on attend que l'hydratation soit finie
-
-    //   if (isAuthenticated) {
-    //     navigation.replace('Lobby'); // user déjà connecté
-    //   } else {
-    //     navigation.replace('GetStarted'); // première utilisation ou pas loggé
-    //   }
-    // }, 3000);
-
-    return;
-  }, [isAuthenticated, loading, fadeAnim, scaleAnim, piecesFadeAnim, piecesTranslateY]);
+  }, [fadeAnim, scaleAnim, piecesFadeAnim, piecesTranslateY]);
 
   return (
     <LinearGradient

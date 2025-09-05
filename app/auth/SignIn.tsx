@@ -1,5 +1,4 @@
 // app/auth/SignIn.tsx
-import api from '@/api/api';
 import { useRouter } from 'expo-router';
 import { Formik } from 'formik';
 import React, { useState } from 'react';
@@ -17,6 +16,7 @@ import * as Yup from 'yup';
 import Game from '../../assets/images/chesswb.png';
 import lobby from '../../assets/videos/otpbg.gif';
 import { COLORS } from '../../constants/colors';
+import { api } from '@/lib/api';
 
 const signInSchema = Yup.object().shape({
   email: Yup.string().email('Please enter a valid email').required('Email is required'),

@@ -76,6 +76,12 @@ export default function MainTabLayout() {
           }}
         />
         <Tabs.Screen
+          name="matchmakin"
+          options={{
+            href: null, // Hides this screen from the tab bar
+          }}
+        />
+        <Tabs.Screen
           name="PlayLocal"
           options={{
             href: null, // Hides this screen from the tab bar
