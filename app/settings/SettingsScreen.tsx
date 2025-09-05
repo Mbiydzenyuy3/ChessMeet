@@ -72,9 +72,9 @@ export default function SettingsScreen() {
 
           {/* Account Section */}
           <View style={styles.buttonContainer}>
-
+            <TouchableOpacity>
               <Text style={styles.actionButtonText}>Logout</Text>
-            </TouchableOpacity> */}
+            </TouchableOpacity>
 
             <TouchableOpacity
               style={[styles.actionButton, styles.backButton]}

@@ -74,26 +74,6 @@ export default function LobbyScreen() {
     });
   }
 
-  // function joinQueue() {
-  //   console.log('🔹 Rejoindre la file online');
-  //   dispatch(setMode('online'));
-
-  //   socket.emit('joinQueue', { timeControl: '300+0' });
-
-  //   socket.once('matchFound', (data: any) => {
-  //     if (data && data._id) {
-  //       Alert.alert('Match trouvé', 'Redirection vers la partie…');
-  //       dispatch(updateFromGameObject(data));
-  //       router.push('/main/game');
-  //     } else {
-  //       Alert.alert('En attente', 'En attente d’un adversaire…');
-  //       // L'écran de jeu écoutera les events socket (matchFound/movePlayed)
-
-  //       router.push('/main/game');
-  //     }
-  //   });
-  // }
-
   function joinQueue() {
     console.log('🔹 Rejoindre la file online');
     dispatch(setMode('online'));

@@ -7,6 +7,8 @@ import React, { useState } from 'react';
 import {
   Image,
   ImageBackground,
+  KeyboardAvoidingView,
+  Platform,
   StyleSheet,
   Text,
   TextInput,
@@ -51,46 +53,51 @@ export default function SignIn() {
       style={styles.container}
       resizeMode="cover"
     >
-      <View style={styles.overlay}>
-        <Image source={Game} style={styles.logo} />
-        <Text style={styles.title}>ChessMeet</Text>
-        <Text style={styles.subtitle}>Enter your email to begin your quest</Text>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.keyboardAvoidingContainer}
+      >
+        <View style={styles.overlay}>
+          <Image source={Game} style={styles.logo} />
+          <Text style={styles.title}>ChessMeet</Text>
+          <Text style={styles.subtitle}>Enter your email to begin your quest</Text>
 
-        <Formik
-          initialValues={{ email: '' }}
-          validationSchema={signInSchema}
-          onSubmit={({ email }) => handleSubmitOtp(email)}
-        >
-          {({ handleChange, handleBlur, handleSubmit, values, errors, touched, isValid }) => (
-            <>
-              <View style={styles.inputContainer}>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Your Scroll (Email)"
-                  placeholderTextColor="#9e8a78"
-                  value={values.email}
-                  onChangeText={handleChange('email')}
-                  onBlur={handleBlur('email')}
-                  autoCapitalize="none"
-                  keyboardType="email-address"
-                  selectionColor="#D4AF37"
-                />
-              </View>
-              {touched.email && errors.email && <Text style={styles.error}>{errors.email}</Text>}
+          <Formik
+            initialValues={{ email: '' }}
+            validationSchema={signInSchema}
+            onSubmit={({ email }) => handleSubmitOtp(email)}
+          >
+            {({ handleChange, handleBlur, handleSubmit, values, errors, touched, isValid }) => (
+              <>
+                <View style={styles.inputContainer}>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Your Scroll (Email)"
+                    placeholderTextColor="#9e8a78"
+                    value={values.email}
+                    onChangeText={handleChange('email')}
+                    onBlur={handleBlur('email')}
+                    autoCapitalize="none"
+                    keyboardType="email-address"
+                    selectionColor="#D4AF37"
+                  />
+                </View>
+                {touched.email && errors.email && <Text style={styles.error}>{errors.email}</Text>}
 
-              <TouchableOpacity
-                style={[styles.button, (!isValid || loading) && { opacity: 0.6 }]}
-                onPress={() => handleSubmit()}
-                disabled={!isValid || loading}
-              >
-                <Text style={styles.buttonText}>{loading ? 'Sending...' : 'Send Code'}</Text>
-              </TouchableOpacity>
-            </>
-          )}
-        </Formik>
+                <TouchableOpacity
+                  style={[styles.button, (!isValid || loading) && { opacity: 0.6 }]}
+                  onPress={() => handleSubmit()}
+                  disabled={!isValid || loading}
+                >
+                  <Text style={styles.buttonText}>{loading ? 'Sending...' : 'Send Code'}</Text>
+                </TouchableOpacity>
+              </>
+            )}
+          </Formik>
 
-        <Text style={styles.footerText}>A verification code will be sent to your inbox</Text>
-      </View>
+          <Text style={styles.footerText}>A verification code will be sent to your inbox</Text>
+        </View>
+      </KeyboardAvoidingView>
     </ImageBackground>
   );
 }
@@ -110,6 +117,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 20,
+  },
+  keyboardAvoidingContainer: {
+    flex: 1,
   },
   logo: {
     width: 80,

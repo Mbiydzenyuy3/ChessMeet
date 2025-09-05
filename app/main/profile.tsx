@@ -2,6 +2,7 @@ import { COLORS } from '@/constants/colors';
 import { useAuth } from '@/hooks/useAuth';
 import { clearToken } from '@/lib/storage';
 import { useAudioPlayer } from 'expo-audio';
+import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
@@ -23,19 +24,16 @@ import clickSound from '../../assets/sound/click.mp3';
 const { width, height } = Dimensions.get('window');
 
 export default function Profile() {
+  const { user, updateProfile, uploadAvatar, avatarLoading } = useAuth();
   const click = useAudioPlayer(clickSound);
-  const { user, updateProfile, loading } = useAuth();
-  const [displayName, setDisplayName] = useState('');
-  const [avatarUrl, setAvatarUrl] = useState('');
-  const [isEditing, setIsEditing] = useState(false);
 
+  const [displayName, setDisplayName] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<ImagePicker.ImagePickerAsset | null>(null);
   const router = useRouter();
 
   useEffect(() => {
-    if (user) {
-      setDisplayName(user.displayName ?? '');
-      setAvatarUrl(user.avatarUrl ?? '');
-    }
+    if (user) setDisplayName(user.displayName ?? '');
   }, [user]);
 
   const handleLogout = async () => {
@@ -43,34 +41,73 @@ export default function Profile() {
     router.push('/auth/SignIn');
   };
 
+  const pickImageAsync = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission required', 'We need camera roll permissions to update your avatar!');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      allowsEditing: true,
+      quality: 1,
+      aspect: [1, 1],
+    });
+
+    if (!result.canceled) setSelectedImage(result.assets[0]);
+  };
+
   const handleSave = async () => {
     try {
-      await updateProfile({ displayName, avatarUrl }).unwrap();
+      // 1️⃣ Upload avatar if selected
+      if (selectedImage) {
+        const formData = new FormData();
+        const uriParts = selectedImage.uri.split('.');
+        const fileType = uriParts[uriParts.length - 1];
+
+        formData.append('file', {
+          uri: selectedImage.uri,
+          name: `avatar.${fileType}`,
+          type: `image/${fileType}`,
+        } as unknown as Blob);
+
+        await uploadAvatar(formData).unwrap();
+        setSelectedImage(null);
+      }
+
+      if (displayName !== user?.displayName) {
+        await updateProfile({ displayName }).unwrap();
+      }
+
       Alert.alert('Success', 'Profile updated successfully!');
       setIsEditing(false);
     } catch (err) {
       console.error(err);
-      Alert.alert('Error', 'Failed to update profile');
+      Alert.alert('Error', 'Failed to update profile. Please try again.');
     }
   };
 
+  // Determine displayed avatar
+  const imageUri =
+    selectedImage?.uri ||
+    user?.avatarUrl ||
+    'https://i.pinimg.com/474x/fa/d5/e7/fad5e79954583ad50ccb3f16ee64f66d.jpg';
+
   return (
-    <ImageBackground
-      source={lobby} // ✅ wooden background
-      style={styles.background}
-      resizeMode="cover"
-    >
+    <ImageBackground source={lobby} style={styles.background} resizeMode="cover">
       <View style={styles.overlay}>
         <ScrollView contentContainerStyle={styles.container}>
           <Text style={styles.title}>My Profile</Text>
-          <Image
-            source={{
-              uri:
-                user?.avatarUrl ||
-                'https://i.pinimg.com/474x/fa/d5/e7/fad5e79954583ad50ccb3f16ee64f66d.jpg',
-            }}
-            style={styles.avatar}
-          />
+
+          {/* Avatar */}
+          <TouchableOpacity onPress={isEditing ? pickImageAsync : undefined} disabled={!isEditing}>
+            <Image source={{ uri: imageUri }} style={styles.avatar} />
+            {isEditing && (
+              <View style={styles.editIcon}>
+                <Text style={styles.editIconText}>EDIT</Text>
+              </View>
+            )}
+          </TouchableOpacity>
 
           {/* Display Name */}
           <Text style={styles.label}>Display Name</Text>
@@ -78,18 +115,6 @@ export default function Profile() {
             value={displayName}
             onChangeText={setDisplayName}
             placeholder="Enter display name"
-            placeholderTextColor="#9e8a78"
-            style={[styles.input, !isEditing && styles.inputDisabled]}
-            editable={isEditing}
-            selectionColor="#D4AF37"
-          />
-
-          {/* Avatar URL */}
-          <Text style={styles.label}>Avatar URL</Text>
-          <TextInput
-            value={avatarUrl}
-            onChangeText={setAvatarUrl}
-            placeholder="Enter avatar URL"
             placeholderTextColor="#9e8a78"
             style={[styles.input, !isEditing && styles.inputDisabled]}
             editable={isEditing}
@@ -104,10 +129,10 @@ export default function Profile() {
                   click.play();
                   handleSave();
                 }}
-                disabled={loading}
+                disabled={avatarLoading}
                 style={styles.actionButton}
               >
-                {loading ? (
+                {avatarLoading ? (
                   <ActivityIndicator color="#FFF8E1" />
                 ) : (
                   <Text style={styles.actionButtonText}>Save Changes</Text>
@@ -142,35 +167,35 @@ export default function Profile() {
 }
 
 const styles = StyleSheet.create({
-  background: {
-    flex: 1,
-    width,
-    height,
-    // justifyContent: 'center',
-    // alignItems: 'center',
+  avatar: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    marginBottom: 30,
+    borderWidth: 4,
+    borderColor: COLORS.borderColor,
   },
-  overlay: {
-    flex: 1,
-    backgroundColor: COLORS.overlay,
-    width: '100%',
+  editIcon: {
+    position: 'absolute',
+    bottom: 30,
+    right: 0,
+    backgroundColor: COLORS.shadeText,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: COLORS.borderColor,
   },
-  container: {
-    padding: 20,
-    // backgroundColor: COLORS.BackgroundColor,
-    flexGrow: 1,
-  },
-  title: {
-    fontSize: 24,
+  editIconText: {
+    color: COLORS.borderColor,
     fontWeight: 'bold',
-    marginBottom: 20,
-    color: COLORS.white,
+    fontSize: 12,
   },
-  label: {
-    color: COLORS.white,
-    fontSize: 14,
-    marginTop: 10,
-    marginBottom: 10,
-  },
+  background: { flex: 1, width, height },
+  overlay: { flex: 1, backgroundColor: COLORS.overlay, width: '100%' },
+  container: { padding: 20, flexGrow: 1 },
+  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 20, color: COLORS.white },
+  label: { color: COLORS.white, fontSize: 14, marginTop: 10, marginBottom: 10 },
   input: {
     borderWidth: 1,
     borderColor: COLORS.border,
@@ -179,19 +204,12 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     color: COLORS.white,
   },
-  inputDisabled: {
-    backgroundColor: COLORS.border,
-    color: COLORS.mediumGray,
-  },
-
-  buttonContainer: {
-    width: '100%',
-    marginTop: 20,
-  },
+  inputDisabled: { backgroundColor: COLORS.border, color: COLORS.mediumGray },
+  buttonContainer: { width: '100%', marginTop: 20 },
   actionButton: {
-    backgroundColor: COLORS.buttonOtp, // SaddleBrown color
+    backgroundColor: COLORS.buttonOtp,
     borderWidth: 2,
-    borderColor: COLORS.borderColor, // Gold border
+    borderColor: COLORS.borderColor,
     borderRadius: 8,
     paddingVertical: 14,
     alignItems: 'center',
@@ -203,16 +221,6 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     elevation: 8,
   },
-  actionButtonText: {
-    color: COLORS.whiteOtpText,
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  logoutButton: {
-    backgroundColor: COLORS.logout, // Darker brown for logout
-    marginTop: 180,
-    borderColor: COLORS.buttonOtp,
-  },
-
-  avatar: { width: 100, height: 100, borderRadius: 60, marginBottom: 30 },
+  actionButtonText: { color: COLORS.whiteOtpText, fontSize: 18, fontWeight: 'bold' },
+  logoutButton: { backgroundColor: COLORS.logout, marginTop: 180, borderColor: COLORS.buttonOtp },
 });
