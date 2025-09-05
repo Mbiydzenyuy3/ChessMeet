@@ -2,6 +2,7 @@
 /* eslint-disable react-native/no-inline-styles */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Chess } from 'chess.js';
+import { ArrowLeft } from 'lucide-react-native';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -11,8 +12,10 @@ import {
   Pressable,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from 'react-native';
+
 import AssistantPanel from '../../components/AssistantPanel';
 import MoveList from '../../components/MoveList';
 import { useAppDispatch, useAppSelector } from '../../store';
@@ -38,6 +41,7 @@ import lobby from '../../assets/images/woodenbg.jpg'; // Import the background
 export function extractLastMove(prevFen: string, newFen: string) {
   const chessPrev = new Chess(prevFen);
   const chessNew = new Chess(newFen);
+
   const legalMoves = chessPrev.moves({ verbose: true });
   for (const move of legalMoves) {
     const clone = new Chess(prevFen);
@@ -64,11 +68,14 @@ export function usePlayerColor(): 'w' | 'b' | null {
 }
 
 // ... Helper functions (extractLastMove, usePlayerColor) remain unchanged
-
+const router = useRouter();
 // ✅ New component for the loading/waiting screen
 const WaitingForOpponent = () => (
   <ImageBackground source={lobby} style={styles.background} resizeMode="cover">
     <View style={styles.overlay}>
+      <TouchableOpacity style={styles.backButton} onPress={() => router.push('/main')}>
+        <ArrowLeft size={28} color={'#FFF8E1'} />
+      </TouchableOpacity>
       <View style={styles.waitingContainer}>
         <Text style={styles.waitingTitle}>Finding Opponent</Text>
         <ActivityIndicator size="large" color="#D4AF37" />
@@ -305,6 +312,14 @@ export default function GameScreen() {
     return <WaitingForOpponent />;
   }
 
+  const boardColor = {
+    black: '#481f01',
+    white: '#eeeed2',
+    lastMoveHighlight: 'rgba(255, 255, 0, 0.5)',
+    checkmateHighlight: '#E84855',
+    promotionPieceButton: '#FF9B71',
+  };
+
   return (
     <ImageBackground source={lobby} style={styles.background} resizeMode="cover">
       <View style={styles.overlay}>
@@ -477,6 +492,13 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     position: 'absolute',
     bottom: 20,
+  },
+  backButton: {
+    position: 'absolute',
+    top: 50,
+    left: 20,
+    padding: 8,
+    zIndex: 10,
   },
   modalCloseText: {
     color: '#D4AF37',
