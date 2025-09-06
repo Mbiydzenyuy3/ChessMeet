@@ -1,3 +1,4 @@
+/* eslint-disable react-native/no-unused-styles */
 /* eslint-disable react-native/no-color-literals */
 /* eslint-disable react-native/no-inline-styles */
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -6,15 +7,27 @@ import { ArrowLeft } from 'lucide-react-native';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   ImageBackground,
   Modal,
-  Pressable,
+  // Pressable,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
+  Dimensions,
+  Alert,
 } from 'react-native';
+
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+  withSequence,
+  withRepeat,
+  withDelay,
+  // interpolate,
+  // Extrapolation,
+} from 'react-native-reanimated';
 
 import AssistantPanel from '../../components/AssistantPanel';
 import MoveList from '../../components/MoveList';
@@ -27,13 +40,16 @@ import { newChess } from '../../lib/chess';
 import {
   appendMove,
   resetGame,
-  // setGameSnapshot,
   setLoading,
   setSuggestions,
   updateFromGameObject,
 } from '../../store/gameSlice';
 
 import lobby from '../../assets/images/woodenbg.jpg'; // Import the background
+
+const { width, height } = Dimensions.get('window');
+const AnimatedView = Animated.createAnimatedComponent(View);
+// const AnimatedText = Animated.createAnimatedComponent(Text);
 
 // Helper functions (extractLastMove, usePlayerColor) remain unchanged...
 export function extractLastMove(prevFen: string, newFen: string) {
@@ -65,7 +81,6 @@ export function usePlayerColor(): 'w' | 'b' | null {
   return null;
 }
 
-// ... Helper functions (extractLastMove, usePlayerColor) remain unchanged
 const router = useRouter();
 // ✅ New component for the loading/waiting screen
 const WaitingForOpponent = () => (
@@ -85,6 +100,222 @@ const WaitingForOpponent = () => (
   </ImageBackground>
 );
 
+// Composant pour les confettis animés
+const ConfettiPiece = ({ index }: { index: number }) => {
+  const translateY = useSharedValue(-height);
+  const translateX = useSharedValue(0);
+  const rotation = useSharedValue(0);
+
+  useEffect(() => {
+    translateY.value = withDelay(index * 50, withTiming(height + 100, { duration: 3000 }));
+
+    translateX.value = withRepeat(
+      withSequence(
+        withTiming(Math.random() * 50 - 25, { duration: 800 }),
+        withTiming(Math.random() * 50 - 25, { duration: 800 })
+      ),
+      -1,
+      true
+    );
+
+    rotation.value = withRepeat(withTiming(360, { duration: 2000 }), -1);
+  }, []);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateY: translateY.value },
+      { translateX: translateX.value },
+      { rotate: `${rotation.value}deg` },
+    ],
+  }));
+
+  const colors = ['#FFD700', '#FF6B35', '#F7931E', '#FF1744', '#E91E63'];
+  const confettiColor = colors[index % colors.length];
+
+  return (
+    <AnimatedView
+      style={[
+        styles.confetti,
+        {
+          backgroundColor: confettiColor,
+          left: Math.random() * width,
+        },
+        animatedStyle,
+      ]}
+    />
+  );
+};
+
+// Composant pour l'écran de fin de partie
+const GameEndModal = ({
+  visible,
+  result,
+  isWinner,
+  onNewGame,
+  onMainMenu,
+}: {
+  visible: boolean;
+  result: string;
+  isWinner: boolean;
+  onNewGame: () => void;
+  onMainMenu: () => void;
+}) => {
+  const scale = useSharedValue(0);
+  const opacity = useSharedValue(0);
+  const confettiVisible = useSharedValue(0);
+
+  useEffect(() => {
+    if (visible) {
+      opacity.value = withTiming(1, { duration: 300 });
+      scale.value = withSequence(
+        withTiming(1.1, { duration: 300 }),
+        withTiming(1, { duration: 200 })
+      );
+
+      if (isWinner) {
+        confettiVisible.value = withDelay(200, withTiming(1, { duration: 100 }));
+      }
+    } else {
+      opacity.value = withTiming(0, { duration: 200 });
+      scale.value = withTiming(0, { duration: 200 });
+      confettiVisible.value = withTiming(0, { duration: 100 });
+    }
+  }, [visible, isWinner]);
+
+  const modalStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+    transform: [{ scale: scale.value }],
+  }));
+
+  const getResultText = () => {
+    if (result === 'checkmate') {
+      return isWinner ? 'VICTOIRE!' : 'DÉFAITE';
+    } else if (result === 'stalemate' || result === 'draw') {
+      return 'MATCH NUL';
+    } else if (result === 'resigned') {
+      return isWinner ? 'VICTOIRE PAR ABANDON' : 'ABANDON';
+    }
+    return 'PARTIE TERMINÉE';
+  };
+
+  const getResultIcon = () => {
+    if (result === 'checkmate') {
+      return isWinner ? '👑' : '💔';
+    } else if (result === 'stalemate' || result === 'draw') {
+      return '🤝';
+    } else if (result === 'resigned') {
+      return isWinner ? '🏆' : '😔';
+    }
+    return '⚡';
+  };
+
+  const getResultColor = () => {
+    if (result === 'checkmate' || result === 'resigned') {
+      return isWinner ? '#4CAF50' : '#F44336';
+    }
+    return '#FF9800';
+  };
+
+  return (
+    <Modal visible={visible} transparent animationType="none">
+      <View style={styles.gameEndOverlay}>
+        {/* Confettis pour la victoire */}
+        {isWinner && (
+          <View style={StyleSheet.absoluteFill} pointerEvents="none">
+            {Array.from({ length: 20 }).map((_, i) => (
+              <ConfettiPiece key={i} index={i} />
+            ))}
+          </View>
+        )}
+
+        <AnimatedView style={[styles.gameEndModal, modalStyle]}>
+          <View style={[styles.gameEndHeader, { backgroundColor: getResultColor() }]}>
+            <Text style={styles.gameEndIcon}>{getResultIcon()}</Text>
+            <Text style={styles.gameEndTitle}>{getResultText()}</Text>
+          </View>
+
+          <View style={styles.gameEndContent}>
+            <Text style={styles.gameEndSubtitle}>
+              {result === 'checkmate' &&
+                (isWinner ? 'Échec et mat! Great game!' : 'Échec et mat. Well done!')}
+              {result === 'stalemate' && 'Stalemate position - equality'}
+              {result === 'draw' && 'Draw by mutual agreement'}
+              {result === 'resigned' &&
+                (isWinner ? 'Your opponent has resigned' : 'You have given up the game')}
+            </Text>
+
+            <View style={styles.gameEndButtons}>
+              {/* <TouchableOpacity style={styles.gameEndButton} onPress={onRematch}>
+                <Text style={styles.gameEndButtonText}>🔄 Revenge</Text>
+              </TouchableOpacity> */}
+
+              <TouchableOpacity style={styles.gameEndButton} onPress={onNewGame}>
+                <Text style={styles.gameEndButtonText}> New Part</Text>
+              </TouchableOpacity>
+
+              {/* <TouchableOpacity
+                style={[styles.gameEndButton, styles.analyzeButton]}
+                onPress={onAnalyze}
+              >
+                <Text style={styles.gameEndButtonText}>📊 Analyser (Bientôt)</Text>
+              </TouchableOpacity> */}
+
+              <TouchableOpacity
+                style={[styles.gameEndButton, styles.menuButton]}
+                onPress={onMainMenu}
+              >
+                <Text style={styles.gameEndButtonText}>🏠 Menu Principal</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </AnimatedView>
+      </View>
+    </Modal>
+  );
+};
+
+// Composant modal amélioré pour mobile
+const ImprovedModal = ({
+  visible,
+  onClose,
+  title,
+  children,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  title: string;
+  children: React.ReactNode;
+}) => {
+  const translateY = useSharedValue(height);
+
+  useEffect(() => {
+    translateY.value = visible
+      ? withTiming(0, { duration: 300 })
+      : withTiming(height, { duration: 300 });
+  }, [visible]);
+
+  const modalStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: translateY.value }],
+  }));
+
+  return (
+    <Modal visible={visible} transparent animationType="none" onRequestClose={onClose}>
+      <View style={styles.improvedModalOverlay}>
+        <TouchableOpacity style={styles.modalBackdrop} activeOpacity={1} onPress={onClose} />
+        <AnimatedView style={[styles.improvedModalContent, modalStyle]}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalHeaderTitle}>{title}</Text>
+            <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+              <Text style={styles.closeButtonText}>✕</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.modalBody}>{children}</View>
+        </AnimatedView>
+      </View>
+    </Modal>
+  );
+};
+
 export default function GameScreen() {
   const router = useRouter();
   const dispatch = useAppDispatch();
@@ -94,9 +325,16 @@ export default function GameScreen() {
   const prevFenRef = useRef<string | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
 
+  const [gameEndData, setGameEndData] = useState<{
+    visible: boolean;
+    result: string;
+    isWinner: boolean;
+  }>({ visible: false, result: '', isWinner: false });
+
   console.log(`couleur du joueru ${playerColor}`);
 
   const { currentId, fen, moves, assistantEnabled, mode } = useAppSelector((s) => s.game);
+  const user = useAppSelector((state) => state.auth.user);
 
   // Le tour (turn) est maintenant déduit directement de l'état "fen"
 
@@ -105,8 +343,6 @@ export default function GameScreen() {
 
   const [showMoves, setShowMoves] = useState(false);
   const [showCoach, setShowCoach] = useState(false);
-
-  const user = useAppSelector((state) => state.auth.user);
 
   // ✅ PREMIER useEffect : Gère l'initialisation des écouteurs de socket.
   // Ce hook ne s'exécute qu'une seule fois au montage du composant pour éviter de
@@ -123,36 +359,51 @@ export default function GameScreen() {
 
     socket.on('gameOver', (p: any) => {
       if (!mounted) return;
-      console.log('📥 gameOver ⚠️ reçu:', JSON.stringify(p, null, 2));
+      console.log('📥 gameOver reçu:', JSON.stringify(p, null, 2));
 
-      // L'ID utilisateur doit être récupéré de l'état global ou passé en paramètre
       const userId = user?._id;
+      const isWinner = p.winnerId === userId;
 
-      // if (p?.game) dispatch(updateFromGameObject(p.game));
-
-      let message = 'La partie est terminée.';
-      if (p.result === 'checkmate') {
-        if (p.winnerId === userId) {
-          message = 'Félicitations, vous avez gagné par échec et mat !';
-        } else {
-          message = 'Échec et mat ! Vous avez perdu.';
-        }
-      } else if (p.result === 'stalemate') {
-        message = 'Pat ! La partie est nulle.';
-      } else if (p.result === 'draw') {
-        message = 'Match nul.';
-      } else if (p.result === 'resigned') {
-        message = 'Votre adversaire a abandonné la partie.';
-      }
-
-      Alert.alert('Partie terminée', message);
-      console.log('Partie terminée', message);
-
-      setTimeout(() => {
-        router.replace('/main');
-        dispatch(resetGame());
-      }, 3000);
+      setGameEndData({
+        visible: true,
+        result: p.result || 'unknown',
+        isWinner,
+      });
     });
+
+    // socket.on('gameOver', (p: any) => {
+    //   if (!mounted) return;
+    //   console.log('📥 gameOver ⚠️ reçu:', JSON.stringify(p, null, 2));
+
+    //   // L'ID utilisateur doit être récupéré de l'état global ou passé en paramètre
+    //   const userId = user?._id;
+    //   const isWinner = p.winnerId === userId;
+
+    //   // if (p?.game) dispatch(updateFromGameObject(p.game));
+
+    //   let message = 'La partie est terminée.';
+    //   if (p.result === 'checkmate') {
+    //     if (p.winnerId === userId) {
+    //       message = 'Félicitations, vous avez gagné par échec et mat !';
+    //     } else {
+    //       message = 'Échec et mat ! Vous avez perdu.';
+    //     }
+    //   } else if (p.result === 'stalemate') {
+    //     message = 'Pat ! La partie est nulle.';
+    //   } else if (p.result === 'draw') {
+    //     message = 'Match nul.';
+    //   } else if (p.result === 'resigned') {
+    //     message = 'Votre adversaire a abandonné la partie.';
+    //   }
+
+    //   Alert.alert('Partie terminée', message);
+    //   console.log('Partie terminée', message);
+
+    //   setTimeout(() => {
+    //     router.replace('/main');
+    //     dispatch(resetGame());
+    //   }, 3000);
+    // });
 
     socket.on('suggestionReceived', (p: any) => {
       if (!mounted) return;
@@ -260,6 +511,7 @@ export default function GameScreen() {
     if (!assistantEnabled || !currentId) return;
     try {
       dispatch(setLoading(true));
+      console.log('demande sugestion');
       socket.emit('getSuggestion', { gameId: currentId });
     } catch (e) {
       console.error('Error requesting suggestion:', e);
@@ -293,6 +545,34 @@ export default function GameScreen() {
     prevFenRef.current = fen;
     console.log('🔄 prevFenRef mis à jour:', prevFenRef.current);
   }, [fen]);
+
+  // Fonctions de fin de partie
+  const handleNewGame = () => {
+    setGameEndData({ visible: false, result: '', isWinner: false });
+    // Logique pour démarrer une nouvelle partie
+    router.replace('/main');
+    dispatch(resetGame());
+  };
+
+  const handleRematch = () => {
+    setGameEndData({ visible: false, result: '', isWinner: false });
+    // Logique pour une revanche
+    router.replace('/main');
+    dispatch(resetGame());
+  };
+
+  const handleMainMenu = () => {
+    setGameEndData({ visible: false, result: '', isWinner: false });
+    dispatch(resetGame());
+    router.replace('/main');
+    dispatch(resetGame());
+  };
+
+  const handleAnalyze = () => {
+    // Fonctionnalité future
+    console.log('Analyse de la partie à implémenter');
+    dispatch(resetGame());
+  };
 
   if (!playerColor) {
     return <WaitingForOpponent />;
@@ -342,71 +622,73 @@ export default function GameScreen() {
             }}
             colors={boardColor}
           />
+          {/* ------------------------------------- */}
           <View style={styles.buttonRow}>
-            <Pressable onPress={() => setShowConfirm(true)} style={styles.actionButton}>
-              <Text style={styles.buttonText}>Give up</Text>
-            </Pressable>
-            <Pressable onPress={() => setShowMoves(true)} style={styles.actionButton}>
-              <Text style={styles.buttonText}>History</Text>
-            </Pressable>
-            <Pressable onPress={() => setShowCoach(true)} style={styles.actionButton}>
-              <Text style={styles.buttonText}>AI Coach</Text>
-            </Pressable>
+            <TouchableOpacity onPress={() => setShowConfirm(true)} style={styles.actionButton}>
+              <Text style={styles.buttonText}>give up</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setShowMoves(true)} style={styles.actionButton}>
+              <Text style={styles.buttonText}>move story</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setShowCoach(true)} style={styles.actionButton}>
+              <Text style={styles.buttonText}>Coach IA</Text>
+            </TouchableOpacity>
           </View>
-          <Modal
-            visible={showMoves}
-            animationType="slide"
-            onRequestClose={() => setShowMoves(false)}
-          >
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>Move History</Text>
-              <MoveList moves={moves} fullWidth />
-              <Pressable onPress={() => setShowMoves(false)} style={styles.modalCloseButton}>
-                <Text style={styles.modalCloseText}>Close</Text>
-              </Pressable>
-            </View>
-          </Modal>
-          <Modal
-            visible={showCoach}
-            animationType="slide"
-            onRequestClose={() => setShowCoach(false)}
-          >
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>AI Coach</Text>
-              <AssistantPanel onAsk={askSuggestion} fullWidth />
-              <Pressable onPress={() => setShowCoach(false)} style={styles.modalCloseButton}>
-                <Text style={styles.modalCloseText}>Close</Text>
-              </Pressable>
-            </View>
-          </Modal>
+          {/* ----------------------------------- */}
+          {/* 
 
+          {/* Modales améliorées */}
+          <ImprovedModal
+            visible={showMoves}
+            onClose={() => setShowMoves(false)}
+            title="Move History"
+          >
+            <MoveList moves={moves} fullWidth />
+          </ImprovedModal>
+          <ImprovedModal visible={showCoach} onClose={() => setShowCoach(false)} title="Coach IA">
+            <AssistantPanel onAsk={askSuggestion} fullWidth />
+          </ImprovedModal>
 
           {/* Modal Confirmation Abandon */}
           <Modal
             visible={showConfirm}
-            transparent
+            transparent={true}
             animationType="fade"
             onRequestClose={() => setShowConfirm(false)}
+            statusBarTranslucent={true} // Important pour Android
           >
-            {/* Use the new styles for the modal */}
             <View style={styles.modalOverlay}>
               <View style={styles.confirmModal}>
-                <Text style={styles.confirmTitle}>Resign Game?</Text>
-                <Text style={styles.confirmText}>Are you sure you want to resign the game?</Text>
+                <Text style={styles.confirmTitle}>Give up the game?</Text>
+                <Text style={styles.confirmText}>Are you sure you want to give up the game?</Text>
                 <View style={styles.confirmButtonRow}>
-                  <Pressable
+                  <TouchableOpacity
                     style={[styles.confirmButton, styles.cancelButton]}
                     onPress={() => setShowConfirm(false)}
                   >
-                    <Text style={styles.cancelButtonText}>Cancel</Text>
-                  </Pressable>
-                  <Pressable style={styles.confirmButton} onPress={handleResign}>
-                    <Text style={styles.confirmButtonText}>Quit</Text>
-                  </Pressable>
+                    <Text style={styles.cancelButtonText}>cancel</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.confirmButton, styles.resignButton]}
+                    onPress={handleResign}
+                  >
+                    <Text style={styles.confirmButtonText}>give up</Text>
+                  </TouchableOpacity>
                 </View>
               </View>
             </View>
           </Modal>
+
+          {/* Modal de fin de partie */}
+          <GameEndModal
+            visible={gameEndData.visible}
+            result={gameEndData.result}
+            isWinner={gameEndData.isWinner}
+            onNewGame={handleNewGame}
+            onRematch={handleRematch}
+            onMainMenu={handleMainMenu}
+            onAnalyze={handleAnalyze}
+          />
         </View>
       </View>
     </ImageBackground>
@@ -431,39 +713,26 @@ const styles = StyleSheet.create({
   buttonRow: {
     flexDirection: 'row',
     gap: 12,
-    marginTop: 100,
+    marginTop: 20,
   },
   actionButton: {
     backgroundColor: '#8B4513',
     borderWidth: 2,
     borderColor: '#D4AF37',
-    borderRadius: 8,
+    borderRadius: 12,
     paddingVertical: 12,
     paddingHorizontal: 20,
     alignItems: 'center',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
   },
   buttonText: {
     color: '#FFF8E1',
     fontWeight: 'bold',
-    fontSize: 16,
-  },
-  modalContent: {
-    flex: 1,
-    paddingTop: 60,
-    backgroundColor: '#1E1E2D',
-  },
-  modalTitle: {
-    fontFamily: 'CinzelDecorative-Bold',
-    fontSize: 24,
-    color: '#FFF8E1',
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  modalCloseButton: {
-    padding: 16,
-    alignSelf: 'center',
-    position: 'absolute',
-    bottom: 20,
+    fontSize: 14,
   },
   backButton: {
     position: 'absolute',
@@ -472,64 +741,152 @@ const styles = StyleSheet.create({
     padding: 8,
     zIndex: 10,
   },
-  modalCloseText: {
+  waitingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  waitingTitle: {
+    fontFamily: 'CinzelDecorative-Bold',
+    fontSize: 28,
+    color: '#FFF8E1',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  waitingText: {
+    color: '#E0E0E0',
+    fontSize: 16,
+    textAlign: 'center',
+    marginTop: 15,
+  },
+  spinner: {
+    marginVertical: 20,
+  },
+  waitingDots: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 20,
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#D4AF37',
+  },
+  // Styles pour les modales améliorées
+  improvedModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.8)',
+  },
+  modalBackdrop: {
+    flex: 1,
+  },
+  improvedModalContent: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#1E1E2D',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    maxHeight: height * 0.85,
+    borderWidth: 2,
+    borderColor: '#D4AF37',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#333',
+  },
+  modalHeaderTitle: {
+    fontFamily: 'CinzelDecorative-Bold',
+    fontSize: 20,
+    color: '#FFF8E1',
+  },
+  closeButton: {
+    padding: 8,
+  },
+  closeButtonText: {
     color: '#D4AF37',
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
   },
+  modalBody: {
+    flex: 1,
+    padding: 20,
+  },
+  // Styles pour la modal de confirmation
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.7)',
+    backgroundColor: 'rgba(0,0,0,0.8)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   confirmModal: {
-    width: '80%',
-    backgroundColor: '#1E1E2D', // Dark card background
-    borderRadius: 10,
+    width: width * 0.85,
+    maxWidth: 400,
+    backgroundColor: '#1E1E2D',
+    borderRadius: 15,
     padding: 25,
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: '#D4AF37', // Gold border
+    borderColor: '#D4AF37',
+    elevation: 20,
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-    elevation: 10,
+    shadowOffset: { width: 0, height: 8 }, // Ombre plus marquée
+    shadowOpacity: 0.5,
+    shadowRadius: 10,
+    // Ajout de propriétés pour assurer la visibilité
+    zIndex: 1000,
   },
+
   confirmTitle: {
     fontSize: 22,
     fontWeight: 'bold',
     color: '#FFF8E1',
-    marginBottom: 10,
-    fontFamily: 'CinzelDecorative-Bold', // Your gamer font
+    marginBottom: 15,
+    textAlign: 'center',
+    fontFamily: 'CinzelDecorative-Bold',
   },
   confirmText: {
     fontSize: 16,
     color: '#E0E0E0',
     textAlign: 'center',
-    marginBottom: 20,
+    marginBottom: 25,
+    lineHeight: 22,
   },
   confirmButtonRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     width: '100%',
+    gap: 15,
   },
   confirmButton: {
-    backgroundColor: '#c43333', // A thematic red for destructive actions
-    paddingVertical: 10,
+    paddingVertical: 15,
     paddingHorizontal: 20,
-    borderRadius: 8,
+    borderRadius: 10,
     flex: 1,
-    marginHorizontal: 5,
     alignItems: 'center',
-    justifyContent: 'center',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
   },
   cancelButton: {
-    backgroundColor: '#8B4513', // Themed brown for cancel
+    backgroundColor: '#6B7280',
+    borderWidth: 1,
+    borderColor: '#9CA3AF',
+  },
+  resignButton: {
+    // Nouveau style pour le bouton d'abandon
+    backgroundColor: '#DC2626',
+    borderWidth: 1,
+    borderColor: '#EF4444',
   },
   confirmButtonText: {
     color: '#FFF8E1',
@@ -541,24 +898,87 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 16,
   },
-  // ✅ New styles for the waiting screen
-  waitingContainer: {
+  // Styles pour la modal de fin de partie
+  gameEndOverlay: {
     flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.9)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
   },
-  waitingTitle: {
+  gameEndModal: {
+    width: '90%',
+    backgroundColor: '#1E1E2D',
+    borderRadius: 20,
+    overflow: 'hidden',
+    elevation: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.5,
+    shadowRadius: 15,
+  },
+  gameEndHeader: {
+    padding: 25,
+    alignItems: 'center',
+    borderBottomWidth: 2,
+    borderBottomColor: 'rgba(255,255,255,0.1)',
+  },
+  gameEndIcon: {
+    fontSize: 60,
+    marginBottom: 10,
+  },
+  gameEndTitle: {
     fontFamily: 'CinzelDecorative-Bold',
-    fontSize: 32,
+    fontSize: 28,
     color: '#FFF8E1',
     textAlign: 'center',
-    marginBottom: 20,
+    fontWeight: 'bold',
   },
-  waitingText: {
-    color: '#E0E0E0',
+  gameEndContent: {
+    padding: 25,
+  },
+  gameEndSubtitle: {
     fontSize: 16,
+    color: '#E0E0E0',
     textAlign: 'center',
-    marginTop: 15,
+    marginBottom: 30,
+    lineHeight: 22,
+  },
+  gameEndButtons: {
+    gap: 15,
+  },
+  gameEndButton: {
+    backgroundColor: '#8B4513',
+    paddingVertical: 15,
+    paddingHorizontal: 25,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#D4AF37',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+  },
+  gameEndButtonText: {
+    color: '#FFF8E1',
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  analyzeButton: {
+    backgroundColor: '#4A5568',
+    borderColor: '#9CA3AF',
+  },
+  menuButton: {
+    backgroundColor: '#2D3748',
+    borderColor: '#718096',
+  },
+  // Styles pour les confettis
+  confetti: {
+    position: 'absolute',
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
 });
