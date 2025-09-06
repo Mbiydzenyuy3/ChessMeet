@@ -99,7 +99,7 @@ export default function MainTabLayout() {
           }}
         />
         <Tabs.Screen
-          name="matchmakin"
+          name="machmakin"
           options={{
             href: null, // Hides this screen from the tab bar
           }}
