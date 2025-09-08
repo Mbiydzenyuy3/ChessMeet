@@ -3,6 +3,7 @@ import { COLORS } from '@/constants/colors';
 import { useAppDispatch, useAppSelector } from '@/store';
 import { doVerifyOtp } from '@/store/authSlice';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+
 import React, { useRef, useState } from 'react';
 import {
   Image,
@@ -28,13 +29,52 @@ export default function OTPVerify() {
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const inputRefs = useRef<TextInput[]>([]);
 
+  // const handleChange = (value: string, index: number) => {
+  //   const newOtp = [...otp];
+
+  //   //If a longer string is pasted, fill all inputs
+  //   if (value.length > 1) {
+  //     const pastCode = value.substring(0, 6);
+  //     setOtp(pastCode.split(''));
+  //     //focus on the las input after pasting
+  //     inputRefs.current[5]?.focus();
+  //     return;
+  //   }
+
+  //   //Handle normal single character input
+  //   newOtp[index] = value.slice(-1);
+  //   setOtp(newOtp);
+
+  //   if (value && index < 5) {
+  //     inputRefs.current[index + 1]?.focus();
+  //   }
+  // };
+
   const handleChange = (value: string, index: number) => {
     const newOtp = [...otp];
-    newOtp[index] = value.slice(-1);
+
+    //Logic to handle a long pasted string
+    if (value.length > 1) {
+      const pastedCode = value.substring(0, 6);
+      setOtp(pastedCode.split(''));
+      // Automatically verify after pasting
+      handleVerify();
+      inputRefs.current[5]?.focus();
+      return;
+    }
+
+    //logic to handle normal single character input
+    newOtp[index] = value;
     setOtp(newOtp);
 
+    //move to next input if a value is entered
     if (value && index < 5) {
       inputRefs.current[index + 1]?.focus();
+    }
+
+    //Automatically verify if all inputs are filled
+    if (newOtp.join('').length === 6) {
+      handleVerify();
     }
   };
 
@@ -87,6 +127,8 @@ export default function OTPVerify() {
                 keyboardType="number-pad"
                 maxLength={1}
                 selectionColor="#D4AF37"
+                textContentType="oneTimeCode" //iOS
+                autoComplete="sms-otp" // Android
               />
             ))}
           </View>
