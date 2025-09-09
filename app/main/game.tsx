@@ -3,10 +3,18 @@
 /* eslint-disable react-native/no-inline-styles */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Chess } from 'chess.js';
-import { ArrowLeft } from 'lucide-react-native';
+import {
+  ArrowLeft,
+  BookOpenIcon,
+  DoorOpenIcon,
+  FlagIcon,
+  LightbulbIcon,
+} from 'lucide-react-native';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
+  Dimensions,
   ImageBackground,
   Modal,
   // Pressable,
@@ -14,19 +22,15 @@ import {
   Text,
   TouchableOpacity,
   View,
-  Dimensions,
-  Alert,
 } from 'react-native';
 
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
-  withTiming,
-  withSequence,
-  withRepeat,
   withDelay,
-  // interpolate,
-  // Extrapolation,
+  withRepeat,
+  withSequence,
+  withTiming,
 } from 'react-native-reanimated';
 
 import AssistantPanel from '../../components/AssistantPanel';
@@ -622,74 +626,79 @@ export default function GameScreen() {
             }}
             colors={boardColor}
           />
-          {/* ------------------------------------- */}
-          <View style={styles.buttonRow}>
-            <TouchableOpacity onPress={() => setShowConfirm(true)} style={styles.actionButton}>
-              <Text style={styles.buttonText}>give up</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => setShowMoves(true)} style={styles.actionButton}>
-              <Text style={styles.buttonText}>move story</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => setShowCoach(true)} style={styles.actionButton}>
-              <Text style={styles.buttonText}>Coach IA</Text>
-            </TouchableOpacity>
-          </View>
-          {/* ----------------------------------- */}
-          {/* 
+        </View>
 
-          {/* Modales améliorées */}
-          <ImprovedModal
-            visible={showMoves}
-            onClose={() => setShowMoves(false)}
-            title="Move History"
-          >
-            <MoveList moves={moves} fullWidth />
-          </ImprovedModal>
-          <ImprovedModal visible={showCoach} onClose={() => setShowCoach(false)} title="Coach IA">
-            <AssistantPanel onAsk={askSuggestion} fullWidth />
-          </ImprovedModal>
+        {/* Controls are now OUTSIDE boardContainer -> docked at bottom */}
+        <View style={styles.controls}>
+          <TouchableOpacity onPress={() => setShowConfirm(true)} style={styles.button}>
+            <FlagIcon size={28} color="#FF6B6B" />
+            <Text style={styles.buttonText}>Resign</Text>
+          </TouchableOpacity>
 
-          {/* Modal Confirmation Abandon */}
-          <Modal
-            visible={showConfirm}
-            transparent={true}
-            animationType="fade"
-            onRequestClose={() => setShowConfirm(false)}
-            statusBarTranslucent={true} // Important pour Android
-          >
-            <View style={styles.modalOverlay}>
-              <View style={styles.confirmModal}>
-                <Text style={styles.confirmTitle}>Give up the game?</Text>
-                <Text style={styles.confirmText}>Are you sure you want to give up the game?</Text>
-                <View style={styles.confirmButtonRow}>
-                  <TouchableOpacity
-                    style={[styles.confirmButton, styles.cancelButton]}
-                    onPress={() => setShowConfirm(false)}
-                  >
-                    <Text style={styles.cancelButtonText}>cancel</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.confirmButton, styles.resignButton]}
-                    onPress={handleResign}
-                  >
-                    <Text style={styles.confirmButtonText}>give up</Text>
-                  </TouchableOpacity>
-                </View>
+          <TouchableOpacity onPress={() => setShowMoves(true)} style={styles.button}>
+            <BookOpenIcon size={28} color="#FFF" />
+            <Text style={styles.buttonText}>History</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={() => setShowCoach(true)} style={styles.button}>
+            <LightbulbIcon size={28} color="#FFF" />
+            <Text style={styles.buttonText}>Hint</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={() => router.replace('/main')} style={styles.button}>
+            <DoorOpenIcon size={28} color="#FFF" />
+            <Text style={styles.buttonText}>Exit</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Modals */}
+        <ImprovedModal visible={showMoves} onClose={() => setShowMoves(false)} title="Move History">
+          <MoveList moves={moves} fullWidth />
+        </ImprovedModal>
+        <ImprovedModal visible={showCoach} onClose={() => setShowCoach(false)} title="Coach IA">
+          <AssistantPanel onAsk={askSuggestion} fullWidth />
+        </ImprovedModal>
+
+        {/* Modal Confirmation Abandon */}
+        <Modal
+          visible={showConfirm}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setShowConfirm(false)}
+          statusBarTranslucent={true} // Important pour Android
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.confirmModal}>
+              <Text style={styles.confirmTitle}>Give up the game?</Text>
+              <Text style={styles.confirmText}>Are you sure you want to give up the game?</Text>
+              <View style={styles.confirmButtonRow}>
+                <TouchableOpacity
+                  style={[styles.confirmButton, styles.cancelButton]}
+                  onPress={() => setShowConfirm(false)}
+                >
+                  <Text style={styles.cancelButtonText}>cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.confirmButton, styles.resignButton]}
+                  onPress={handleResign}
+                >
+                  <Text style={styles.confirmButtonText}>give up</Text>
+                </TouchableOpacity>
               </View>
             </View>
-          </Modal>
+          </View>
+        </Modal>
 
-          {/* Modal de fin de partie */}
-          <GameEndModal
-            visible={gameEndData.visible}
-            result={gameEndData.result}
-            isWinner={gameEndData.isWinner}
-            onNewGame={handleNewGame}
-            onRematch={handleRematch}
-            onMainMenu={handleMainMenu}
-            onAnalyze={handleAnalyze}
-          />
-        </View>
+        {/* Modal de fin de partie */}
+        <GameEndModal
+          visible={gameEndData.visible}
+          result={gameEndData.result}
+          isWinner={gameEndData.isWinner}
+          onNewGame={handleNewGame}
+          onRematch={handleRematch}
+          onMainMenu={handleMainMenu}
+          onAnalyze={handleAnalyze}
+        />
       </View>
     </ImageBackground>
   );
@@ -703,12 +712,16 @@ const styles = StyleSheet.create({
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.6)',
+    width: '100%',
+    paddingVertical: 40, // same as PlayLocal
+    alignItems: 'center',
   },
+
   boardContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 12,
+    paddingBottom: 20,
   },
   buttonRow: {
     flexDirection: 'row',
@@ -728,11 +741,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
-  },
-  buttonText: {
-    color: '#FFF8E1',
-    fontWeight: 'bold',
-    fontSize: 14,
   },
   backButton: {
     position: 'absolute',
@@ -980,5 +988,22 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
+  },
+  controls: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingVertical: 12,
+    marginBottom: 5,
+  },
+  button: {
+    alignItems: 'center',
+    paddingHorizontal: 16,
+  },
+  buttonText: {
+    fontSize: 16,
+    color: '#FFF',
+    marginTop: 4,
+    textAlign: 'center',
+    fontWeight: '600',
   },
 });
