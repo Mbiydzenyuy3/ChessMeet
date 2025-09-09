@@ -1,4 +1,4 @@
 export const ENV = {
-  BASE_URL: 'http://192.168.43.125:3000/api',
-  WS_URL: 'http://192.168.43.125:3000',
+  BASE_URL: 'http://192.168.1.169:3000/api',
+  WS_URL: 'http://192.168.1.169:3000',
 };

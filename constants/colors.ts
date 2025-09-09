@@ -72,11 +72,12 @@ export const COLORS = {
   buttonText: '#FFF8E1',
   sub: '#E0E0E0',
 
-  overlay: 'rgba(0,0,0,0.5)',
+  overlay: 'rgba(0,0,0,0.3)',
   overlayBackground: 'rgba(0,0,0,0.80)',
   overlayBox: 'rgba(0,0,0,0.20)',
   shadeText: 'rgba(0, 0, 0, 0.9)',
   progressBg: 'rgba(255, 255, 255, 0.2)',
+  layer: 'rgba(255,0,0,0.15)',
 
   otpInput: 'rgba(40, 25, 15, 0.8)',
   layoutOverlay: 'rgba(0,0,0,0.65)',
