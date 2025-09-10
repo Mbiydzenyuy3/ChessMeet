@@ -184,6 +184,9 @@ const GameEndModal = ({
   const confettiVisible = useSharedValue(0);
 
   useEffect(() => {
+    console.log('📥📥📥 isWinner reçu:', isWinner);
+    console.log('📥📥📥 result reçu:', result);
+
     if (visible) {
       opacity.value = withTiming(1, { duration: 300 });
       scale.value = withSequence(
@@ -379,9 +382,11 @@ export default function GameScreen() {
     socket.on('gameOver', (p: any) => {
       if (!mounted) return;
       console.log('📥 gameOver reçu:', JSON.stringify(p, null, 2));
-
       const userId = user?._id;
+      console.log('📥📥📥 userId reçu:', userId);
+
       const isWinner = p.winnerId === userId;
+      console.log('📥📥📥 isWinner reçu:', isWinner);
 
       setGameEndData({
         visible: true,
@@ -389,40 +394,6 @@ export default function GameScreen() {
         isWinner,
       });
     });
-
-    // socket.on('gameOver', (p: any) => {
-    //   if (!mounted) return;
-    //   console.log('📥 gameOver ⚠️ reçu:', JSON.stringify(p, null, 2));
-
-    //   // L'ID utilisateur doit être récupéré de l'état global ou passé en paramètre
-    //   const userId = user?._id;
-    //   const isWinner = p.winnerId === userId;
-
-    //   // if (p?.game) dispatch(updateFromGameObject(p.game));
-
-    //   let message = 'La partie est terminée.';
-    //   if (p.result === 'checkmate') {
-    //     if (p.winnerId === userId) {
-    //       message = 'Félicitations, vous avez gagné par échec et mat !';
-    //     } else {
-    //       message = 'Échec et mat ! Vous avez perdu.';
-    //     }
-    //   } else if (p.result === 'stalemate') {
-    //     message = 'Pat ! La partie est nulle.';
-    //   } else if (p.result === 'draw') {
-    //     message = 'Match nul.';
-    //   } else if (p.result === 'resigned') {
-    //     message = 'Votre adversaire a abandonné la partie.';
-    //   }
-
-    //   Alert.alert('Partie terminée', message);
-    //   console.log('Partie terminée', message);
-
-    //   setTimeout(() => {
-    //     router.replace('/main');
-    //     dispatch(resetGame());
-    //   }, 3000);
-    // });
 
     socket.on('suggestionReceived', (p: any) => {
       if (!mounted) return;
@@ -576,18 +547,6 @@ export default function GameScreen() {
       dispatch(setLoading(false));
     }
   }
-  // async function onMove(from: string, to: string) {
-  //   console.log(`called from onMove with ${from} to ${to}, mode:${mode}`);
-  //   if (!currentId) return;
-  //   try {
-  //     dispatch(setLoading(true));
-  //     socket.emit('makeMove', { gameId: currentId, move: `${from}${to}` });
-  //   } catch (e: any) {
-  //     Alert.alert('Coup invalide', e?.response?.data?.message || 'Cant play this move');
-  //   } finally {
-  //     dispatch(setLoading(false));
-  //   }
-  // }
 
   async function handleResign() {
     if (!currentId) return;
