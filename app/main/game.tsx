@@ -3,10 +3,18 @@
 /* eslint-disable react-native/no-inline-styles */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Chess } from 'chess.js';
-import { ArrowLeft } from 'lucide-react-native';
+import {
+  ArrowLeft,
+  BookOpenIcon,
+  DoorOpenIcon,
+  FlagIcon,
+  LightbulbIcon,
+} from 'lucide-react-native';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
+  Dimensions,
   ImageBackground,
   Modal,
   // Pressable,
@@ -14,19 +22,15 @@ import {
   Text,
   TouchableOpacity,
   View,
-  Dimensions,
-  Alert,
 } from 'react-native';
 
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
-  withTiming,
-  withSequence,
-  withRepeat,
   withDelay,
-  // interpolate,
-  // Extrapolation,
+  withRepeat,
+  withSequence,
+  withTiming,
 } from 'react-native-reanimated';
 
 import AssistantPanel from '../../components/AssistantPanel';
@@ -343,6 +347,7 @@ export default function GameScreen() {
 
   const [showMoves, setShowMoves] = useState(false);
   const [showCoach, setShowCoach] = useState(false);
+  const [showResignNotice, setShowResignNotice] = useState(false);
 
   // ✅ PREMIER useEffect : Gère l'initialisation des écouteurs de socket.
   // Ce hook ne s'exécute qu'une seule fois au montage du composant pour éviter de
@@ -494,10 +499,10 @@ export default function GameScreen() {
   async function handleResign() {
     if (!currentId) return;
     try {
-      console.log('Partie handleResign 🚫 🚫⚠️  ');
+      console.log('Partie handleResign 🚫 🚫⚠️');
       dispatch(setLoading(true));
       socket.emit('resign', { gameId: currentId });
-      Alert.alert('Abandon', 'You have abandoned the game.');
+      setShowResignNotice(true); // 👈 Show custom modal instead of Alert
     } catch (e: any) {
       console.error('Abort error:', e);
       Alert.alert('Error', e?.message || 'Impossible to give up the game.');
@@ -549,7 +554,6 @@ export default function GameScreen() {
   // Fonctions de fin de partie
   const handleNewGame = () => {
     setGameEndData({ visible: false, result: '', isWinner: false });
-    // Logique pour démarrer une nouvelle partie
     router.replace('/main');
     dispatch(resetGame());
   };
@@ -622,74 +626,96 @@ export default function GameScreen() {
             }}
             colors={boardColor}
           />
-          {/* ------------------------------------- */}
-          <View style={styles.buttonRow}>
-            <TouchableOpacity onPress={() => setShowConfirm(true)} style={styles.actionButton}>
-              <Text style={styles.buttonText}>give up</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => setShowMoves(true)} style={styles.actionButton}>
-              <Text style={styles.buttonText}>move story</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => setShowCoach(true)} style={styles.actionButton}>
-              <Text style={styles.buttonText}>Coach IA</Text>
+        </View>
+
+        {/* Controls are now OUTSIDE boardContainer -> docked at bottom */}
+        <View style={styles.controls}>
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => setShowConfirm(true)}
+            style={styles.button}
+          >
+            <FlagIcon size={28} color="#FF6B6B" />
+            <Text style={styles.buttonText}>Resign</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={() => setShowMoves(true)} style={styles.button}>
+            <BookOpenIcon size={28} color="#FFF" />
+            <Text style={styles.buttonText}>History</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={() => setShowCoach(true)} style={styles.button}>
+            <LightbulbIcon size={28} color="#FFF" />
+            <Text style={styles.buttonText}>Hint</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={() => router.replace('/main')} style={styles.button}>
+            <DoorOpenIcon size={28} color="#FFF" />
+            <Text style={styles.buttonText}>Exit</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Modals */}
+        <ImprovedModal visible={showMoves} onClose={() => setShowMoves(false)} title="Move History">
+          <MoveList moves={moves} fullWidth />
+        </ImprovedModal>
+        <ImprovedModal visible={showCoach} onClose={() => setShowCoach(false)} title="Coach IA">
+          <AssistantPanel onAsk={askSuggestion} fullWidth />
+        </ImprovedModal>
+
+        {/* Modal Confirmation Abandon */}
+        {/* Modal Confirmation Abandon */}
+        <ImprovedModal
+          visible={showConfirm}
+          onClose={() => setShowConfirm(false)}
+          title="Give up the game?"
+        >
+          <View style={{ gap: 20 }}>
+            <Text style={styles.confirmText}>Are you sure you want to resign the game?</Text>
+            <View style={styles.confirmButtonRow}>
+              <TouchableOpacity
+                style={[styles.confirmButton, styles.cancelButton]}
+                onPress={() => setShowConfirm(false)}
+              >
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.confirmButton, styles.resignButton]}
+                onPress={handleResign}
+              >
+                <Text style={styles.confirmButtonText}>Resign</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </ImprovedModal>
+
+        {/* Resign Notice Modal */}
+        <ImprovedModal
+          visible={showResignNotice}
+          onClose={() => setShowResignNotice(false)}
+          title="Game Abandoned"
+        >
+          <View style={{ gap: 20 }}>
+            <Text style={styles.confirmText}>You have abandoned the game.</Text>
+            <TouchableOpacity
+              style={[styles.confirmButton, styles.resignButton]}
+              onPress={() => setShowResignNotice(false)}
+            >
+              <Text style={styles.confirmButtonText}>OK</Text>
             </TouchableOpacity>
           </View>
-          {/* ----------------------------------- */}
-          {/* 
+        </ImprovedModal>
 
-          {/* Modales améliorées */}
-          <ImprovedModal
-            visible={showMoves}
-            onClose={() => setShowMoves(false)}
-            title="Move History"
-          >
-            <MoveList moves={moves} fullWidth />
-          </ImprovedModal>
-          <ImprovedModal visible={showCoach} onClose={() => setShowCoach(false)} title="Coach IA">
-            <AssistantPanel onAsk={askSuggestion} fullWidth />
-          </ImprovedModal>
-
-          {/* Modal Confirmation Abandon */}
-          <Modal
-            visible={showConfirm}
-            transparent={true}
-            animationType="fade"
-            onRequestClose={() => setShowConfirm(false)}
-            statusBarTranslucent={true} // Important pour Android
-          >
-            <View style={styles.modalOverlay}>
-              <View style={styles.confirmModal}>
-                <Text style={styles.confirmTitle}>Give up the game?</Text>
-                <Text style={styles.confirmText}>Are you sure you want to give up the game?</Text>
-                <View style={styles.confirmButtonRow}>
-                  <TouchableOpacity
-                    style={[styles.confirmButton, styles.cancelButton]}
-                    onPress={() => setShowConfirm(false)}
-                  >
-                    <Text style={styles.cancelButtonText}>cancel</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.confirmButton, styles.resignButton]}
-                    onPress={handleResign}
-                  >
-                    <Text style={styles.confirmButtonText}>give up</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </View>
-          </Modal>
-
-          {/* Modal de fin de partie */}
-          <GameEndModal
-            visible={gameEndData.visible}
-            result={gameEndData.result}
-            isWinner={gameEndData.isWinner}
-            onNewGame={handleNewGame}
-            onRematch={handleRematch}
-            onMainMenu={handleMainMenu}
-            onAnalyze={handleAnalyze}
-          />
-        </View>
+        {/* Modal de fin de partie */}
+        <GameEndModal
+          visible={gameEndData.visible}
+          result={gameEndData.result}
+          isWinner={gameEndData.isWinner}
+          onNewGame={handleNewGame}
+          onRematch={handleRematch}
+          onMainMenu={handleMainMenu}
+          onAnalyze={handleAnalyze}
+        />
       </View>
     </ImageBackground>
   );
@@ -703,12 +729,16 @@ const styles = StyleSheet.create({
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.6)',
+    width: '100%',
+    paddingVertical: 40, // same as PlayLocal
+    alignItems: 'center',
   },
+
   boardContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 12,
+    paddingBottom: 20,
   },
   buttonRow: {
     flexDirection: 'row',
@@ -728,11 +758,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
-  },
-  buttonText: {
-    color: '#FFF8E1',
-    fontWeight: 'bold',
-    fontSize: 14,
   },
   backButton: {
     position: 'absolute',
@@ -820,28 +845,46 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   // Styles pour la modal de confirmation
+  // modalOverlay: {
+  //   flex: 1,
+  //   backgroundColor: 'rgba(0,0,0,0.8)',
+  //   justifyContent: 'center',
+  //   alignItems: 'center',
+  // },
   modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.8)',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.6)',
     justifyContent: 'center',
     alignItems: 'center',
   },
+
+  // confirmModal: {
+  //   width: width * 0.85,
+  //   maxWidth: 400,
+  //   backgroundColor: '#1E1E2D',
+  //   borderRadius: 15,
+  //   padding: 25,
+  //   alignItems: 'center',
+  //   borderWidth: 2,
+  //   borderColor: '#D4AF37',
+  //   elevation: 20,
+  //   shadowColor: '#000',
+  //   shadowOffset: { width: 0, height: 8 }, // Ombre plus marquée
+  //   shadowOpacity: 0.5,
+  //   shadowRadius: 10,
+  //   // Ajout de propriétés pour assurer la visibilité
+  //   zIndex: 1000,
+  // },
   confirmModal: {
-    width: width * 0.85,
-    maxWidth: 400,
-    backgroundColor: '#1E1E2D',
-    borderRadius: 15,
-    padding: 25,
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#D4AF37',
-    elevation: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 }, // Ombre plus marquée
-    shadowOpacity: 0.5,
-    shadowRadius: 10,
-    // Ajout de propriétés pour assurer la visibilité
-    zIndex: 1000,
+    width: '80%',
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 20,
+    elevation: 5, // Android shadow
   },
 
   confirmTitle: {
@@ -980,5 +1023,22 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
+  },
+  controls: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingVertical: 12,
+    marginBottom: 5,
+  },
+  button: {
+    alignItems: 'center',
+    paddingHorizontal: 16,
+  },
+  buttonText: {
+    fontSize: 16,
+    color: '#FFF',
+    marginTop: 4,
+    textAlign: 'center',
+    fontWeight: '600',
   },
 });

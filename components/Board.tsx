@@ -496,32 +496,11 @@ export default function Board() {
 
         {/* Controls */}
         <View style={styles.controls}>
-          <Pressable
-            style={styles.button}
-            onPress={() => {
-              chess.reset();
-              setFen(chess.fen());
-              chessboardRef.current?.resetBoard();
-              setSelectedSquare(null);
-              setValidMoves([]);
-              setPromotion(null);
-            }}
-          >
+          <Pressable style={styles.button} onPress={() => chessboardRef.current?.resetBoard()}>
             <RotateCcwIcon size={32} color="white" />
             <Text style={styles.text}>Reset</Text>
           </Pressable>
-
-          <Pressable
-            style={styles.button}
-            onPress={() => {
-              chess.reset();
-              setFen(chess.fen());
-              setSelectedSquare(null);
-              setValidMoves([]);
-              setPromotion(null);
-              router.back();
-            }}
-          >
+          <Pressable style={styles.button} onPress={() => router.back()}>
             <DoorOpenIcon size={32} color="white" />
             <Text style={styles.text}>Exit</Text>
           </Pressable>
