@@ -671,7 +671,7 @@ export default function GameScreen() {
           title="Give up the game?"
         >
           <View style={{ gap: 20 }}>
-            <Text style={styles.confirmText}>Are you sure you want to give up the game?</Text>
+            <Text style={styles.confirmText}>Are you sure you want to resign the game?</Text>
             <View style={styles.confirmButtonRow}>
               <TouchableOpacity
                 style={[styles.confirmButton, styles.cancelButton]}
@@ -683,7 +683,7 @@ export default function GameScreen() {
                 style={[styles.confirmButton, styles.resignButton]}
                 onPress={handleResign}
               >
-                <Text style={styles.confirmButtonText}>Resig</Text>
+                <Text style={styles.confirmButtonText}>Resign</Text>
               </TouchableOpacity>
             </View>
           </View>
