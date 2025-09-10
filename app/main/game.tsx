@@ -347,6 +347,7 @@ export default function GameScreen() {
 
   const [showMoves, setShowMoves] = useState(false);
   const [showCoach, setShowCoach] = useState(false);
+  const [showResignNotice, setShowResignNotice] = useState(false);
 
   // ✅ PREMIER useEffect : Gère l'initialisation des écouteurs de socket.
   // Ce hook ne s'exécute qu'une seule fois au montage du composant pour éviter de
@@ -498,10 +499,10 @@ export default function GameScreen() {
   async function handleResign() {
     if (!currentId) return;
     try {
-      console.log('Partie handleResign 🚫 🚫⚠️  ');
+      console.log('Partie handleResign 🚫 🚫⚠️');
       dispatch(setLoading(true));
       socket.emit('resign', { gameId: currentId });
-      Alert.alert('Abandon', 'You have abandoned the game.');
+      setShowResignNotice(true); // 👈 Show custom modal instead of Alert
     } catch (e: any) {
       console.error('Abort error:', e);
       Alert.alert('Error', e?.message || 'Impossible to give up the game.');
@@ -686,6 +687,23 @@ export default function GameScreen() {
                 <Text style={styles.confirmButtonText}>Resign</Text>
               </TouchableOpacity>
             </View>
+          </View>
+        </ImprovedModal>
+
+        {/* Resign Notice Modal */}
+        <ImprovedModal
+          visible={showResignNotice}
+          onClose={() => setShowResignNotice(false)}
+          title="Game Abandoned"
+        >
+          <View style={{ gap: 20 }}>
+            <Text style={styles.confirmText}>You have abandoned the game.</Text>
+            <TouchableOpacity
+              style={[styles.confirmButton, styles.resignButton]}
+              onPress={() => setShowResignNotice(false)}
+            >
+              <Text style={styles.confirmButtonText}>OK</Text>
+            </TouchableOpacity>
           </View>
         </ImprovedModal>
 
