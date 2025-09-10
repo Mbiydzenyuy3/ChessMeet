@@ -4,7 +4,6 @@ import auth from './authSlice';
 import game from './gameSlice';
 import socket from './socketSlice';
 
-
 export const store = configureStore({ reducer: { auth, game, socket } });
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
