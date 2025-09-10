@@ -554,7 +554,6 @@ export default function GameScreen() {
   // Fonctions de fin de partie
   const handleNewGame = () => {
     setGameEndData({ visible: false, result: '', isWinner: false });
-    // Logique pour démarrer une nouvelle partie
     router.replace('/main');
     dispatch(resetGame());
   };
