@@ -368,12 +368,30 @@ export default function Board() {
 
           {/* Controls */}
           <View style={styles.controls}>
-            <Pressable style={styles.button} onPress={() => chessboardRef.current?.resetBoard()}>
+            <Pressable
+              style={styles.button}
+              onPress={() => {
+                chess.reset();
+                setFen(chess.fen());
+                chessboardRef.current?.resetBoard();
+                setSelectedSquare(null);
+                setValidMoves([]);
+              }}
+            >
               <RotateCcwIcon size={32} color="white" />
               <Text style={styles.text}>Reset</Text>
             </Pressable>
 
-            <Pressable style={styles.button} onPress={() => router.back()}>
+            <Pressable
+              style={styles.button}
+              onPress={() => {
+                chess.reset();
+                setFen(chess.fen());
+                setSelectedSquare(null);
+                setValidMoves([]);
+                router.back();
+              }}
+            >
               <DoorOpenIcon size={32} color="white" />
               <Text style={styles.text}>Exit</Text>
             </Pressable>
@@ -393,12 +411,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  container: {
-    aspectRatio: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingBottom: 20,
-  },
+  // container: {
+  //   aspectRatio: 1,
+  //   alignItems: 'center',
+  //   justifyContent: 'center',
+  //   paddingBottom: 20,
+  // },
   controls: {
     flexDirection: 'row',
     justifyContent: 'space-around',
