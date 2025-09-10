@@ -630,7 +630,11 @@ export default function GameScreen() {
 
         {/* Controls are now OUTSIDE boardContainer -> docked at bottom */}
         <View style={styles.controls}>
-          <TouchableOpacity onPress={() => setShowConfirm(true)} style={styles.button}>
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => setShowConfirm(true)}
+            style={styles.button}
+          >
             <FlagIcon size={28} color="#FF6B6B" />
             <Text style={styles.buttonText}>Resign</Text>
           </TouchableOpacity>
@@ -660,34 +664,30 @@ export default function GameScreen() {
         </ImprovedModal>
 
         {/* Modal Confirmation Abandon */}
-        <Modal
+        {/* Modal Confirmation Abandon */}
+        <ImprovedModal
           visible={showConfirm}
-          transparent={true}
-          animationType="fade"
-          onRequestClose={() => setShowConfirm(false)}
-          statusBarTranslucent={true} // Important pour Android
+          onClose={() => setShowConfirm(false)}
+          title="Give up the game?"
         >
-          <View style={styles.modalOverlay}>
-            <View style={styles.confirmModal}>
-              <Text style={styles.confirmTitle}>Give up the game?</Text>
-              <Text style={styles.confirmText}>Are you sure you want to give up the game?</Text>
-              <View style={styles.confirmButtonRow}>
-                <TouchableOpacity
-                  style={[styles.confirmButton, styles.cancelButton]}
-                  onPress={() => setShowConfirm(false)}
-                >
-                  <Text style={styles.cancelButtonText}>cancel</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.confirmButton, styles.resignButton]}
-                  onPress={handleResign}
-                >
-                  <Text style={styles.confirmButtonText}>give up</Text>
-                </TouchableOpacity>
-              </View>
+          <View style={{ gap: 20 }}>
+            <Text style={styles.confirmText}>Are you sure you want to give up the game?</Text>
+            <View style={styles.confirmButtonRow}>
+              <TouchableOpacity
+                style={[styles.confirmButton, styles.cancelButton]}
+                onPress={() => setShowConfirm(false)}
+              >
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.confirmButton, styles.resignButton]}
+                onPress={handleResign}
+              >
+                <Text style={styles.confirmButtonText}>Resig</Text>
+              </TouchableOpacity>
             </View>
           </View>
-        </Modal>
+        </ImprovedModal>
 
         {/* Modal de fin de partie */}
         <GameEndModal
@@ -828,28 +828,46 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   // Styles pour la modal de confirmation
+  // modalOverlay: {
+  //   flex: 1,
+  //   backgroundColor: 'rgba(0,0,0,0.8)',
+  //   justifyContent: 'center',
+  //   alignItems: 'center',
+  // },
   modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.8)',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.6)',
     justifyContent: 'center',
     alignItems: 'center',
   },
+
+  // confirmModal: {
+  //   width: width * 0.85,
+  //   maxWidth: 400,
+  //   backgroundColor: '#1E1E2D',
+  //   borderRadius: 15,
+  //   padding: 25,
+  //   alignItems: 'center',
+  //   borderWidth: 2,
+  //   borderColor: '#D4AF37',
+  //   elevation: 20,
+  //   shadowColor: '#000',
+  //   shadowOffset: { width: 0, height: 8 }, // Ombre plus marquée
+  //   shadowOpacity: 0.5,
+  //   shadowRadius: 10,
+  //   // Ajout de propriétés pour assurer la visibilité
+  //   zIndex: 1000,
+  // },
   confirmModal: {
-    width: width * 0.85,
-    maxWidth: 400,
-    backgroundColor: '#1E1E2D',
-    borderRadius: 15,
-    padding: 25,
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#D4AF37',
-    elevation: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 }, // Ombre plus marquée
-    shadowOpacity: 0.5,
-    shadowRadius: 10,
-    // Ajout de propriétés pour assurer la visibilité
-    zIndex: 1000,
+    width: '80%',
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 20,
+    elevation: 5, // Android shadow
   },
 
   confirmTitle: {
