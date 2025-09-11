@@ -2,7 +2,8 @@
 /* eslint-disable react-native/no-color-literals */
 /* eslint-disable react-native/no-inline-styles */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Chess } from 'chess.js';
+import { Chess, Square } from 'chess.js';
+
 import {
   ArrowLeft,
   BookOpenIcon,
@@ -55,25 +56,44 @@ const { width, height } = Dimensions.get('window');
 const AnimatedView = Animated.createAnimatedComponent(View);
 // const AnimatedText = Animated.createAnimatedComponent(Text);
 
-// Helper functions (extractLastMove, usePlayerColor) remain unchanged...
+/**
+ * Extrait le dernier coup joué en comparant deux FEN.
+ * Gère correctement les promotions en se basant sur l'historique détaillé de chess.js.
+ * @param prevFen Le FEN de la position précédente.
+ * @param newFen Le FEN de la nouvelle position.
+ * @returns Un objet contenant le coup (from, to, san, promotion) ou null.
+ */
 export function extractLastMove(prevFen: string, newFen: string) {
-  const chessPrev = new Chess(prevFen);
-  const chessNew = new Chess(newFen);
+  try {
+    const chessNew = new Chess(newFen);
 
-  const legalMoves = chessPrev.moves({ verbose: true });
-  for (const move of legalMoves) {
-    const clone = new Chess(prevFen);
-    clone.move({ from: move.from, to: move.to, promotion: move.promotion });
-    if (clone.fen() === newFen) {
-      return { from: move.from, to: move.to, san: move.san };
+    // Obtenir l'historique complet du jeu avec des détails verbeux
+    const history = chessNew.history({ verbose: true });
+
+    if (history.length === 0) {
+      // S'il n'y a pas d'historique, il n'y a pas eu de coup
+      return null;
     }
+
+    // Le dernier élément du tableau d'historique est le dernier coup
+    const last = history[history.length - 1];
+
+    // L'objet 'last' contient déjà toutes les informations nécessaires, y compris
+    // 'promotion' si le coup en est un.
+    if (last) {
+      return {
+        from: last.from,
+        to: last.to,
+        san: last.san,
+        promotion: last.promotion || undefined, // S'assure que c'est undefined si pas de promotion
+      };
+    }
+
+    return null;
+  } catch (e) {
+    console.error('Failed to extract last move:', e);
+    return null;
   }
-  const history = chessNew.history({ verbose: true });
-  const last = history[history.length - 1];
-  if (last) {
-    return { from: last.from, to: last.to, san: last.san };
-  }
-  return null;
 }
 
 export function usePlayerColor(): 'w' | 'b' | null {
@@ -169,6 +189,9 @@ const GameEndModal = ({
   const confettiVisible = useSharedValue(0);
 
   useEffect(() => {
+    console.log('📥📥📥 isWinner reçu:', isWinner);
+    console.log('📥📥📥 result reçu:', result);
+
     if (visible) {
       opacity.value = withTiming(1, { duration: 300 });
       scale.value = withSequence(
@@ -365,9 +388,11 @@ export default function GameScreen() {
     socket.on('gameOver', (p: any) => {
       if (!mounted) return;
       console.log('📥 gameOver reçu:', JSON.stringify(p, null, 2));
-
       const userId = user?._id;
+      console.log('📥📥📥 userId reçu:', userId);
+
       const isWinner = p.winnerId === userId;
+      console.log('📥📥📥 isWinner reçu:', isWinner);
 
       setGameEndData({
         visible: true,
@@ -375,40 +400,6 @@ export default function GameScreen() {
         isWinner,
       });
     });
-
-    // socket.on('gameOver', (p: any) => {
-    //   if (!mounted) return;
-    //   console.log('📥 gameOver ⚠️ reçu:', JSON.stringify(p, null, 2));
-
-    //   // L'ID utilisateur doit être récupéré de l'état global ou passé en paramètre
-    //   const userId = user?._id;
-    //   const isWinner = p.winnerId === userId;
-
-    //   // if (p?.game) dispatch(updateFromGameObject(p.game));
-
-    //   let message = 'La partie est terminée.';
-    //   if (p.result === 'checkmate') {
-    //     if (p.winnerId === userId) {
-    //       message = 'Félicitations, vous avez gagné par échec et mat !';
-    //     } else {
-    //       message = 'Échec et mat ! Vous avez perdu.';
-    //     }
-    //   } else if (p.result === 'stalemate') {
-    //     message = 'Pat ! La partie est nulle.';
-    //   } else if (p.result === 'draw') {
-    //     message = 'Match nul.';
-    //   } else if (p.result === 'resigned') {
-    //     message = 'Votre adversaire a abandonné la partie.';
-    //   }
-
-    //   Alert.alert('Partie terminée', message);
-    //   console.log('Partie terminée', message);
-
-    //   setTimeout(() => {
-    //     router.replace('/main');
-    //     dispatch(resetGame());
-    //   }, 3000);
-    // });
 
     socket.on('suggestionReceived', (p: any) => {
       if (!mounted) return;
@@ -483,14 +474,81 @@ export default function GameScreen() {
     }
   }, [currentId, router]);
 
-  async function onMove(from: string, to: string) {
-    console.log(`called from onMove with ${from} to ${to}, mode:${mode}`);
+  // A function to handle the promotion logic
+  async function handlePromotion(from: string, to: string, promotion: string) {
+    console.log(
+      `called from handlePromotion with ${from} to ${to}, mode:${mode} promotion:${promotion}`
+    );
+
     if (!currentId) return;
     try {
       dispatch(setLoading(true));
-      socket.emit('makeMove', { gameId: currentId, move: `${from}${to}` });
+      // Construct the UCI move string with promotion
+      const moveUci = `${from}${to}${promotion}`;
+      console.log(`Sending promotion move: ${moveUci}`);
+      socket.emit('makeMove', { gameId: currentId, move: moveUci });
     } catch (e: any) {
-      Alert.alert('Coup invalide', e?.response?.data?.message || 'Cant play this move');
+      Alert.alert('Invalid move', e?.response?.data?.message || 'Cannot play this move');
+    } finally {
+      dispatch(setLoading(false));
+    }
+  }
+
+  async function onMove(from: string, to: string) {
+    console.log(`called from onMove with ${from} to ${to}, mode:${mode}`);
+    if (!currentId) return;
+
+    try {
+      const tempChess = new Chess(fen);
+
+      // ✅ LOGIQUE DE PROMOTION CORRIGÉE
+      // Utilisez 'as Square' pour indiquer à TypeScript que 'from' est une case valide.
+      // L'objet renvoyé par .moves({ verbose: true }) a bien la propriété 'promotion'.
+      const possiblePromotions = tempChess
+        .moves({
+          square: from as Square, // <-- Correction ici
+          verbose: true,
+        })
+        .filter((m) => m.to === to && m.promotion);
+
+      if (possiblePromotions.length > 0) {
+        // C'est une promotion ! Demander à l'utilisateur la pièce
+        Alert.alert(
+          'Promotion!',
+          'Choose a piece to promote your pawn to:',
+          [
+            {
+              text: 'Queen',
+              onPress: () => handlePromotion(from, to, 'q'),
+            },
+            {
+              text: 'Rook',
+              onPress: () => handlePromotion(from, to, 'r'),
+            },
+            {
+              text: 'Bishop',
+              onPress: () => handlePromotion(from, to, 'b'),
+            },
+            {
+              text: 'Knight',
+              onPress: () => handlePromotion(from, to, 'n'),
+            },
+          ],
+          { cancelable: false }
+        );
+        return false; // Bloquer la librairie pour qu'elle ne joue pas le coup tout de suite
+      } else {
+        // Pas de promotion, envoyer le coup standard
+        dispatch(setLoading(true));
+        socket.emit('makeMove', { gameId: currentId, move: `${from}${to}` });
+      }
+      return false;
+    } catch (e: any) {
+      console.error('Error backend:', e);
+      setTimeout(() => {
+        boardRef.current?.resetBoard(fen);
+      }, 50);
+      return false;
     } finally {
       dispatch(setLoading(false));
     }
@@ -558,12 +616,12 @@ export default function GameScreen() {
     dispatch(resetGame());
   };
 
-  const handleRematch = () => {
-    setGameEndData({ visible: false, result: '', isWinner: false });
-    // Logique pour une revanche
-    router.replace('/main');
-    dispatch(resetGame());
-  };
+  // const handleRematch = () => {
+  //   setGameEndData({ visible: false, result: '', isWinner: false });
+  //   // Logique pour une revanche
+  //   router.replace('/main');
+  //   dispatch(resetGame());
+  // };
 
   const handleMainMenu = () => {
     setGameEndData({ visible: false, result: '', isWinner: false });
@@ -572,11 +630,11 @@ export default function GameScreen() {
     dispatch(resetGame());
   };
 
-  const handleAnalyze = () => {
-    // Fonctionnalité future
-    console.log('Analyse de la partie à implémenter');
-    dispatch(resetGame());
-  };
+  // const handleAnalyze = () => {
+  //   // Fonctionnalité future
+  //   console.log('Analyse de la partie à implémenter');
+  //   dispatch(resetGame());
+  // };
 
   if (!playerColor) {
     return <WaitingForOpponent />;
@@ -712,9 +770,9 @@ export default function GameScreen() {
           result={gameEndData.result}
           isWinner={gameEndData.isWinner}
           onNewGame={handleNewGame}
-          onRematch={handleRematch}
+          // onRematch={handleRematch}
           onMainMenu={handleMainMenu}
-          onAnalyze={handleAnalyze}
+          // onAnalyze={handleAnalyze}
         />
       </View>
     </ImageBackground>
