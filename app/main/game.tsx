@@ -17,7 +17,6 @@ import {
   Dimensions,
   ImageBackground,
   Modal,
-  // Pressable,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -49,11 +48,10 @@ import {
   updateFromGameObject,
 } from '../../store/gameSlice';
 
-import lobby from '../../assets/images/woodenbg.jpg'; // Import the background
+import lobby from '../../assets/images/woodenbg.jpg';
 
 const { width, height } = Dimensions.get('window');
 const AnimatedView = Animated.createAnimatedComponent(View);
-// const AnimatedText = Animated.createAnimatedComponent(Text);
 
 // Helper functions (extractLastMove, usePlayerColor) remain unchanged...
 export function extractLastMove(prevFen: string, newFen: string) {
@@ -86,6 +84,7 @@ export function usePlayerColor(): 'w' | 'b' | null {
 }
 
 const router = useRouter();
+
 // ✅ New component for the loading/waiting screen
 const WaitingForOpponent = () => (
   <ImageBackground source={lobby} style={styles.background} resizeMode="cover">
@@ -104,7 +103,7 @@ const WaitingForOpponent = () => (
   </ImageBackground>
 );
 
-// Composant pour les confettis animés
+// Component for animated confetti
 const ConfettiPiece = ({ index }: { index: number }) => {
   const translateY = useSharedValue(-height);
   const translateX = useSharedValue(0);
@@ -150,7 +149,7 @@ const ConfettiPiece = ({ index }: { index: number }) => {
   );
 };
 
-// Composant pour l'écran de fin de partie
+// Component for game end modal
 const GameEndModal = ({
   visible,
   result,
@@ -193,13 +192,13 @@ const GameEndModal = ({
 
   const getResultText = () => {
     if (result === 'checkmate') {
-      return isWinner ? 'VICTOIRE!' : 'DÉFAITE';
+      return isWinner ? 'VICTORY!' : 'DEFEAT';
     } else if (result === 'stalemate' || result === 'draw') {
-      return 'MATCH NUL';
+      return 'DRAW';
     } else if (result === 'resigned') {
-      return isWinner ? 'VICTOIRE PAR ABANDON' : 'ABANDON';
+      return isWinner ? 'VICTORY BY RESIGNATION' : 'RESIGNED';
     }
-    return 'PARTIE TERMINÉE';
+    return 'GAME OVER';
   };
 
   const getResultIcon = () => {
@@ -223,7 +222,7 @@ const GameEndModal = ({
   return (
     <Modal visible={visible} transparent animationType="none">
       <View style={styles.gameEndOverlay}>
-        {/* Confettis pour la victoire */}
+        {/* Confetti for victory */}
         {isWinner && (
           <View style={StyleSheet.absoluteFill} pointerEvents="none">
             {Array.from({ length: 20 }).map((_, i) => (
@@ -241,34 +240,23 @@ const GameEndModal = ({
           <View style={styles.gameEndContent}>
             <Text style={styles.gameEndSubtitle}>
               {result === 'checkmate' &&
-                (isWinner ? 'Échec et mat! Great game!' : 'Échec et mat. Well done!')}
-              {result === 'stalemate' && 'Stalemate position - equality'}
+                (isWinner ? 'Checkmate! Great game!' : 'Checkmate. Well done!')}
+              {result === 'stalemate' && 'Stalemate - equality'}
               {result === 'draw' && 'Draw by mutual agreement'}
               {result === 'resigned' &&
                 (isWinner ? 'Your opponent has resigned' : 'You have given up the game')}
             </Text>
 
             <View style={styles.gameEndButtons}>
-              {/* <TouchableOpacity style={styles.gameEndButton} onPress={onRematch}>
-                <Text style={styles.gameEndButtonText}>🔄 Revenge</Text>
-              </TouchableOpacity> */}
-
               <TouchableOpacity style={styles.gameEndButton} onPress={onNewGame}>
-                <Text style={styles.gameEndButtonText}> New Part</Text>
+                <Text style={styles.gameEndButtonText}>New Game</Text>
               </TouchableOpacity>
-
-              {/* <TouchableOpacity
-                style={[styles.gameEndButton, styles.analyzeButton]}
-                onPress={onAnalyze}
-              >
-                <Text style={styles.gameEndButtonText}>📊 Analyser (Bientôt)</Text>
-              </TouchableOpacity> */}
 
               <TouchableOpacity
                 style={[styles.gameEndButton, styles.menuButton]}
                 onPress={onMainMenu}
               >
-                <Text style={styles.gameEndButtonText}>🏠 Menu Principal</Text>
+                <Text style={styles.gameEndButtonText}>🏠 Main Menu</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -278,7 +266,7 @@ const GameEndModal = ({
   );
 };
 
-// Composant modal amélioré pour mobile
+// Enhanced modal for mobile
 const ImprovedModal = ({
   visible,
   onClose,

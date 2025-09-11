@@ -1,33 +1,25 @@
 /* eslint-disable react-native/no-color-literals */
 /* eslint-disable react-native/no-inline-styles */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// import { COLORS } from '@/constants/colors';
+import { api } from '@/lib/api';
+import { useAppSelector } from '@/redux/slices/hooks'; // adjust path
 import { UserStats } from '@/types/types';
 import React from 'react';
-import {
-  ImageBackground,
-  StyleSheet,
-  Text,
-  // TouchableOpacity,
-  View,
-  ScrollView,
-  Dimensions,
-} from 'react-native';
+
+import { Dimensions, ImageBackground, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, {
+  Extrapolation,
+  interpolate,
   useAnimatedStyle,
   useSharedValue,
   withDelay,
   withRepeat,
   withSequence,
   withTiming,
-  interpolate,
-  Extrapolation,
 } from 'react-native-reanimated';
 import lobby from '../../assets/images/woodenbg.jpg';
-// import { api } from '@/lib/api';
 
 const { width } = Dimensions.get('window');
-// const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 const AnimatedText = Animated.createAnimatedComponent(Text);
 const AnimatedView = Animated.createAnimatedComponent(View);
 
@@ -50,7 +42,7 @@ const initialStats: UserStats = {
   rating: 1200,
 };
 
-// Composant pour une pièce flottante animée
+/* ---------------- Floating Chess Piece ---------------- */
 const FloatingPiece = ({ symbol, index }: { symbol: string; index: number }) => {
   const translateY = useSharedValue(0);
   const opacity = useSharedValue(0.1);
@@ -99,7 +91,7 @@ const FloatingPiece = ({ symbol, index }: { symbol: string; index: number }) => 
   );
 };
 
-// Composant pour une carte de statistique avec animation
+/* ---------------- Stat Card ---------------- */
 const StatCard = ({
   title,
   value,
@@ -145,7 +137,7 @@ const StatCard = ({
   );
 };
 
-// Composant pour l'historique des parties
+/* ---------------- Game History Item ---------------- */
 const GameHistoryItem = ({ game, index }: { game: GameHistory; index: number }) => {
   const slideX = useSharedValue(-width);
 
@@ -207,20 +199,20 @@ const GameHistoryItem = ({ game, index }: { game: GameHistory; index: number }) 
           <Text style={styles.historyOpponent}>
             {getGameTypeIcon()} vs {game.opponent}
           </Text>
-          <Text style={styles.historyDate}>{new Date(game.date).toLocaleDateString('fr-FR')}</Text>
+          <Text style={styles.historyDate}>{new Date(game.date).toLocaleDateString('en-US')}</Text>
         </View>
 
         <View style={styles.historyFooter}>
           <Text style={styles.historyReason}>
             {game.reason === 'checkmate'
-              ? 'Échec et mat'
+              ? 'Checkmate'
               : game.reason === 'resign'
-                ? 'Abandon'
+                ? 'Resigned'
                 : game.reason === 'timeout'
-                  ? 'Temps écoulé'
+                  ? 'Timeout'
                   : game.reason === 'stalemate'
-                    ? 'Pat'
-                    : 'Match nul'}
+                    ? 'Stalemate'
+                    : 'Draw'}
           </Text>
           <Text style={styles.historyDuration}>{formatDuration(game.duration)}</Text>
         </View>
@@ -229,15 +221,16 @@ const GameHistoryItem = ({ game, index }: { game: GameHistory; index: number }) 
   );
 };
 
-// Composant pour le graphique de progression du rating
+/* ---------------- Rating Chart ---------------- */
 const RatingChart = ({ rating }: { rating: number }) => {
   const chartWidth = width * 0.8;
   const barHeight = useSharedValue(0);
-  const ratingColor = rating >= 1200 ? '#4CAF50' : rating >= 1000 ? '#FF9800' : '#F44336';
 
   React.useEffect(() => {
-    barHeight.value = withDelay(600, withTiming(rating / 2000, { duration: 1000 }));
-  }, [rating]);
+    barHeight.value = withTiming(1, { duration: 1000 });
+  }, []);
+
+  const ratingColor = rating >= 1200 ? '#4CAF50' : rating >= 1000 ? '#FF9800' : '#F44336';
 
   const barStyle = useAnimatedStyle(() => ({
     width: interpolate(barHeight.value, [0, 1], [0, chartWidth], Extrapolation.CLAMP),
@@ -245,7 +238,7 @@ const RatingChart = ({ rating }: { rating: number }) => {
 
   return (
     <View style={styles.ratingChart}>
-      <Text style={styles.ratingTitle}>Rating Actuel</Text>
+      <Text style={styles.ratingTitle}>Current Rating</Text>
       <View style={styles.chartContainer}>
         <AnimatedView style={[styles.ratingBar, { backgroundColor: ratingColor }, barStyle]} />
         <Text style={styles.ratingValue}>{rating}</Text>
@@ -254,64 +247,35 @@ const RatingChart = ({ rating }: { rating: number }) => {
   );
 };
 
+/* ---------------- Main Screen ---------------- */
 export default function StatsScreen() {
-  const [stats] = React.useState<UserStats>(initialStats);
+  const token = useAppSelector((state) => state.auth.token);
+  const [stats, setStats] = React.useState<UserStats>(initialStats);
   const [gameHistory, setGameHistory] = React.useState<GameHistory[]>([]);
-  const [loading] = React.useState(false);
+  const [loading, setLoading] = React.useState(false);
 
   React.useEffect(() => {
-    setGameHistory([
-      {
-        _id: '1',
-        result: 'win',
-        opponent: 'IA Niveau 3',
-        gameType: 'ai',
-        duration: 845,
-        date: new Date().toISOString(),
-        reason: 'checkmate',
-      },
-      {
-        _id: '2',
-        result: 'loss',
-        opponent: 'ChessMaster99',
-        gameType: 'online',
-        duration: 1245,
-        date: new Date(Date.now() - 86400000).toISOString(),
-        reason: 'resign',
-      },
-      {
-        _id: '3',
-        result: 'draw',
-        opponent: 'LocalPlayer',
-        gameType: 'local',
-        duration: 2100,
-        date: new Date(Date.now() - 172800000).toISOString(),
-        reason: 'stalemate',
-      },
-    ]);
-    // const fetchData = async () => {
-    //   try {
-    //     if (!token) return;
-    //     const headers = { Authorization: `Bearer ${token}` };
+    const fetchData = async () => {
+      try {
+        if (!token) {
+          console.warn('No token, skipping fetch');
+          return;
+        }
 
-    //     // Récupérer les statistiques
-    //     const statsRes = await api.get<UserStats>('/user/me/stats', { headers });
-    //     setStats(statsRes.data);
+        const headers = { Authorization: `Bearer ${token}` };
 
-    //     // Récupérer l'historique des parties (simulé pour l'exemple)
-    //     const historyRes = await api.get<GameHistory[]>('/user/me/games/history', { headers });
-    //     setGameHistory(historyRes.data || []);
-    //   } catch (err) {
-    //     console.error('Failed to fetch stats data', err);
-    //     // Données simulées en cas d'erreur
+        const statsRes = await api.get<UserStats>('/user/me/stats', { headers });
+        setStats(statsRes.data);
 
-    //   } finally {
-    //     setLoading(false);
-    //   }
-    // };
+        const historyRes = await api.get<GameHistory[]>('/user/me/games/history', { headers });
+        setGameHistory(historyRes.data || []);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    // fetchData();
-  }, []);
+    fetchData();
+  }, [token]);
 
   const chessSymbols = ['♔', '♕', '♖', '♗', '♘', '♙'];
   const winRate = stats.gamesPlayed > 0 ? ((stats.wins / stats.gamesPlayed) * 100).toFixed(1) : '0';
@@ -319,7 +283,7 @@ export default function StatsScreen() {
   return (
     <ImageBackground source={lobby} style={styles.background} resizeMode="cover">
       <View style={styles.overlay}>
-        {/* Pièces flottantes en arrière-plan */}
+        {/* Floating pieces */}
         <View style={StyleSheet.absoluteFill} pointerEvents="none">
           {chessSymbols.map((symbol, index) => (
             <FloatingPiece key={index} symbol={symbol} index={index} />
@@ -331,51 +295,42 @@ export default function StatsScreen() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
         >
-          {/* En-tête des statistiques */}
+          {/* Header */}
           <View style={styles.header}>
             <Text style={styles.headerTitle}>My Statistics</Text>
             <Text style={styles.headerSubtitle}>Overview of your performance</Text>
           </View>
 
-          {/* Cartes de statistiques */}
+          {/* Stats Cards */}
           <View style={styles.statsGrid}>
             <StatCard
-              title="Parties Jouées"
+              title="Games Played"
               value={stats.gamesPlayed}
               icon="♟"
               color="#8B4513"
               delay={100}
             />
-
             <StatCard
-              title="Victoires"
+              title="Wins"
               value={stats.wins}
-              subtitle={`${winRate}% de victoires`}
+              subtitle={`${winRate}% wins`}
               icon="🏆"
               color="#4CAF50"
               delay={200}
             />
-
-            <StatCard title="Défaites" value={stats.losses} icon="💔" color="#F44336" delay={300} />
-
-            <StatCard
-              title="Matchs Nuls"
-              value={stats.draws}
-              icon="🤝"
-              color="#FF9800"
-              delay={400}
-            />
+            <StatCard title="Losses" value={stats.losses} icon="💔" color="#F44336" delay={300} />
+            <StatCard title="Draws" value={stats.draws} icon="🤝" color="#FF9800" delay={400} />
           </View>
 
-          {/* Graphique de rating */}
+          {/* Rating */}
           <RatingChart rating={stats.rating} />
 
-          {/* Historique des parties */}
+          {/* History */}
           <View style={styles.historySection}>
             <Text style={styles.sectionTitle}>Recent Games</Text>
             {loading ? (
               <View style={styles.loadingContainer}>
-                <Text style={styles.loadingText}>Chargement...</Text>
+                <Text style={styles.loadingText}>Loading...</Text>
               </View>
             ) : gameHistory.length > 0 ? (
               gameHistory
@@ -383,10 +338,8 @@ export default function StatsScreen() {
                 .map((game, index) => <GameHistoryItem key={game._id} game={game} index={index} />)
             ) : (
               <View style={styles.emptyState}>
-                <Text style={styles.emptyStateText}>Aucune partie jouée récemment</Text>
-                <Text style={styles.emptyStateSubtext}>
-                  Commencez à jouer pour voir vos statistiques !
-                </Text>
+                <Text style={styles.emptyStateText}>No games played recently</Text>
+                <Text style={styles.emptyStateSubtext}>Start playing to see your stats!</Text>
               </View>
             )}
           </View>
