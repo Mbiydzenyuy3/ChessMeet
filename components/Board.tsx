@@ -122,17 +122,6 @@ export default function Board() {
               <RotateCcwIcon size={32} color="white" />
               <Text style={styles.text}>Reset</Text>
             </Pressable>
-
-            {/* <Pressable>
-            <Lightbulb size={35} color="white" />
-            <Text style={styles.text}>Hint</Text>
-          </Pressable>
-
-          <Pressable style={styles.button} onPress={handleUndo}>
-            <Undo2 size={32} color="white" />
-            <Text style={styles.text}>Undo</Text>
-          </Pressable> */}
-
             <Pressable style={styles.button} onPress={() => router.back()}>
               <DoorOpenIcon size={32} color="white" />
               <Text style={styles.text}>Exit</Text>
