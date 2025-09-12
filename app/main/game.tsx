@@ -786,7 +786,7 @@ const styles = StyleSheet.create({
   },
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    // backgroundColor: 'rgba(0,0,0,0.6)',
     width: '100%',
     paddingVertical: 40, // same as PlayLocal
     alignItems: 'center',

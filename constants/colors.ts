@@ -72,7 +72,7 @@ export const COLORS = {
   buttonText: '#FFF8E1',
   sub: '#E0E0E0',
 
-  overlay: 'rgba(0,0,0,0.3)',
+  // overlay: 'rgba(0,0,0,0.1)',
   overlayBackground: 'rgba(0,0,0,0.80)',
   overlayBox: 'rgba(0,0,0,0.20)',
   shadeText: 'rgba(0, 0, 0, 0.9)',

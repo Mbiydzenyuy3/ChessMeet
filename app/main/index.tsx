@@ -434,7 +434,7 @@ const styles = StyleSheet.create({
   },
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.2)',
+    // backgroundColor: 'rgba(0,0,0,0.0)',
     width: '100%',
     height: '100%',
   },
