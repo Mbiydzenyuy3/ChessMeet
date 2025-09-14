@@ -4,7 +4,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import authApi, { UpdateProfilePayload } from '../api/authApi';
 
-import { api } from '../lib/api';
 import { fetchMe, verifyOtp } from '../lib/auth';
 import { clearToken, getToken, saveToken } from '../lib/storage';
 
@@ -53,17 +52,19 @@ export const doVerifyOtp = createAsyncThunk(
     return { token: res.accessToken, user: me };
   }
 );
-export const doUploadAvatar = createAsyncThunk(
-  'auth/uploadAvatar',
-  async (formData: FormData, { rejectWithValue }) => {
-    try {
-      const { data } = await api.patch('/user/me/avatar', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-      return data; // should contain updated avatarUrl
-    } catch (err: any) {
-      return rejectWithValue(err.response?.data || 'Failed to upload avatar');
-    }
+export const uploadAvatar = createAsyncThunk(
+  'auth/upload-avatar',
+  async (formData: FormData, { getState }) => {
+    const state = getState() as { auth: AuthState };
+    const token = state.auth.token!;
+    const res = await authApi.uploadAvatar(formData, token);
+    const uploadedAvatarUrl = res.data.url;
+
+    // Update the user's profile with the new avatar URL
+    const updatedUser = await authApi.updateProfile({ avatarUrl: uploadedAvatarUrl }, token);
+    await AsyncStorage.setItem('user', JSON.stringify(updatedUser.data));
+
+    return updatedUser.data;
   }
 );
 
@@ -98,15 +99,15 @@ const slice = createSlice({
       s.token = a.payload.token;
       s.user = a.payload.user;
     });
-    b.addCase(doUploadAvatar.pending, (state) => {
+    b.addCase(uploadAvatar.pending, (state) => {
       state.avatarLoading = true;
       state.error = undefined;
     })
-      .addCase(doUploadAvatar.fulfilled, (state, action: PayloadAction<{ avatarUrl: string }>) => {
+      .addCase(uploadAvatar.fulfilled, (state, action: PayloadAction<{ avatarUrl: string }>) => {
         state.avatarLoading = false;
         if (state.user) state.user = { ...state.user, ...action.payload };
       })
-      .addCase(doUploadAvatar.rejected, (state, action) => {
+      .addCase(uploadAvatar.rejected, (state, action) => {
         state.avatarLoading = false;
         state.error = (action.payload as string) || 'Avatar upload failed';
       });

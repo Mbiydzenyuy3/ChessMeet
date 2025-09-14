@@ -33,6 +33,14 @@ const authApi = {
     api.patch('/user/me', updates, {
       headers: { Authorization: `Bearer ${token}` },
     }),
+  // Add the new function to upload the avatar
+  uploadAvatar: (formData: FormData, token: string) =>
+    api.post('/user/me/avatar', formData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'multipart/form-data', // Crucial for file uploads
+      },
+    }),
 };
 
 export default authApi;
