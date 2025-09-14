@@ -1,15 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // ============================ store/authSlice.ts ============================
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
-import authApi, { UpdateProfilePayload } from '../api/authApi';
+import authApi, { UpdateProfilePayload, UpdateProfileRes } from '../api/authApi'; // Import the response type
 
 import { fetchMe, verifyOtp } from '../lib/auth';
 import { clearToken, getToken, saveToken } from '../lib/storage';
 
 export type AuthState = {
   token: string | null;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   user: any | null;
   loading: boolean;
   error?: string;
@@ -25,46 +23,42 @@ const initialState: AuthState = {
   profileLoading: false,
 };
 
+// ... (hydrateAuth, requestOtp, doVerifyOtp thunks remain the same) ...
 export const hydrateAuth = createAsyncThunk('auth/hydrate', async () => {
   const t = await getToken();
-  console.log('rechercher du token');
   if (!t) return { token: null, user: null };
-  console.log('rechercher du token', t);
-
   const me = await fetchMe();
-  console.log(`user fetche me : ${JSON.stringify(me)}`);
   return { token: t, user: me };
 });
 
 export const requestOtp = createAsyncThunk('auth/request-otp', async (email: string) => {
   const res = await authApi.requestOtp(email);
-  return res.data; // contains requestId + message
+  return res.data;
 });
 
 export const doVerifyOtp = createAsyncThunk(
   'auth/verifyOtp',
   async ({ userIdentifier, code }: { userIdentifier: string; code: string }) => {
-    console.log(`information de verification recue ${userIdentifier}, code : ${code}`);
     const res = await verifyOtp(userIdentifier, code);
     await saveToken(res.accessToken);
     const me = res.user || (await fetchMe());
-    console.log(`information ${res} me :${me}`);
     return { token: res.accessToken, user: me };
   }
 );
+
+// CORRECTED THUNK
 export const uploadAvatar = createAsyncThunk(
   'auth/upload-avatar',
   async (formData: FormData, { getState }) => {
     const state = getState() as { auth: AuthState };
     const token = state.auth.token!;
-    const res = await authApi.uploadAvatar(formData, token);
-    const uploadedAvatarUrl = res.data.url;
 
-    // Update the user's profile with the new avatar URL
-    const updatedUser = await authApi.updateProfile({ avatarUrl: uploadedAvatarUrl }, token);
-    await AsyncStorage.setItem('user', JSON.stringify(updatedUser.data));
+    // CHANGE: Make only ONE API call. The backend endpoint handles the database update.
+    const response = await authApi.uploadAvatar(formData, token);
 
-    return updatedUser.data;
+    // CHANGE: Directly return the user object from the upload response.
+    // The backend's /user/me/avatar endpoint should return the updated user document.
+    return response.data.user;
   }
 );
 
@@ -74,9 +68,8 @@ export const doUpdateProfile = createAsyncThunk(
     const state = getState() as { auth: AuthState };
     const token = state.auth.token!;
     const res = await authApi.updateProfile(updates, token);
-    const updatedUser = res.data;
-    await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
-    return updatedUser;
+    // REMOVED: Redundant AsyncStorage.setItem call. Let your persistence layer handle this.
+    return res.data;
   }
 );
 
@@ -90,6 +83,7 @@ const slice = createSlice({
   initialState,
   reducers: {},
   extraReducers: (b) => {
+    // ... (hydrateAuth, requestOtp, doVerifyOtp cases remain the same) ...
     b.addCase(hydrateAuth.pending, (s) => {
       s.loading = true;
       s.error = undefined;
@@ -99,19 +93,6 @@ const slice = createSlice({
       s.token = a.payload.token;
       s.user = a.payload.user;
     });
-    b.addCase(uploadAvatar.pending, (state) => {
-      state.avatarLoading = true;
-      state.error = undefined;
-    })
-      .addCase(uploadAvatar.fulfilled, (state, action: PayloadAction<{ avatarUrl: string }>) => {
-        state.avatarLoading = false;
-        if (state.user) state.user = { ...state.user, ...action.payload };
-      })
-      .addCase(uploadAvatar.rejected, (state, action) => {
-        state.avatarLoading = false;
-        state.error = (action.payload as string) || 'Avatar upload failed';
-      });
-
     b.addCase(hydrateAuth.rejected, (s, a) => {
       s.loading = false;
       s.error = String(a.error.message || '');
@@ -143,6 +124,24 @@ const slice = createSlice({
       s.error = String(a.error.message || '');
     });
 
+    // CORRECTED REDUCER CASES
+    b.addCase(uploadAvatar.pending, (state) => {
+      state.avatarLoading = true;
+      state.error = undefined;
+    })
+      // CHANGE: The payload is now the full user object (or whatever your API returns).
+      // Using a specific type like UpdateProfileRes is better than 'any'.
+      .addCase(uploadAvatar.fulfilled, (state, action: PayloadAction<UpdateProfileRes>) => {
+        state.avatarLoading = false;
+        // Update the user state with the fresh data from the server
+        state.user = { ...state.user, ...action.payload };
+      })
+      .addCase(uploadAvatar.rejected, (state, action) => {
+        state.avatarLoading = false;
+        state.error = (action.payload as string) || 'Avatar upload failed';
+      });
+
+    // ... (logout and doUpdateProfile cases remain the same) ...
     b.addCase(logout.fulfilled, (state) => {
       state.token = null;
       state.user = null;

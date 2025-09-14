@@ -225,6 +225,7 @@
 //   logoutButton: { backgroundColor: COLORS.logout, marginTop: 180, borderColor: COLORS.buttonOtp },
 // });
 
+//app/main/profile.tsx
 import { UpdateProfilePayload } from '@/api/authApi';
 import { COLORS } from '@/constants/colors';
 import { useAuth } from '@/hooks/useAuth';
