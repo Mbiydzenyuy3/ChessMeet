@@ -1,6 +1,5 @@
 //api/authApi.ts
-import { ENDPOINTS } from '../constants/endpoints';
-import api from './api';
+import { api } from '../lib/api';
 
 export interface RequestOtpRes {
   email: string; // backend returns this
@@ -24,23 +23,18 @@ export interface UpdateProfileRes {
 }
 
 const authApi = {
-  requestOtp: (email: string) => api.post<RequestOtpRes>(ENDPOINTS.REQUEST_OTP, { email }),
+  // Functions from lib/auth.ts are now here
+  requestOtp: (email: string) => api.post('/auth/request-otp', { email }),
 
   verifyOtp: (userIdentifier: string, code: string) =>
-    api.post<VerifyOtpRes>(ENDPOINTS.VERIFY_OTP, { userIdentifier, code }),
+    api.post('/auth/verify-otp', { userIdentifier, code }),
 
-  updateProfile: (updates: UpdateProfilePayload, token: string) =>
-    api.patch('/user/me', updates, {
-      headers: { Authorization: `Bearer ${token}` },
-    }),
-  // Add the new function to upload the avatar
-  uploadAvatar: (formData: FormData, token: string) =>
-    api.post('/user/me/avatar', formData, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'multipart/form-data', // Crucial for file uploads
-      },
-    }),
+  fetchMe: () => api.get('/user/me'),
+
+  // Functions that no longer need the 'token' parameter
+  updateProfile: (updates: UpdateProfilePayload) => api.patch('/user/me', updates),
+
+  uploadAvatar: (formData: FormData) => api.post('/user/me/avatar', formData),
 };
 
 export default authApi;

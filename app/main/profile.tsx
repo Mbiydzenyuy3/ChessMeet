@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // import { COLORS } from '@/constants/colors';
 // import { useAuth } from '@/hooks/useAuth';
 // import { clearToken } from '@/lib/storage';
@@ -293,15 +294,13 @@ export default function Profile() {
     try {
       if (selectedImage) {
         const formData = new FormData();
-        const uriParts = selectedImage.uri.split('.');
-        const fileType = uriParts[uriParts.length - 1];
 
         // Prepare the file for upload
         formData.append('file', {
           uri: selectedImage.uri,
-          name: `avatar.${fileType}`,
-          type: `image/${fileType}`,
-        } as unknown as Blob);
+          name: selectedImage.fileName || `avatar.jpg`,
+          type: selectedImage.mimeType || 'image/jpeg',
+        } as any);
 
         // Call the new uploadAvatar thunk
         await uploadAvatar(formData).unwrap();
@@ -316,9 +315,9 @@ export default function Profile() {
 
       Alert.alert('Success', 'Profile updated successfully!');
       setIsEditing(false);
-    } catch (err) {
-      console.error(err);
-      Alert.alert('Error', 'Failed to update profile. Please try again.');
+    } catch (err: any) {
+      console.error('Save failed:', err.response?.data || err.message || err);
+      Alert.alert('Error', err.response?.data?.message || 'Failed to update profile.');
     } finally {
       setIsSaving(false);
     }
