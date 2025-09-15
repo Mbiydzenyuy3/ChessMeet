@@ -693,7 +693,6 @@ export default function GameScreen() {
             onPress={() => setShowConfirm(true)}
             style={styles.button}
           >
-
             <FlagIcon size={28} color="#FF6B6B" />
             <Text style={styles.buttonText}>Resign</Text>
           </TouchableOpacity>
@@ -771,9 +770,9 @@ export default function GameScreen() {
           result={gameEndData.result}
           isWinner={gameEndData.isWinner}
           onNewGame={handleNewGame}
-          onRematch={handleRematch}
+          // onRematch={handleRematch}
           onMainMenu={handleMainMenu}
-          onAnalyze={handleAnalyze}
+          // onAnalyze={handleAnalyze}
         />
       </View>
     </ImageBackground>
