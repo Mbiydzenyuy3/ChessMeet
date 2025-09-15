@@ -9,28 +9,29 @@
 import { COLORS } from '@/constants/colors';
 import { useAuth } from '@/hooks/useAuth';
 import { useSocket } from '@/hooks/useSocket';
+import axios from 'axios';
 import { useRouter } from 'expo-router';
 import { Settings } from 'lucide-react-native';
 import React, { useState } from 'react';
 import {
   Alert,
+  Dimensions,
   Image,
   ImageBackground,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
-  ScrollView,
-  Dimensions,
 } from 'react-native';
 import Animated, {
+  interpolate,
   useAnimatedStyle,
   useSharedValue,
+  withDelay,
   withRepeat,
   withSequence,
   withTiming,
-  withDelay,
-  interpolate,
 } from 'react-native-reanimated';
 import FloatingPiece from '../../components/FloatingPiece';
 import TransitionScreen from '../../components/TransitionScreen';
@@ -55,6 +56,12 @@ interface RecentGame {
   gameType: 'ai' | 'online' | 'local';
   date: string;
   duration: number;
+}
+
+interface UserStats {
+  gamesPlayed: number;
+  wins: number;
+  rating: number;
 }
 
 // Composant pour afficher une partie récente
@@ -182,6 +189,8 @@ export default function LobbyScreen() {
   const click = useAudioPlayer(clickSound);
   const socket = useSocket();
   const router = useRouter();
+  const { token } = useAuth();
+  const [stats, setStats] = useState<UserStats | null>(null);
   const { user } = useAuth();
   const dispatch = useAppDispatch();
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -192,6 +201,28 @@ export default function LobbyScreen() {
   // Animation pour le logo central
   const logoScale = useSharedValue(0);
   const logoRotation = useSharedValue(0);
+
+  React.useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const res = await axios.get('http://10.0.2.2:3000/user/me', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        setStats({
+          gamesPlayed: res.data.gamesPlayed,
+          wins: res.data.wins,
+          rating: res.data.rating,
+        });
+      } catch (err) {
+        console.error('❌ Failed to fetch user stats:', err);
+      }
+    };
+
+    if (token) {
+      fetchStats();
+    }
+  }, [token]);
 
   React.useEffect(() => {
     logoScale.value = withSequence(
@@ -385,7 +416,7 @@ export default function LobbyScreen() {
                     onPress={() => router.push('/main/stats')}
                     style={styles.viewAllButton}
                   >
-                    <Text style={styles.viewAllText}>Voir tout</Text>
+                    <Text style={styles.viewAllText}>View all</Text>
                   </TouchableOpacity>
                 </View>
 
@@ -404,17 +435,17 @@ export default function LobbyScreen() {
             {/* Quick Stats */}
             <View style={styles.quickStats}>
               <View style={styles.statItem}>
-                <Text style={styles.statNumber}>12</Text>
+                <Text style={styles.statNumber}>{stats?.gamesPlayed ?? '-'}</Text>
                 <Text style={styles.statLabel}>Parties</Text>
               </View>
               <View style={styles.statDivider} />
               <View style={styles.statItem}>
-                <Text style={styles.statNumber}>8</Text>
+                <Text style={styles.statNumber}>{stats?.wins ?? '-'}</Text>
                 <Text style={styles.statLabel}>Victoires</Text>
               </View>
               <View style={styles.statDivider} />
               <View style={styles.statItem}>
-                <Text style={styles.statNumber}>1247</Text>
+                <Text style={styles.statNumber}>{stats?.rating ?? '-'}</Text>
                 <Text style={styles.statLabel}>Rating</Text>
               </View>
             </View>
