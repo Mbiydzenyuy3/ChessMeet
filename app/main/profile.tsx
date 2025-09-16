@@ -304,6 +304,7 @@ export default function Profile() {
 
         // Call the new uploadAvatar thunk
         await uploadAvatar(formData).unwrap();
+        console.log(formData);
         setSelectedImage(null);
       }
 
