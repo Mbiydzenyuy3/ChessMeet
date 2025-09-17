@@ -227,7 +227,6 @@
 // });
 
 //app/main/profile.tsx
-import { UpdateProfilePayload } from '@/api/authApi';
 import { COLORS } from '@/constants/colors';
 import { useAuth } from '@/hooks/useAuth';
 import { clearToken } from '@/lib/storage';
@@ -292,6 +291,7 @@ export default function Profile() {
   const handleSave = async () => {
     setIsSaving(true);
     try {
+      // Upload avatar if a new one is picked
       if (selectedImage) {
         const formData = new FormData();
 
@@ -304,14 +304,14 @@ export default function Profile() {
 
         // Call the new uploadAvatar thunk
         await uploadAvatar(formData).unwrap();
-        console.log(formData);
+        // console.log(formData);
         setSelectedImage(null);
       }
 
       // If display name has changed, update it.
       if (displayName !== user?.displayName) {
-        const payload: UpdateProfilePayload = { displayName };
-        await updateProfile(payload).unwrap();
+        // const payload: UpdateProfilePayload = { displayName };
+        await updateProfile({ displayName }).unwrap();
       }
 
       Alert.alert('Success', 'Profile updated successfully!');
