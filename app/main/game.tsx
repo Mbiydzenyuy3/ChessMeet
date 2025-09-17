@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable react-native/no-unused-styles */
 /* eslint-disable react-native/no-color-literals */
 /* eslint-disable react-native/no-inline-styles */
@@ -38,7 +39,7 @@ import MoveList from '../../components/MoveList';
 import { useAppDispatch, useAppSelector } from '../../store';
 
 import { useRouter } from 'expo-router';
-import Chessboard, { ChessboardRef } from 'react-native-chessboard';
+import { ChessboardRef } from 'react-native-chessboard';
 import { useSocket } from '../../hooks/useSocket';
 import { newChess } from '../../lib/chess';
 import {
@@ -50,43 +51,32 @@ import {
 } from '../../store/gameSlice';
 
 import lobby from '../../assets/images/woodenbg.jpg';
+import EnhancedChessboard from '../../components/chess/EnhancedChessboard'; // Import du nouveau composant
+import PlayerCard from '../../components/chess/PlayerCard'; // Import du nouveau composant
+import { api } from '../../lib/api'; // Assurez-vous que le service API existe
 
 const { width, height } = Dimensions.get('window');
 const AnimatedView = Animated.createAnimatedComponent(View);
 
 /**
  * Extrait le dernier coup joué en comparant deux FEN.
- * Gère correctement les promotions en se basant sur l'historique détaillé de chess.js.
- * @param prevFen Le FEN de la position précédente.
- * @param newFen Le FEN de la nouvelle position.
- * @returns Un objet contenant le coup (from, to, san, promotion) ou null.
  */
 export function extractLastMove(prevFen: string, newFen: string) {
   try {
     const chessNew = new Chess(newFen);
-
-    // Obtenir l'historique complet du jeu avec des détails verbeux
     const history = chessNew.history({ verbose: true });
-
     if (history.length === 0) {
-      // S'il n'y a pas d'historique, il n'y a pas eu de coup
       return null;
     }
-
-    // Le dernier élément du tableau d'historique est le dernier coup
     const last = history[history.length - 1];
-
-    // L'objet 'last' contient déjà toutes les informations nécessaires, y compris
-    // 'promotion' si le coup en est un.
     if (last) {
       return {
         from: last.from,
         to: last.to,
         san: last.san,
-        promotion: last.promotion || undefined, // S'assure que c'est undefined si pas de promotion
+        promotion: last.promotion || undefined,
       };
     }
-
     return null;
   } catch (e) {
     console.error('Failed to extract last move:', e);
@@ -103,27 +93,26 @@ export function usePlayerColor(): 'w' | 'b' | null {
   return null;
 }
 
-const router = useRouter();
-
-// ✅ New component for the loading/waiting screen
-const WaitingForOpponent = () => (
-  <ImageBackground source={lobby} style={styles.background} resizeMode="cover">
-    <View style={styles.overlay}>
-      <TouchableOpacity style={styles.backButton} onPress={() => router.push('/main')}>
-        <ArrowLeft size={28} color={'#FFF8E1'} />
-      </TouchableOpacity>
-      <View style={styles.waitingContainer}>
-        <Text style={styles.waitingTitle}>Finding Opponent</Text>
-        <ActivityIndicator size="large" color="#D4AF37" />
-        <Text style={styles.waitingText}>
-          Please wait while we match you with another player...
-        </Text>
+const WaitingForOpponent = () => {
+  const router = useRouter();
+  return (
+    <ImageBackground source={lobby} style={styles.background} resizeMode="cover">
+      <View style={styles.overlay}>
+        <TouchableOpacity style={styles.backButton} onPress={() => router.push('/main')}>
+          <ArrowLeft size={28} color={'#FFF8E1'} />
+        </TouchableOpacity>
+        <View style={styles.waitingContainer}>
+          <Text style={styles.waitingTitle}>Finding Opponent</Text>
+          <ActivityIndicator size="large" color="#D4AF37" />
+          <Text style={styles.waitingText}>
+            Please wait while we match you with another player...
+          </Text>
+        </View>
       </View>
-    </View>
-  </ImageBackground>
-);
+    </ImageBackground>
+  );
+};
 
-// Component for animated confetti
 const ConfettiPiece = ({ index }: { index: number }) => {
   const translateY = useSharedValue(-height);
   const translateX = useSharedValue(0);
@@ -131,7 +120,6 @@ const ConfettiPiece = ({ index }: { index: number }) => {
 
   useEffect(() => {
     translateY.value = withDelay(index * 50, withTiming(height + 100, { duration: 3000 }));
-
     translateX.value = withRepeat(
       withSequence(
         withTiming(Math.random() * 50 - 25, { duration: 800 }),
@@ -140,7 +128,6 @@ const ConfettiPiece = ({ index }: { index: number }) => {
       -1,
       true
     );
-
     rotation.value = withRepeat(withTiming(360, { duration: 2000 }), -1);
   }, []);
 
@@ -169,7 +156,6 @@ const ConfettiPiece = ({ index }: { index: number }) => {
   );
 };
 
-// Component for game end modal
 const GameEndModal = ({
   visible,
   result,
@@ -188,16 +174,12 @@ const GameEndModal = ({
   const confettiVisible = useSharedValue(0);
 
   useEffect(() => {
-    console.log('📥📥📥 isWinner reçu:', isWinner);
-    console.log('📥📥📥 result reçu:', result);
-
     if (visible) {
       opacity.value = withTiming(1, { duration: 300 });
       scale.value = withSequence(
         withTiming(1.1, { duration: 300 }),
         withTiming(1, { duration: 200 })
       );
-
       if (isWinner) {
         confettiVisible.value = withDelay(200, withTiming(1, { duration: 100 }));
       }
@@ -219,7 +201,7 @@ const GameEndModal = ({
     } else if (result === 'stalemate' || result === 'draw') {
       return 'DRAW';
     } else if (result === 'resigned') {
-      return isWinner ? 'VICTORY BY RESIGNATION' : 'RESIGNED';
+      return isWinner ? 'VICTORY BY RESIGNATION' : 'RESIGNATION';
     }
     return 'GAME OVER';
   };
@@ -245,7 +227,6 @@ const GameEndModal = ({
   return (
     <Modal visible={visible} transparent animationType="none">
       <View style={styles.gameEndOverlay}>
-        {/* Confetti for victory */}
         {isWinner && (
           <View style={StyleSheet.absoluteFill} pointerEvents="none">
             {Array.from({ length: 20 }).map((_, i) => (
@@ -253,28 +234,24 @@ const GameEndModal = ({
             ))}
           </View>
         )}
-
         <AnimatedView style={[styles.gameEndModal, modalStyle]}>
           <View style={[styles.gameEndHeader, { backgroundColor: getResultColor() }]}>
             <Text style={styles.gameEndIcon}>{getResultIcon()}</Text>
             <Text style={styles.gameEndTitle}>{getResultText()}</Text>
           </View>
-
           <View style={styles.gameEndContent}>
             <Text style={styles.gameEndSubtitle}>
               {result === 'checkmate' &&
                 (isWinner ? 'Checkmate! Great game!' : 'Checkmate. Well done!')}
-              {result === 'stalemate' && 'Stalemate - equality'}
+              {result === 'stalemate' && 'Stalemate position - equality'}
               {result === 'draw' && 'Draw by mutual agreement'}
               {result === 'resigned' &&
                 (isWinner ? 'Your opponent has resigned' : 'You have given up the game')}
             </Text>
-
             <View style={styles.gameEndButtons}>
               <TouchableOpacity style={styles.gameEndButton} onPress={onNewGame}>
                 <Text style={styles.gameEndButtonText}>New Game</Text>
               </TouchableOpacity>
-
               <TouchableOpacity
                 style={[styles.gameEndButton, styles.menuButton]}
                 onPress={onMainMenu}
@@ -289,7 +266,6 @@ const GameEndModal = ({
   );
 };
 
-// Enhanced modal for mobile
 const ImprovedModal = ({
   visible,
   onClose,
@@ -336,6 +312,7 @@ export default function GameScreen() {
   const dispatch = useAppDispatch();
   const socket = useSocket();
   const boardRef = useRef<ChessboardRef>(null);
+
   const playerColor = usePlayerColor();
   const prevFenRef = useRef<string | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -346,12 +323,10 @@ export default function GameScreen() {
     isWinner: boolean;
   }>({ visible: false, result: '', isWinner: false });
 
-  console.log(`couleur du joueru ${playerColor}`);
-
-  const { currentId, fen, moves, assistantEnabled, mode } = useAppSelector((s) => s.game);
+  const { currentId, fen, moves, assistantEnabled, whitePlayer, blackPlayer } = useAppSelector(
+    (s) => s.game
+  );
   const user = useAppSelector((state) => state.auth.user);
-
-  // Le tour (turn) est maintenant déduit directement de l'état "fen"
 
   const chess = useMemo(() => newChess(fen), [fen]);
   const turn = useMemo(() => chess.turn(), [chess]);
@@ -360,14 +335,74 @@ export default function GameScreen() {
   const [showCoach, setShowCoach] = useState(false);
   const [showResignNotice, setShowResignNotice] = useState(false);
 
-  // ✅ PREMIER useEffect : Gère l'initialisation des écouteurs de socket.
-  // Ce hook ne s'exécute qu'une seule fois au montage du composant pour éviter de
-  // recréer et supprimer constamment les écouteurs.
+  // Nouveaux états pour les données des joueurs et le dernier coup
+  const [whitePlayerData, setWhitePlayerData] = useState<any>(null);
+  const [blackPlayerData, setBlackPlayerData] = useState<any>(null);
+  const [lastMoveForDisplay, setLastMoveForDisplay] = useState<any>(null);
+
+  // Fonction pour récupérer les données d'un joueur
+  const fetchPlayerData = async (playerId: string) => {
+    try {
+      if (playerId === 'AI') {
+        return {
+          _id: 'AI',
+          displayName: 'Chess AI',
+          rating: 1500,
+          isAI: true,
+          avatar: null,
+        };
+      }
+      const response = await api.get(`/user/${playerId}`);
+      // console.log(`information de l'utilisateur : ${JSON.stringify(response.data)} `);
+
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching player data:', error);
+      return {
+        _id: playerId,
+        name: 'Unknown Player',
+        rating: 1200,
+        isAI: false,
+        avatar: null,
+      };
+    }
+  };
+
+  // Chargement des données des joueurs
   useEffect(() => {
-    if (!socket) return;
+    const loadPlayersData = async () => {
+      if (whitePlayer) {
+        const whiteData = await fetchPlayerData(whitePlayer);
+        setWhitePlayerData(whiteData);
+      }
+      if (blackPlayer) {
+        const blackData = await fetchPlayerData(blackPlayer);
+        setBlackPlayerData(blackData);
+      }
+    };
+    if (whitePlayer && blackPlayer) {
+      loadPlayersData();
+    }
+  }, [whitePlayer, blackPlayer]);
+
+  // Mise à jour de l'affichage du dernier coup
+  useEffect(() => {
+    if (moves.length > 0) {
+      const lastMove = moves[moves.length - 1];
+      if (lastMove.from && lastMove.to) {
+        setLastMoveForDisplay({
+          from: lastMove.from,
+          to: lastMove.to,
+          san: lastMove.san || `${lastMove.from}-${lastMove.to}`,
+        });
+      }
+    }
+  }, [moves]);
+
+  useEffect(() => {
+    if (!socket || !currentId) return;
     let mounted = true;
 
-    // Événements qui n'ont pas besoin de l'état du jeu (fen, etc.)
     socket.on('joined', (p: any) => {
       if (!mounted) return;
       console.log('📥 joined reçu:', JSON.stringify(p, null, 2));
@@ -375,13 +410,8 @@ export default function GameScreen() {
 
     socket.on('gameOver', (p: any) => {
       if (!mounted) return;
-      console.log('📥 gameOver reçu:', JSON.stringify(p, null, 2));
       const userId = user?._id;
-      console.log('📥📥📥 userId reçu:', userId);
-
       const isWinner = p.winnerId === userId;
-      console.log('📥📥📥 isWinner reçu:', isWinner);
-
       setGameEndData({
         visible: true,
         result: p.result || 'unknown',
@@ -391,7 +421,6 @@ export default function GameScreen() {
 
     socket.on('suggestionReceived', (p: any) => {
       if (!mounted) return;
-      console.log('📥 📥✅ suggestionReceived:', JSON.stringify(p, null, 2));
       const raw = p.suggestions || {};
       const moves = raw.suggestions || [];
       const reasons = raw.explanations || [];
@@ -402,23 +431,6 @@ export default function GameScreen() {
       dispatch(setSuggestions(suggestions));
       dispatch(setLoading(false));
     });
-
-    // La fonction de nettoyage se déclenche au démontage du composant
-    return () => {
-      mounted = false;
-      socket.off('joined');
-      socket.off('gameOver');
-      socket.off('suggestionReceived');
-    };
-  }, [socket, dispatch, router, updateFromGameObject, setSuggestions, resetGame]);
-
-  // ✅ DEUXIÈME useEffect : Gère les événements qui dépendent de l'état du jeu.
-  // Ce hook est relancé à chaque changement de `fen` ou `currentId`.
-  useEffect(() => {
-    if (!currentId || !socket) return;
-    let mounted = true;
-
-    socket.emit('joinGame', { gameId: currentId });
 
     socket.on('movePlayed', (payload: any) => {
       if (!mounted) return;
@@ -448,32 +460,29 @@ export default function GameScreen() {
       }
     });
 
+    socket.emit('joinGame', { gameId: currentId });
+
     return () => {
       mounted = false;
+      socket.off('joined');
+      socket.off('gameOver');
+      socket.off('suggestionReceived');
       socket.off('movePlayed');
       socket.off('yourTurn');
     };
   }, [socket, currentId, fen, dispatch, updateFromGameObject, appendMove]);
 
-  // ✅ TROISIÈME useEffect : Gère la redirection si `currentId` n'existe pas.
   useEffect(() => {
     if (!currentId) {
       router.replace('/main');
     }
   }, [currentId, router]);
 
-  // A function to handle the promotion logic
   async function handlePromotion(from: string, to: string, promotion: string) {
-    console.log(
-      `called from handlePromotion with ${from} to ${to}, mode:${mode} promotion:${promotion}`
-    );
-
     if (!currentId) return;
     try {
       dispatch(setLoading(true));
-      // Construct the UCI move string with promotion
       const moveUci = `${from}${to}${promotion}`;
-      console.log(`Sending promotion move: ${moveUci}`);
       socket.emit('makeMove', { gameId: currentId, move: moveUci });
     } catch (e: any) {
       Alert.alert('Invalid move', e?.response?.data?.message || 'Cannot play this move');
@@ -483,24 +492,16 @@ export default function GameScreen() {
   }
 
   async function onMove(from: string, to: string) {
-    console.log(`called from onMove with ${from} to ${to}, mode:${mode}`);
-    if (!currentId) return;
-
+    if (!currentId) return false;
     try {
       const tempChess = new Chess(fen);
-
-      // ✅ LOGIQUE DE PROMOTION CORRIGÉE
-      // Utilisez 'as Square' pour indiquer à TypeScript que 'from' est une case valide.
-      // L'objet renvoyé par .moves({ verbose: true }) a bien la propriété 'promotion'.
       const possiblePromotions = tempChess
         .moves({
-          square: from as Square, // <-- Correction ici
+          square: from as Square,
           verbose: true,
         })
         .filter((m) => m.to === to && m.promotion);
-
       if (possiblePromotions.length > 0) {
-        // C'est une promotion ! Demander à l'utilisateur la pièce
         Alert.alert(
           'Promotion!',
           'Choose a piece to promote your pawn to:',
@@ -524,9 +525,8 @@ export default function GameScreen() {
           ],
           { cancelable: false }
         );
-        return false; // Bloquer la librairie pour qu'elle ne joue pas le coup tout de suite
+        return false;
       } else {
-        // Pas de promotion, envoyer le coup standard
         dispatch(setLoading(true));
         socket.emit('makeMove', { gameId: currentId, move: `${from}${to}` });
       }
@@ -545,10 +545,9 @@ export default function GameScreen() {
   async function handleResign() {
     if (!currentId) return;
     try {
-      console.log('Partie handleResign 🚫 🚫⚠️');
       dispatch(setLoading(true));
       socket.emit('resign', { gameId: currentId });
-      setShowResignNotice(true); // 👈 Show custom modal instead of Alert
+      setShowResignNotice(false);
     } catch (e: any) {
       console.error('Abort error:', e);
       Alert.alert('Error', e?.message || 'Impossible to give up the game.');
@@ -562,7 +561,6 @@ export default function GameScreen() {
     if (!assistantEnabled || !currentId) return;
     try {
       dispatch(setLoading(true));
-      console.log('demande sugestion');
       socket.emit('getSuggestion', { gameId: currentId });
     } catch (e) {
       console.error('Error requesting suggestion:', e);
@@ -570,46 +568,31 @@ export default function GameScreen() {
     }
   }
 
-  // Quand `fen` change dans Redux → synchro du board
   useEffect(() => {
     if (!fen || !boardRef.current) return;
-    console.log('🔄 useEffect fen déclenché', { fen, prevFen: prevFenRef.current });
     const prevFen = prevFenRef.current;
     if (!prevFen) {
-      console.log('⚡ Premier affichage → reset complet');
       boardRef.current.resetBoard(fen);
       prevFenRef.current = fen;
       return;
     }
     if (prevFen === fen) {
-      console.log('ℹ️ FEN inchangé → rien à faire');
       return;
     }
     const lastMove = extractLastMove(prevFen, fen);
     if (lastMove) {
-      console.log('✅ Dernier coup extrait et appliqué:', lastMove);
       boardRef.current.move({ from: lastMove.from, to: lastMove.to });
     } else {
-      console.warn('⚠️ Impossible de trouver le dernier coup → reset complet');
       boardRef.current.resetBoard(fen);
     }
     prevFenRef.current = fen;
-    console.log('🔄 prevFenRef mis à jour:', prevFenRef.current);
   }, [fen]);
 
-  // Fonctions de fin de partie
   const handleNewGame = () => {
     setGameEndData({ visible: false, result: '', isWinner: false });
     router.replace('/main');
     dispatch(resetGame());
   };
-
-  // const handleRematch = () => {
-  //   setGameEndData({ visible: false, result: '', isWinner: false });
-  //   // Logique pour une revanche
-  //   router.replace('/main');
-  //   dispatch(resetGame());
-  // };
 
   const handleMainMenu = () => {
     setGameEndData({ visible: false, result: '', isWinner: false });
@@ -617,12 +600,6 @@ export default function GameScreen() {
     router.replace('/main');
     dispatch(resetGame());
   };
-
-  // const handleAnalyze = () => {
-  //   // Fonctionnalité future
-  //   console.log('Analyse de la partie à implémenter');
-  //   dispatch(resetGame());
-  // };
 
   if (!playerColor) {
     return <WaitingForOpponent />;
@@ -636,52 +613,84 @@ export default function GameScreen() {
     promotionPieceButton: '#FF9B71',
   };
 
+  const getPlayersData = () => {
+    if (playerColor === 'w') {
+      return {
+        current: whitePlayerData,
+        opponent: blackPlayerData,
+      };
+    } else {
+      return {
+        current: blackPlayerData,
+        opponent: whitePlayerData,
+      };
+    }
+  };
+
+  const { current: currentPlayerData, opponent: opponentPlayerData } = getPlayersData();
+
   return (
     <ImageBackground source={lobby} style={styles.background} resizeMode="cover">
       <View style={styles.overlay}>
+        <TouchableOpacity style={styles.backButton} onPress={() => router.push('/main')}>
+          <ArrowLeft size={28} color={'#FFF8E1'} />
+        </TouchableOpacity>
+
+        {opponentPlayerData && (
+          <PlayerCard
+            player={opponentPlayerData}
+            isActive={turn !== playerColor}
+            lastMove={turn === playerColor && lastMoveForDisplay ? `${lastMoveForDisplay.san}` : ''}
+            isCurrentPlayer={false}
+            position="top"
+          />
+        )}
+
+        {currentPlayerData && (
+          <PlayerCard
+            player={currentPlayerData}
+            isActive={turn === playerColor}
+            lastMove={''}
+            isCurrentPlayer={true}
+            position="bottom"
+          />
+        )}
+
         <View style={styles.boardContainer}>
-          <Chessboard
-            ref={boardRef}
+          <EnhancedChessboard
+            boardRef={boardRef}
+            fen={fen}
             onMove={async (info: any) => {
-              console.log(`info: ${JSON.stringify(info)}`);
               const pieceColor = info.move.color;
               if (pieceColor !== playerColor) {
-                console.log('⛔ Not your color !');
-                setTimeout(() => {
-                  boardRef.current?.resetBoard(fen);
-                }, 50);
+                setTimeout(() => boardRef.current?.resetBoard(fen), 50);
                 return false;
               }
               if (turn !== playerColor) {
-                console.log('⛔ Not your turn!');
-                setTimeout(() => {
-                  boardRef.current?.resetBoard(fen);
-                }, 50);
+                setTimeout(() => boardRef.current?.resetBoard(fen), 50);
                 return false;
               }
               try {
                 await onMove(info.move.from, info.move.to);
                 return false;
               } catch (e) {
-                console.error('Error backend:', e);
-                setTimeout(() => {
-                  boardRef.current?.resetBoard(fen);
-                }, 50);
+                setTimeout(() => boardRef.current?.resetBoard(fen), 50);
                 return false;
               }
             }}
             colors={boardColor}
+            lastMove={lastMoveForDisplay}
+            playerColor={playerColor}
+            turn={turn}
           />
         </View>
 
-        {/* Controls are now OUTSIDE boardContainer -> docked at bottom */}
         <View style={styles.controls}>
           <TouchableOpacity
             activeOpacity={0.7}
             onPress={() => setShowConfirm(true)}
             style={styles.button}
           >
-
             <FlagIcon size={28} color="#FF6B6B" />
             <Text style={styles.buttonText}>Resign</Text>
           </TouchableOpacity>
@@ -696,13 +705,18 @@ export default function GameScreen() {
             <Text style={styles.buttonText}>Hint</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={() => router.replace('/main')} style={styles.button}>
+          <TouchableOpacity
+            onPress={() => {
+              dispatch(resetGame());
+              router.replace('/main');
+            }}
+            style={styles.button}
+          >
             <DoorOpenIcon size={28} color="#FFF" />
             <Text style={styles.buttonText}>Exit</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Modals */}
         <ImprovedModal visible={showMoves} onClose={() => setShowMoves(false)} title="Move History">
           <MoveList moves={moves} fullWidth />
         </ImprovedModal>
@@ -710,8 +724,6 @@ export default function GameScreen() {
           <AssistantPanel onAsk={askSuggestion} fullWidth />
         </ImprovedModal>
 
-        {/* Modal Confirmation Abandon */}
-        {/* Modal Confirmation Abandon */}
         <ImprovedModal
           visible={showConfirm}
           onClose={() => setShowConfirm(false)}
@@ -736,7 +748,6 @@ export default function GameScreen() {
           </View>
         </ImprovedModal>
 
-        {/* Resign Notice Modal */}
         <ImprovedModal
           visible={showResignNotice}
           onClose={() => setShowResignNotice(false)}
@@ -753,15 +764,12 @@ export default function GameScreen() {
           </View>
         </ImprovedModal>
 
-        {/* Modal de fin de partie */}
         <GameEndModal
           visible={gameEndData.visible}
           result={gameEndData.result}
           isWinner={gameEndData.isWinner}
           onNewGame={handleNewGame}
-          onRematch={handleRematch}
           onMainMenu={handleMainMenu}
-          onAnalyze={handleAnalyze}
         />
       </View>
     </ImageBackground>
@@ -777,34 +785,16 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.6)',
     width: '100%',
-    paddingVertical: 40, // same as PlayLocal
+    paddingVertical: 40,
     alignItems: 'center',
+    justifyContent: 'center',
   },
-
   boardContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingBottom: 20,
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    gap: 12,
-    marginTop: 20,
-  },
-  actionButton: {
-    backgroundColor: '#8B4513',
-    borderWidth: 2,
-    borderColor: '#D4AF37',
-    borderRadius: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    alignItems: 'center',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
+    paddingTop: 120, // Plus d'espace pour la carte du joueur du haut
+    paddingBottom: 160, // Plus d'espace pour la carte du joueur du bas
   },
   backButton: {
     position: 'absolute',
@@ -832,21 +822,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 15,
   },
-  spinner: {
-    marginVertical: 20,
-  },
-  waitingDots: {
-    flexDirection: 'row',
-    gap: 8,
-    marginTop: 20,
-  },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#D4AF37',
-  },
-  // Styles pour les modales améliorées
   improvedModalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.8)',
@@ -891,57 +866,6 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
   },
-  // Styles pour la modal de confirmation
-  // modalOverlay: {
-  //   flex: 1,
-  //   backgroundColor: 'rgba(0,0,0,0.8)',
-  //   justifyContent: 'center',
-  //   alignItems: 'center',
-  // },
-  modalOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  // confirmModal: {
-  //   width: width * 0.85,
-  //   maxWidth: 400,
-  //   backgroundColor: '#1E1E2D',
-  //   borderRadius: 15,
-  //   padding: 25,
-  //   alignItems: 'center',
-  //   borderWidth: 2,
-  //   borderColor: '#D4AF37',
-  //   elevation: 20,
-  //   shadowColor: '#000',
-  //   shadowOffset: { width: 0, height: 8 }, // Ombre plus marquée
-  //   shadowOpacity: 0.5,
-  //   shadowRadius: 10,
-  //   // Ajout de propriétés pour assurer la visibilité
-  //   zIndex: 1000,
-  // },
-  confirmModal: {
-    width: '80%',
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 20,
-    elevation: 5, // Android shadow
-  },
-
-  confirmTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#FFF8E1',
-    marginBottom: 15,
-    textAlign: 'center',
-    fontFamily: 'CinzelDecorative-Bold',
-  },
   confirmText: {
     fontSize: 16,
     color: '#E0E0E0',
@@ -973,7 +897,6 @@ const styles = StyleSheet.create({
     borderColor: '#9CA3AF',
   },
   resignButton: {
-    // Nouveau style pour le bouton d'abandon
     backgroundColor: '#DC2626',
     borderWidth: 1,
     borderColor: '#EF4444',
@@ -988,7 +911,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 16,
   },
-  // Styles pour la modal de fin de partie
   gameEndOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.9)',
@@ -1064,7 +986,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#2D3748',
     borderColor: '#718096',
   },
-  // Styles pour les confettis
   confetti: {
     position: 'absolute',
     width: 8,

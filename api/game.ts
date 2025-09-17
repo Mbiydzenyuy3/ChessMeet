@@ -27,7 +27,7 @@
 // //   }
 // // }
 // src/api/game.ts
-import api from './api';
+import { api } from '../lib/api';
 
 export interface AIJoinResponse {
   gameId: string;

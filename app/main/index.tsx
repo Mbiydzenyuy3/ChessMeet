@@ -185,6 +185,7 @@ const AnimatedGameModeButton = ({
 };
 
 // -------------------------------------------------
+// -------------------------------------------------
 export default function LobbyScreen() {
   const click = useAudioPlayer(clickSound);
   const socket = useSocket();
@@ -315,144 +316,140 @@ export default function LobbyScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <ImageBackground source={lobby} style={styles.background} resizeMode="cover">
       <View style={StyleSheet.absoluteFill} pointerEvents="none">
         {chessSymbols.map((symbol, index) => (
           <FloatingPiece key={index} symbol={symbol} index={index} />
         ))}
       </View>
 
-      <ImageBackground source={lobby} style={styles.background} resizeMode="cover">
-        <View style={styles.overlay}>
-          <ScrollView
-            style={styles.scrollContainer}
-            contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={false}
+      <ScrollView
+        style={styles.scrollContainer}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Profile Card */}
+        <AnimatedView style={[styles.profileCard, styles.shadow]}>
+          <View style={styles.headerItems}>
+            <TouchableOpacity
+              onPress={() => {
+                click.play();
+                router.push('/main/profile');
+              }}
+            >
+              <Image
+                source={{
+                  uri:
+                    user?.avatarUrl ||
+                    'https://i.pinimg.com/474x/fa/d5/e7/fad5e79954583ad50ccb3f16ee64f66d.jpg',
+                }}
+                style={styles.avatar}
+              />
+            </TouchableOpacity>
+            <Text style={styles.welcome}>{user?.displayName || 'Guest'}</Text>
+          </View>
+
+          <TouchableOpacity
+            style={styles.settingsBtn}
+            onPress={() => {
+              router.push('/settings/SettingsScreen');
+            }}
           >
-            {/* Profile Card */}
-            <AnimatedView style={[styles.profileCard, styles.shadow]}>
-              <View style={styles.headerItems}>
-                <TouchableOpacity
-                  onPress={() => {
-                    click.play();
-                    router.push('/main/profile');
-                  }}
-                >
-                  <Image
-                    source={{
-                      uri:
-                        user?.avatarUrl ||
-                        'https://i.pinimg.com/474x/fa/d5/e7/fad5e79954583ad50ccb3f16ee64f66d.jpg',
-                    }}
-                    style={styles.avatar}
-                  />
-                </TouchableOpacity>
-                <Text style={styles.welcome}>{user?.displayName || 'Guest'}</Text>
-              </View>
+            <Settings color="#fff" size={20} onPress={() => click.play()} />
+          </TouchableOpacity>
+        </AnimatedView>
 
-              <TouchableOpacity
-                style={styles.settingsBtn}
-                onPress={() => {
-                  router.push('/settings/SettingsScreen');
-                }}
-              >
-                <Settings color="#fff" size={20} onPress={() => click.play()} />
-              </TouchableOpacity>
-            </AnimatedView>
+        {/* Chess Icon Center */}
+        <AnimatedView style={[styles.centerPiece, logoAnimatedStyle]}>
+          <Image source={Game} style={styles.gameImage} />
+        </AnimatedView>
 
-            {/* Chess Icon Center */}
-            <AnimatedView style={[styles.centerPiece, logoAnimatedStyle]}>
-              <Image source={Game} style={styles.gameImage} />
-            </AnimatedView>
+        {/* Choose Mode */}
+        <Text style={styles.chooseText}>CHOOSE A GAME MODE</Text>
 
-            {/* Choose Mode */}
-            <Text style={styles.chooseText}>CHOOSE A GAME MODE</Text>
+        {/* Game Mode Buttons */}
+        <View style={styles.buttonContainer}>
+          <AnimatedGameModeButton
+            title="♟ PLAY OFFLINE"
+            onPress={() => {
+              click.play();
+              handleGameModeSelection(() => router.push('/main/PlayLocal'));
+            }}
+            delay={200}
+          />
 
-            {/* Game Mode Buttons */}
-            <View style={styles.buttonContainer}>
-              <AnimatedGameModeButton
-                title="♟ PLAY OFFLINE"
-                onPress={() => {
-                  click.play();
-                  handleGameModeSelection(() => router.push('/main/PlayLocal'));
-                }}
-                delay={200}
-              />
+          <AnimatedGameModeButton
+            title="♟PLAY AGAINST AI"
+            onPress={() => {
+              click.play();
+              handleGameModeSelection(startAI);
+            }}
+            delay={300}
+          />
 
-              <AnimatedGameModeButton
-                title="♟PLAY AGAINST AI"
-                onPress={() => {
-                  click.play();
-                  handleGameModeSelection(startAI);
-                }}
-                delay={300}
-              />
+          <AnimatedGameModeButton
+            title="♟ JOIN ONLINE"
+            onPress={() => {
+              click.play();
+              handleGameModeSelection(joinQueue);
+            }}
+            delay={400}
+          />
 
-              <AnimatedGameModeButton
-                title="♟ JOIN ONLINE"
-                onPress={() => {
-                  click.play();
-                  handleGameModeSelection(joinQueue);
-                }}
-                delay={400}
-              />
-
-              <AnimatedGameModeButton
-                title="♟ LEARN CHESS"
-                onPress={() => {
-                  click.play();
-                  handleGameModeSelection(() => router.push('/settings/LessonScreen'));
-                }}
-                delay={500}
-              />
-            </View>
-
-            {/* Recent Games Section */}
-            {showRecentGames && recentGames.length > 0 && (
-              <View style={styles.recentGamesSection}>
-                <View style={styles.sectionHeader}>
-                  <Text style={styles.sectionTitle}>Recent Games</Text>
-                  <TouchableOpacity
-                    onPress={() => router.push('/main/stats')}
-                    style={styles.viewAllButton}
-                  >
-                    <Text style={styles.viewAllText}>View all</Text>
-                  </TouchableOpacity>
-                </View>
-
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={styles.recentGamesContainer}
-                >
-                  {recentGames.map((game, index) => (
-                    <RecentGameCard key={game._id} game={game} index={index} />
-                  ))}
-                </ScrollView>
-              </View>
-            )}
-
-            {/* Quick Stats */}
-            <View style={styles.quickStats}>
-              <View style={styles.statItem}>
-                <Text style={styles.statNumber}>{stats?.gamesPlayed ?? '-'}</Text>
-                <Text style={styles.statLabel}>Parties</Text>
-              </View>
-              <View style={styles.statDivider} />
-              <View style={styles.statItem}>
-                <Text style={styles.statNumber}>{stats?.wins ?? '-'}</Text>
-                <Text style={styles.statLabel}>Victoires</Text>
-              </View>
-              <View style={styles.statDivider} />
-              <View style={styles.statItem}>
-                <Text style={styles.statNumber}>{stats?.rating ?? '-'}</Text>
-                <Text style={styles.statLabel}>Rating</Text>
-              </View>
-            </View>
-          </ScrollView>
+          <AnimatedGameModeButton
+            title="♟ LEARN CHESS"
+            onPress={() => {
+              click.play();
+              handleGameModeSelection(() => router.push('/settings/LessonScreen'));
+            }}
+            delay={500}
+          />
         </View>
-      </ImageBackground>
-    </View>
+
+        {/* Recent Games Section */}
+        {showRecentGames && recentGames.length > 0 && (
+          <View style={styles.recentGamesSection}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Recent Games</Text>
+              <TouchableOpacity
+                onPress={() => router.push('/main/stats')}
+                style={styles.viewAllButton}
+              >
+                <Text style={styles.viewAllText}>Voir tout</Text>
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.recentGamesContainer}
+            >
+              {recentGames.map((game, index) => (
+                <RecentGameCard key={game._id} game={game} index={index} />
+              ))}
+            </ScrollView>
+          </View>
+        )}
+
+        {/* Quick Stats */}
+        <View style={styles.quickStats}>
+          <View style={styles.statItem}>
+            <Text style={styles.statNumber}>{stats?.gamesPlayed ?? '-'}</Text>
+            <Text style={styles.statLabel}>Parties</Text>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
+            <Text style={styles.statNumber}>{stats?.wins ?? '-'}</Text>
+            <Text style={styles.statLabel}>Victoires</Text>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
+            <Text style={styles.statNumber}>{stats?.rating ?? '-'}</Text>
+            <Text style={styles.statLabel}>Rating</Text>
+          </View>
+        </View>
+      </ScrollView>
+    </ImageBackground>
   );
 }
 
@@ -463,19 +460,16 @@ const styles = StyleSheet.create({
   background: {
     flex: 1,
   },
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    width: '100%',
-    height: '100%',
-  },
+  // Nous avons retiré le style 'overlay'
   scrollContainer: {
     flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)', // Déplacez l'arrière-plan de l'overlay ici
   },
   scrollContent: {
     paddingTop: 40,
     paddingHorizontal: 20,
     paddingBottom: 20,
+    flexGrow: 1, // Ajout de cette ligne
   },
   profileCard: {
     flexDirection: 'row',

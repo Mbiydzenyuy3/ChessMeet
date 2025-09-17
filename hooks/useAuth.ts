@@ -1,11 +1,11 @@
 import { UpdateProfilePayload } from '../api/authApi';
 import {
   doUpdateProfile,
-  doUploadAvatar,
   doVerifyOtp,
   hydrateAuth,
   logout,
   requestOtp,
+  uploadAvatar,
 } from '../store/authSlice';
 import { useAppDispatch, useAppSelector } from '../store/index';
 
@@ -29,6 +29,6 @@ export function useAuth() {
     bootstrapAuth: () => dispatch(hydrateAuth()),
 
     updateProfile: (updates: UpdateProfilePayload) => dispatch(doUpdateProfile(updates)),
-    uploadAvatar: (formData: FormData) => dispatch(doUploadAvatar(formData)),
+    uploadAvatar: (formData: FormData) => dispatch(uploadAvatar(formData)),
   };
 }
