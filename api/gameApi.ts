@@ -1,15 +1,15 @@
 // api/gameApi.ts
-import axiosClient from './api';
+import { api } from '../lib/api';
 
 export const gameApi = {
   startGame: (mode: 'ai' | 'multiplayer', opponentId?: string) =>
-    axiosClient.post('/game/start', { mode, opponentId }),
+    api.post('/game/start', { mode, opponentId }),
 
-  makeMove: (gameId: string, move: string) => axiosClient.post(`/game/${gameId}/move`, { move }),
+  makeMove: (gameId: string, move: string) => api.post(`/game/${gameId}/move`, { move }),
 
-  resign: (gameId: string) => axiosClient.post(`/game/${gameId}/resign`),
+  resign: (gameId: string) => api.post(`/game/${gameId}/resign`),
 
-  getGameState: (gameId: string) => axiosClient.get(`/game/${gameId}`),
+  getGameState: (gameId: string) => api.get(`/game/${gameId}`),
 
-  getGameHistory: (gameId: string) => axiosClient.get(`/game/${gameId}/history`),
+  getGameHistory: (gameId: string) => api.get(`/game/${gameId}/history`),
 };

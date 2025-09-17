@@ -1,5 +1,5 @@
 // api/aiApi.ts
-import api from './api';
+import { api } from '../lib/api';
 
 export const aiApi = {
   getMoveSuggestion: (gameId: string) => api.get(`/ai/${gameId}/suggestion`),

@@ -51,8 +51,8 @@ import {
 } from '../../store/gameSlice';
 
 import lobby from '../../assets/images/woodenbg.jpg';
-import PlayerCard from '../../components/chess/PlayerCard'; // Import du nouveau composant
 import EnhancedChessboard from '../../components/chess/EnhancedChessboard'; // Import du nouveau composant
+import PlayerCard from '../../components/chess/PlayerCard'; // Import du nouveau composant
 import { api } from '../../lib/api'; // Assurez-vous que le service API existe
 
 const { width, height } = Dimensions.get('window');
