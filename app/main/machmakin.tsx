@@ -82,32 +82,32 @@
 // });
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { useRouter } from 'expo-router';
+import { ArrowLeft } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
 import {
-  StyleSheet,
-  View,
-  Text,
   ActivityIndicator,
-  ImageBackground,
-  TouchableOpacity,
   Dimensions,
+  ImageBackground,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import Animated, {
+  Extrapolation,
+  interpolate,
   useAnimatedStyle,
   useSharedValue,
+  withDelay,
   withRepeat,
   withSequence,
   withTiming,
-  withDelay,
-  interpolate,
-  Extrapolation,
 } from 'react-native-reanimated';
-import { ArrowLeft } from 'lucide-react-native';
+import lobby from '../../assets/images/woodenbg.jpg';
 import { useSocket } from '../../hooks/useSocket';
 import { useAppDispatch } from '../../store';
-import { updateFromGameObject, setLoading, setMode } from '../../store/gameSlice';
-import { useRouter } from 'expo-router';
-import lobby from '../../assets/images/woodenbg.jpg';
+import { setLoading, setMode, updateFromGameObject } from '../../store/gameSlice';
 
 const { width } = Dimensions.get('window');
 const AnimatedView = Animated.createAnimatedComponent(View);
@@ -298,7 +298,7 @@ export default function MatchmakingWaitingScreen() {
 
     const onWaiting = (data: any) => {
       console.log(`Message d'attente: ${data?.message}`);
-      setStatusMessage(data?.message || 'Recherche en cours...');
+      setStatusMessage(data?.message || 'Search again...');
     };
 
     // Écouter les événements socket
@@ -388,7 +388,7 @@ export default function MatchmakingWaitingScreen() {
               router.replace('/main');
             }}
           >
-            <Text style={styles.cancelButtonText}>Annuler la recherche</Text>
+            <Text style={styles.cancelButtonText}>Cancel Search</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -401,9 +401,10 @@ const styles = StyleSheet.create({
     flex: 1,
     width: '100%',
   },
+
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.8)',
+    backgroundColor: 'rgba(0,0,0,0.1)',
   },
   container: {
     flex: 1,

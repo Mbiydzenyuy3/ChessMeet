@@ -14,23 +14,23 @@ import { Settings } from 'lucide-react-native';
 import React, { useState } from 'react';
 import {
   Alert,
+  Dimensions,
   Image,
   ImageBackground,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
-  ScrollView,
-  Dimensions,
 } from 'react-native';
 import Animated, {
+  interpolate,
   useAnimatedStyle,
   useSharedValue,
+  withDelay,
   withRepeat,
   withSequence,
   withTiming,
-  withDelay,
-  interpolate,
 } from 'react-native-reanimated';
 import FloatingPiece from '../../components/FloatingPiece';
 import TransitionScreen from '../../components/TransitionScreen';
@@ -432,7 +432,7 @@ const styles = StyleSheet.create({
   // Nous avons retiré le style 'overlay'
   scrollContainer: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)', // Déplacez l'arrière-plan de l'overlay ici
+    backgroundColor: 'rgba(0,0,0,0.1)', // Déplacez l'arrière-plan de l'overlay ici
   },
   scrollContent: {
     paddingTop: 40,
