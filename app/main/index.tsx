@@ -463,7 +463,7 @@ const styles = StyleSheet.create({
   // Nous avons retiré le style 'overlay'
   scrollContainer: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)', // Déplacez l'arrière-plan de l'overlay ici
+    backgroundColor: 'rgba(0,0,0,0.1)', // Déplacez l'arrière-plan de l'overlay ici
   },
   scrollContent: {
     paddingTop: 40,

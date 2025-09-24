@@ -81,6 +81,30 @@ const slice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     // ... (pending and rejected cases for hydrate, requestOtp, doVerifyOtp)
+    builder
+      .addCase(hydrateAuth.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(hydrateAuth.fulfilled, (state, action) => {
+        state.token = action.payload.token;
+        state.user = action.payload.user;
+        state.loading = false;
+      })
+      .addCase(hydrateAuth.rejected, (state) => {
+        state.loading = false;
+        state.token = null;
+        state.user = null;
+      });
+
+    builder.addCase(doVerifyOtp.fulfilled, (state, action) => {
+      state.token = action.payload.token;
+      state.user = action.payload.user;
+    });
+
+    builder.addCase(logout.fulfilled, (state) => {
+      state.token = null;
+      state.user = null;
+    });
 
     // CLEANUP 5: Use the strong IUser type in fulfilled actions.
     builder
